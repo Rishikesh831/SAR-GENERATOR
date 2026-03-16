@@ -1,5 +1,6 @@
 import express from "express"
 import cors from "cors"
+import caseRoutes from "./routes/caseRoutes.js"
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -12,6 +13,8 @@ app.use(express.json());
 app.get('/', (req, res) => {
     res.send('Server is up and running!');
 });
+
+app.use("/api/cases", caseRoutes)
 
 // Health check endpoint
 app.get('/health', (req, res) => {
