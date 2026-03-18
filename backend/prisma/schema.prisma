@@ -1,0 +1,52 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Transaction {
+  id               String   @id @default(uuid())
+  case_id          String
+  external_tx_id   String
+  amount           BigInt
+  currency         String
+  transaction_type String
+  timestamp        DateTime @default(now())
+  sender_details   Json
+  receiver_details Json
+  metadata         String?
+}
+
+enum CaseStatus {
+  Ingested
+  ENRICHING
+  ANALYZING
+  GENERATING_NARRATIVE
+  COMPLETED
+  FAILED
+}
+
+enum riskLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model cases {
+  case_id          String     @id @default(uuid())
+  status           CaseStatus
+  risk_score       Decimal
+  risk_level       riskLevel
+  summary_llm      String
+  flags            Json?
+  ml_insights      Json
+  assigned_analyst String
+}
