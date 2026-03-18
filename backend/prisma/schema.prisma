@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
@@ -12,21 +7,34 @@ datasource db {
   provider = "postgresql"
 }
 
-model Transaction {
-  id               String   @id @default(uuid())
-  case_id          String
-  external_tx_id   String
-  amount           BigInt
-  currency         String
-  transaction_type String
-  timestamp        DateTime @default(now())
-  sender_details   Json
-  receiver_details Json
-  metadata         String?
+model Case {
+  id     String     @id @default(uuid())
+  status CaseStatus @default(INGESTED)
+
+  // Layer 3 & 4: Intelligence Results
+  riskScore Decimal?   @db.Decimal(3, 2) // e.g., 0.94
+  riskLevel RiskLevel? @default(LOW) // LOW, MEDIUM, HIGH
+
+  // Layer 4 & 5: Complex ML Insights
+  // Stores Smurfing/Funneling patterns, SHAP values, and Graph data
+  mlInsights Json?
+
+  // Layer 6: AI Narrative
+  summaryLlm String? @db.Text
+
+  // Metadata
+  assignedTo String? // User ID of the analyst
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relationships
+  transactions Transaction[]
+  auditLogs    AuditLog[]
+  evidence     Evidence[]
 }
 
 enum CaseStatus {
-  Ingested
+  INGESTED
   ENRICHING
   ANALYZING
   GENERATING_NARRATIVE
@@ -34,19 +42,55 @@ enum CaseStatus {
   FAILED
 }
 
-enum riskLevel {
+enum RiskLevel {
   LOW
   MEDIUM
   HIGH
+  CRITICAL
 }
 
-model cases {
-  case_id          String     @id @default(uuid())
-  status           CaseStatus
-  risk_score       Decimal
-  risk_level       riskLevel
-  summary_llm      String
-  flags            Json?
-  ml_insights      Json
-  assigned_analyst String
+model Transaction {
+  id     String @id @default(uuid())
+  caseId String
+  case   Case   @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  externalTxId String? // ID from the original bank CSV/API
+  amount       Decimal  @db.Decimal(15, 2)
+  currency     String   @default("INR")
+  timestamp    DateTime
+
+  // Layer 2: Enrichment (Optional)
+  senderDetails   Json // { "acc_id": "A756", "name": "...", "country": "India" }
+  receiverDetails Json // { "acc_id": "A421", "name": "...", "country": "UAE" }
+
+  category  String? // e.g., "Wire Transfer", "ATM Withdrawal"
+  isFlagged Boolean @default(false)
+}
+
+model Evidence {
+  id     String @id @default(uuid())
+  caseId String
+  case   Case   @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  evidenceType String // e.g., "SMURFING_PATTERN", "VELOCITY_SPIKE"
+  description  String // e.g., "108 small transactions in 24 hours"
+
+  // Array of Transaction IDs that prove this evidence
+  linkedTxIds String[]
+
+  createdAt DateTime @default(now())
+}
+
+model AuditLog {
+  id     String @id @default(uuid())
+  caseId String
+  case   Case   @relation(fields: [caseId], references: [id])
+
+  action String // e.g., "STATUS_CHANGE", "ML_ANALYSIS_COMPLETED"
+  actor  String // e.g., "SYSTEM" or "ANALYST_NAME"
+
+  // Snapshot of what changed (e.g., old_status -> new_status)
+  payload Json?
+
+  timestamp DateTime @default(now())
 }
