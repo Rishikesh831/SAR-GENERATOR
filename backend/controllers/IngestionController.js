@@ -1,74 +1,59 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { db } from "../middlewares/dbconfig.js";
+import { cases, transactions as transactionsTable, auditLogs } from "../src/db/schemas.ts";
 
 export const ingestData = async (req, res) => {
     try {
         const { transactions, customerMetadata } = req.body;
 
         // 1. 🔍 VALIDATION LOGIC
-        // TODO: Write a check to see if transactions exist and is an array.
-        // If not, return a 400 status with a helpful message.
         if (!transactions || !Array.isArray(transactions)) {
-            return res.status(400).json({ message: `Invalid transaction type expected ${typeof (transactions)} --recieved ${typeof (transactions)}` })
+            return res.status(400).json({
+                message: `Invalid transaction type. Expected Array, received ${typeof transactions}`
+            });
         }
 
+        // 2. 💾 DATABASE ORCHESTRATION (The Drizzle Transaction)
+        const result = await db.transaction(async (tx) => {
 
-
-        // 2. 🧹 NORMALIZATION LOGIC
-        // Your ML friend expects a specific format. 
-        // TODO: Map through the 'transactions' array and ensure every object 
-        // has: amount (as Float/Number), senderId, receiverId, and timestamp.
-        const normalized_data = transactions.map(transaction => ({
-            amount: parseFloat(transaction.amount),
-            senderDetails: transaction.senderDetails || {},
-            receiverDetails: transaction.receiverDetails || {},
-            timestamp: new Date(transaction.timestamp || Date.now()),
-            external_tx_id: transaction.external_tx_id || null
-        }))
-
-
-
-        // 3. 💾 DATABASE ORCHESTRATION
-        // We need to create a Case AND its Transactions at the same time.
-        // Prisma's "nested writes" are perfect for this.
-        const newCase = await prisma.case.create({
-            data: {
+            // Step A: Create the Case
+            const [newCase] = await tx.insert(cases).values({
                 status: 'INGESTED',
-                customer_name: customerMetadata?.name || "Unknown",
-                // TODO: Link the normalized transactions here using 'createMany'
-                // Hint: transactions: { createMany: { data: normalizedArray } }
-                transactions: {
-                    createMany: {
-                        data: normalized_data
-                    }
-                }
-            },
+            }).returning({ id: cases.id });
+
+            // Step B: Normalize the transactions with the NEW Case ID
+            const normalizedData = transactions.map(t => ({
+                caseId: newCase.id, // Link to the case we just made
+                amount: t.amount.toString(), // Drizzle/PG Decimal expects strings to preserve precision
+                senderDetails: t.senderDetails || {},
+                receiverDetails: t.receiverDetails || {},
+                timestamp: new Date(t.timestamp || Date.now()),
+                externalTxId: t.external_tx_id || null,
+                currency: t.currency || "INR"
+            }));
+
+            // Step C: Bulk Insert Transactions
+            await tx.insert(transactionsTable).values(normalizedData);
+
+            // Step D: Create Audit Log
+            await tx.insert(auditLogs).values({
+                caseId: newCase.id,
+                action: "CASE_INGESTED",
+                actor: "SYSTEM",
+                payload: { transactionCount: transactions.length }
+            });
+
+            return newCase;
         });
 
-        // 4. 📝 AUDIT TRAIL (Layer 7)
-        // TODO: Create an AuditLog entry for this new Case.
-        const audit_log = await prisma.AuditLog.create(
-            {
-                data: {
-                    caseId: newCase.id,
-                    action: "CASE_INGESTED",
-                    details: {
-                        transactionCount: transactions.length
-                    }
-                }
-            }
-        )
-
-
+        // 3. ✨ SUCCESS RESPONSE
         return res.status(201).json({
             message: "Data Ingested Successfully",
-            caseId: newCase.id,
+            caseId: result.id,
             count: transactions.length
         });
 
     } catch (error) {
-        console.error("Ingestion Error:", error);
-        return res.status(500).json({ error: "Failed to ingest data" });
+        console.error("Drizzle Ingestion Error:", error.message);
+        return res.status(500).json({ error: "Failed to ingest data", details: error.message });
     }
 };

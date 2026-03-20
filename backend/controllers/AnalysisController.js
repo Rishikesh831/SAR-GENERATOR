@@ -1,7 +1,8 @@
-import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
+import { db } from "../middlewares/dbconfig.js";
+import { cases, auditLogs } from "../src/db/schemas.ts";
+import { eq } from "drizzle-orm";
 
-// Corrected delay function: Must RETURN the promise
+// Helper for simulation
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 export const analyzeCase = async (req, res) => {
@@ -9,8 +10,9 @@ export const analyzeCase = async (req, res) => {
 
     try {
         // 1. 🔍 PRE-CHECK
-        const targetCase = await prisma.case.findUnique({
-            where: { id: id }
+        // findFirst is the Drizzle equivalent of findUnique
+        const targetCase = await db.query.cases.findFirst({
+            where: eq(cases.id, id)
         });
 
         if (!targetCase) {
@@ -21,14 +23,12 @@ export const analyzeCase = async (req, res) => {
             return res.status(400).json({ message: "Analysis already completed for this case" });
         }
 
-        // 2. ⏳ SIMULATE ML PROCESSING (Orchestration)
-        // We tell the DB we are starting
-        await prisma.case.update({
-            where: { id: id },
-            data: { status: "ANALYSING" }
-        });
+        // 2. ⏳ SIMULATE ML PROCESSING (Update status to ANALYZING)
+        await db.update(cases)
+            .set({ status: "ANALYSING" })
+            .where(eq(cases.id, id));
 
-        // NOW we pause the execution for 2 seconds
+        // Wait for 2 seconds to mimic heavy computation
         await delay(2000);
 
         // 3. 🕸️ MOCK ML RESULTS
@@ -44,23 +44,23 @@ export const analyzeCase = async (req, res) => {
         };
 
         // 4. 💾 UPDATE DATABASE
-        const updatedCase = await prisma.case.update({
-            where: { id: id },
-            data: {
+        // Drizzle .update().set() syntax
+        const [updatedCase] = await db.update(cases)
+            .set({
                 status: 'FLAGGED',
-                riskScore: mockMlResults.risk_score,
+                riskScore: mockMlResults.risk_score.toString(), // Store as string for Decimal
                 riskLevel: mockMlResults.risk_level,
-                mlInsights: mockMlResults
-            }
-        });
+                mlInsights: mockMlResults // Drizzle handles the JSON injection directly
+            })
+            .where(eq(cases.id, id))
+            .returning();
 
         // 5. 📝 AUDIT LOG (Layer 7)
-        await prisma.auditLog.create({
-            data: {
-                caseId: id,
-                action: "ML_ANALYSIS_COMPLETED",
-                details: { riskScore: mockMlResults.risk_score }
-            }
+        await db.insert(auditLogs).values({
+            caseId: id,
+            action: "ML_ANALYSIS_COMPLETED",
+            actor: "SYSTEM",
+            payload: { riskScore: mockMlResults.risk_score }
         });
 
         return res.status(200).json({
@@ -70,7 +70,7 @@ export const analyzeCase = async (req, res) => {
         });
 
     } catch (error) {
-        console.error("Analysis Error:", error);
-        return res.status(500).json({ error: "Analysis pipeline failed" });
+        console.error("Drizzle Analysis Error:", error.message);
+        return res.status(500).json({ error: "Analysis pipeline failed", details: error.message });
     }
 };

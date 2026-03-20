@@ -1,96 +1,95 @@
+import { db } from "../middlewares/dbconfig.js";
+import { cases } from "../src/db/schemas.ts";
+import { eq } from "drizzle-orm";
 
-// get all cases
+// 1. Get all cases (with transactions)
 export const getAllCases = async (req, res) => {
     try {
-        // Mocking a database call for now
-        const allcases = await prisma.cases.findMany();
+        const allCases = await db.query.cases.findMany({
+            with: { transactions: true } // Same as Prisma's 'include'
+        });
 
-        if (allcases) {
-            res.status(200).json({ message: "all cases successful ", data: allcases });
-        } else {
-            res.status(400).json({ message: "No cases found" });
-        }
+        return res.status(200).json({
+            message: "All cases retrieved successfully",
+            data: allCases
+        });
     } catch (e) {
-        res.status(500).json({ message: "Internal server error", error: e.message });
+        return res.status(500).json({ message: "Internal server error", error: e.message });
     }
 };
 
-// create a new case
+// 2. Create a new case (Direct insert)
 export const postcase = async (req, res) => {
-    const { transactions } = req.body;
     try {
-        const new_case = await prisma.cases.create({
-            data: transactions
-        })
-        return res.status(200).json({ message: "case created successfully! ", data: new_case.id })
+        // Drizzle .insert().returning() gives us the created record back
+        const [newCase] = await db.insert(cases).values({
+            status: "INGESTED"
+        }).returning({ id: cases.id });
+
+        return res.status(201).json({
+            message: "Case created successfully!",
+            data: newCase.id
+        });
     } catch (error) {
-        res.status(404).json({ message: error })
+        return res.status(400).json({ message: error.message });
     }
+};
 
-}
-
-
-// find case by id
+// 3. Find case by ID
 export const getcasebyid = async (req, res) => {
-    const caseid = req.params.id;
+    const { id } = req.params;
     try {
-        const case_details = await prisma.cases.findUnique({
-            where: { id: caseid },
-            include: { transactions: true }
-        })
-        if (case_details) {
-            return res.status(200).json({ message: "case found!", data: case_details })
+        const caseDetails = await db.query.cases.findFirst({
+            where: eq(cases.id, id),
+            with: { transactions: true }
+        });
+
+        if (!caseDetails) {
+            return res.status(404).json({ message: "Case not found" });
         }
-        else {
-            return res.status(400).json({ message: "case not found" })
-        }
+
+        return res.status(200).json({ message: "Case found!", data: caseDetails });
     } catch (error) {
-        return res.status(500).json({ error });
+        return res.status(500).json({ error: error.message });
     }
-}
+};
 
-
-
-// trigger analysis 
+// 4. Trigger Analysis (Update Status)
 export const analysecase = async (req, res) => {
-    const caseid = req.params.id;
+    const { id } = req.params;
     try {
-        const case_details = await prisma.cases.findUnique({
-            where: { id: caseid }
-        })
-        if (case_details) {
-            const response = await prisma.cases.update({
-                where: { id: caseid },
-                data: { status: "PROCESSING" }
-                // push to websocket
+        const updated = await db.update(cases)
+            .set({ status: "ANALYZING" }) // Match your Enum name exactly
+            .where(eq(cases.id, id))
+            .returning();
 
-            })
-            return res.status(200).json({ message: `case with id ${caseid} is processing` })
-
+        if (updated.length === 0) {
+            return res.status(404).json({ message: "Case not found" });
         }
+
+        return res.status(200).json({
+            message: `Case with id ${id} is now processing`,
+            data: updated[0]
+        });
     } catch (error) {
-        return res.status(500).json({ message: error });
+        return res.status(500).json({ message: error.message });
     }
-}
+};
 
-
+// 5. Delete Case
 export const deletecase = async (req, res) => {
-    const caseid = req.params.id;
+    const { id } = req.params;
     try {
-        const case_details = await prisma.cases.findUnique({
-            where: { id: caseid }
-        })
-        if (case_details) {
-            const response = await prisma.cases.deleteOne({
-                where: { id: caseid },
+        const deleted = await db.delete(cases)
+            .where(eq(cases.id, id))
+            .returning();
 
-            })
-            return res.status(200).json({ message: `case with id ${caseid} deleted` })
-
+        if (deleted.length === 0) {
+            return res.status(404).json({ message: "Case not found" });
         }
+
+        return res.status(200).json({ message: `Case with id ${id} deleted successfully` });
     } catch (error) {
-        return res.status(500).json({ message: error });
+        return res.status(500).json({ message: error.message });
     }
-}
-
-
+};

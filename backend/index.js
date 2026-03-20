@@ -1,6 +1,9 @@
-import express from "express"
-import cors from "cors"
-import caseRoutes from "./routes/caseRoutes.js"
+import express from "express";
+
+import cors from "cors";
+import caseRoutes from "./routes/caseRoutes.js";
+import ingestionRoutes from "./routes/ingestionRoutes.js";
+
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -9,19 +12,16 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Basic route
-app.get('/', (req, res) => {
-    res.send('Server is up and running!');
-});
+// Base Endpoints
+app.get('/', (req, res) => res.send('SAR Generator API is live!'));
+app.get('/health', (req, res) => res.status(200).json({ status: 'OK' }));
 
-app.use("/api/cases", caseRoutes)
+// Layer 1: Ingestion Routes
+app.use("/api/ingest", ingestionRoutes);
 
-// Health check endpoint
-app.get('/health', (req, res) => {
-    res.status(200).json({ status: 'OK' });
-});
+// Case Management & Analysis Routes
+app.use("/api/cases", caseRoutes);
 
-// Start the server
 app.listen(PORT, () => {
-    console.log(`Server listening on port ${PORT}`);
+    console.log(`🚀 Server listening on port ${PORT}`);
 });
