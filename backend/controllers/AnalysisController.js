@@ -25,7 +25,7 @@ export const analyzeCase = async (req, res) => {
 
         // 2. ⏳ SIMULATE ML PROCESSING (Update status to ANALYZING)
         await db.update(cases)
-            .set({ status: "ANALYSING" })
+            .set({ status: "ANALYZING" })
             .where(eq(cases.id, id));
 
         // Wait for 2 seconds to mimic heavy computation
@@ -43,14 +43,22 @@ export const analyzeCase = async (req, res) => {
             ]
         };
 
-        // 4. 💾 UPDATE DATABASE
-        // Drizzle .update().set() syntax
+        //  Step 4 (Update Database)
         const [updatedCase] = await db.update(cases)
             .set({
                 status: 'FLAGGED',
-                riskScore: mockMlResults.risk_score.toString(), // Store as string for Decimal
+                riskScore: mockMlResults.risk_score.toString(),
                 riskLevel: mockMlResults.risk_level,
-                mlInsights: mockMlResults // Drizzle handles the JSON injection directly
+                mlInsights: mockMlResults,
+                // REASON: Link the broken laws to the case so frontend can display them
+                violatedLaws: ["PMLA Section 3", "BSA 31 CFR"],
+                // REASON: Move the progress bar for the UI
+                pipelineStatus: {
+                    ingestion: "completed",
+                    enrichment: "completed",
+                    ml_analysis: "completed",
+                    narrative_gen: "pending"
+                }
             })
             .where(eq(cases.id, id))
             .returning();

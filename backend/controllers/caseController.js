@@ -1,6 +1,7 @@
 import { db } from "../middlewares/dbconfig.js";
-import { cases } from "../src/db/schemas.ts";
+import { cases, auditLogs } from "../src/db/schemas.ts";
 import { eq } from "drizzle-orm";
+
 
 // 1. Get all cases (with transactions)
 export const getAllCases = async (req, res) => {
@@ -91,5 +92,32 @@ export const deletecase = async (req, res) => {
         return res.status(200).json({ message: `Case with id ${id} deleted successfully` });
     } catch (error) {
         return res.status(500).json({ message: error.message });
+    }
+};
+
+
+
+// Add this new function to caseController.js
+export const updateChecklist = async (req, res) => {
+    const { id } = req.params;
+    const { checklist } = req.body; // Expecting { identity_verified: true, ... }
+
+    try {
+        const [updated] = await db.update(cases)
+            .set({ complianceChecklist: checklist })
+            .where(eq(cases.id, id))
+            .returning();
+
+        // REASON: Every human action MUST be audited for compliance
+        await db.insert(auditLogs).values({
+            caseId: id,
+            action: "CHECKLIST_UPDATED",
+            actor: "ANALYST_YASH", // In real life, get this from Auth
+            details: "Analyst updated the regulatory checklist."
+        });
+
+        return res.status(200).json({ data: updated.complianceChecklist });
+    } catch (error) {
+        return res.status(500).json({ error: error.message });
     }
 };

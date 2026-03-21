@@ -8,12 +8,12 @@
 
 | Module | Status | Notes |
 |---|---|---|
-| **Data Ingestion** (Layer 1–2) | ✅ Implemented | CSV/JSON transaction ingestion with validation & normalization |
-| **Case Management** | ✅ Implemented | Full CRUD — create, read, update, delete cases |
-| **Risk Analysis** (Layer 3–4) | ✅ Implemented (Mock) | Simulated ML pipeline with mock risk scores & pattern detection |
+| **Data Ingestion** (Layer 1–2) | ✅ Implemented & Routed | CSV/JSON transaction ingestion with validation, normalization & regulatory metadata |
+| **Case Management** | ✅ Implemented & Routed | Full CRUD — list, get by ID, delete + compliance checklist updates |
+| **Risk Analysis** (Layer 3–4) | ✅ Implemented & Routed (Mock) | Simulated ML pipeline with mock risk scores, pattern detection & violated laws |
+| **Audit Logging** (Layer 7) | ✅ Implemented & Routed | Full audit trail query — logs created during Ingestion, Analysis & Checklist flows |
 | **Evidence Linking** (Layer 5) | 🔲 Not Started | Controller file created, logic pending |
 | **Narrative Generation** (Layer 6) | 🔲 Not Started | Controller file created, LLM integration pending |
-| **Audit Logging** (Layer 7) | 🟡 Partial | Audit log creation works within Ingestion & Analysis flows |
 | **Analysis Service** | 🔲 Not Started | Service file created, business logic pending |
 | **Frontend** | 🔲 Not Started | Planned for a future phase |
 
@@ -42,9 +42,12 @@ The system follows a **7-Layer Pipeline Architecture** for processing suspicious
 | Technology | Purpose |
 |---|---|
 | **Node.js + Express 5** | Backend REST API |
-| **Prisma ORM (v7)** | Database schema, migrations, and queries |
+| **Drizzle ORM** | Database schema, migrations, and type-safe queries |
+| **Drizzle-Kit** | Schema migration tooling & SQL generation |
 | **Neon (PostgreSQL)** | Serverless cloud-hosted PostgreSQL database |
-| **@prisma/adapter-neon** | Prisma ↔ Neon DB connection adapter |
+| **@neondatabase/serverless** | Neon DB connection via WebSocket pooling |
+| **dotenv** | Environment variable management |
+| **cors** | Cross-Origin Resource Sharing middleware |
 | **nodemon** | Hot-reload during development |
 
 ---
@@ -54,42 +57,48 @@ The system follows a **7-Layer Pipeline Architecture** for processing suspicious
 ```
 SAR-GENERATOR/
 ├── backend/
-│   ├── controllers/           # Request handlers for each domain
-│   │   ├── IngestionController.js    ✅ Validates & ingests transactions
-│   │   ├── AnalysisController.js     ✅ Triggers ML analysis pipeline
-│   │   ├── caseController.js         ✅ CRUD operations for cases
-│   │   ├── AuditController.js        🟡 Stub — audit helper
-│   │   ├── EvidenceController.js     🔲 Empty — pending implementation
-│   │   └── NarrativeController.js    🔲 Empty — pending implementation
+│   ├── controllers/                  # Request handlers for each domain
+│   │   ├── IngestionController.js         ✅ Validates, normalizes & ingests transactions
+│   │   ├── AnalysisController.js          ✅ Triggers simulated ML analysis pipeline
+│   │   ├── caseController.js              ✅ CRUD + compliance checklist operations
+│   │   ├── AuditController.js             ✅ Retrieves audit trail for a case
+│   │   ├── EvidenceController.js          🔲 Empty — pending implementation
+│   │   └── NarrativeController.js         🔲 Empty — pending implementation
 │   │
 │   ├── routes/
-│   │   └── caseRoutes.js             # Express route definitions
+│   │   ├── caseRoutes.js                  # Case CRUD, analysis, audit & checklist routes
+│   │   └── ingestionRoutes.js             # Data ingestion endpoint
 │   │
 │   ├── services/
-│   │   └── analysisService.js        🔲 Empty — pending business logic
+│   │   └── analysisService.js             🔲 Empty — pending business logic
 │   │
-│   ├── middleware/
-│   │   └── dbconfig.js               # Prisma + Neon DB config & client export
+│   ├── middlewares/
+│   │   └── dbconfig.js                    # Drizzle + Neon DB config & client export
 │   │
-│   ├── prisma/
-│   │   ├── schema.prisma             # Database schema (4 models, 2 enums)
-│   │   └── migrations/               # SQL migration history
+│   ├── src/
+│   │   └── db/
+│   │       └── schemas.ts                 # Drizzle schema (4 tables, 2 enums, relations)
 │   │
-│   ├── generated/prisma/             # Auto-generated Prisma Client (gitignored)
-│   ├── utils/                        # Utility helpers (empty)
-│   ├── index.js                      # Express app entry point
-│   ├── prisma.config.ts              # Prisma CLI configuration
-│   ├── package.json                  # Dependencies & scripts
-│   └── .env                          # Environment variables (DATABASE_URL)
+│   ├── drizzle/
+│   │   ├── 0000_stormy_mandroid.sql       # Initial migration SQL
+│   │   └── meta/                          # Drizzle migration metadata
+│   │
+│   ├── generated/                         # Auto-generated files (gitignored)
+│   ├── utils/                             # Utility helpers (empty)
+│   ├── index.js                           # Express app entry point
+│   ├── drizzle.config.ts                  # Drizzle-Kit CLI configuration
+│   ├── package.json                       # Dependencies & scripts
+│   └── .env                               # Environment variables (DATABASE_URL)
 │
-└── .gitignore
+├── .gitignore
+└── README.md
 ```
 
 ---
 
 ## 📊 Database Schema
 
-The database is powered by **PostgreSQL (Neon)** and managed through **Prisma ORM**. Below is a summary of all models and enums.
+The database is powered by **PostgreSQL (Neon)** and managed through **Drizzle ORM**. Below is a summary of all tables, enums, and relations defined in `src/db/schemas.ts`.
 
 ### Entity Relationship Diagram
 
@@ -100,24 +109,30 @@ erDiagram
     Case ||--o{ AuditLog : "has many"
 
     Case {
-        String id PK
+        UUID id PK
         CaseStatus status
         Decimal riskScore
         RiskLevel riskLevel
         Json mlInsights
+        Json customerDetails
+        String jurisdiction
+        StringArray violatedLaws
+        Timestamp deadlineDate
+        Json pipelineStatus
+        Json complianceChecklist
         String summaryLlm
         String assignedTo
-        DateTime createdAt
-        DateTime updatedAt
+        Timestamp createdAt
+        Timestamp updatedAt
     }
 
     Transaction {
-        String id PK
-        String caseId FK
+        UUID id PK
+        UUID caseId FK
         String externalTxId
         Decimal amount
         String currency
-        DateTime timestamp
+        Timestamp timestamp
         Json senderDetails
         Json receiverDetails
         String category
@@ -125,106 +140,116 @@ erDiagram
     }
 
     Evidence {
-        String id PK
-        String caseId FK
+        UUID id PK
+        UUID caseId FK
         String evidenceType
         String description
         StringArray linkedTxIds
-        DateTime createdAt
+        Timestamp createdAt
     }
 
     AuditLog {
-        String id PK
-        String caseId FK
+        UUID id PK
+        UUID caseId FK
         String action
         String actor
         Json payload
-        DateTime timestamp
+        String details
+        Timestamp timestamp
     }
 ```
 
-### Models
+### Tables
 
-#### `Case`
+#### `cases`
 The central entity representing a suspicious activity investigation.
 
-| Field | Type | Default | Description |
+| Column | Type | Default | Description |
 |---|---|---|---|
-| `id` | `String` (UUID) | Auto-generated | Primary key |
-| `status` | `CaseStatus` | `INGESTED` | Current pipeline stage |
-| `riskScore` | `Decimal(3,2)` | `null` | ML-computed risk score (e.g., `0.94`) |
-| `riskLevel` | `RiskLevel` | `LOW` | Categorical risk classification |
-| `mlInsights` | `Json` | `null` | Smurfing/funneling patterns, SHAP values, graph data |
-| `summaryLlm` | `Text` | `null` | AI-generated SAR narrative |
-| `assignedTo` | `String` | `null` | Analyst user ID |
-| `createdAt` | `DateTime` | `now()` | Record creation timestamp |
-| `updatedAt` | `DateTime` | Auto | Last modification timestamp |
+| `id` | `UUID` | `gen_random_uuid()` | Primary key |
+| `status` | `case_status` enum | `INGESTED` | Current pipeline stage |
+| `risk_score` | `Decimal(3,2)` | `null` | ML-computed risk score (e.g., `0.94`) |
+| `risk_level` | `risk_level` enum | `LOW` | Categorical risk classification |
+| `ml_insights` | `JSONB` | `null` | Smurfing/funneling patterns, SHAP values, graph data |
+| `customer_details` | `JSONB` | `null` | Customer metadata for rapid development |
+| `jurisdiction` | `Text` | `null` | Regulatory jurisdiction (e.g., `"FIU-IND (India)"`) |
+| `violated_laws` | `Text[]` | `null` | Array of violated law references (e.g., `"PMLA Section 3"`) |
+| `deadline_date` | `Timestamp` | `null` | 30-day regulatory filing deadline |
+| `pipeline_status` | `JSONB` | `{ ingestion, enrichment, ml_analysis, narrative_gen }` | Pipeline progress tracker for UI |
+| `compliance_checklist` | `JSONB` | `{ identity_verified, linked_tx_verified, ... }` | Analyst review checklist |
+| `summary_llm` | `Text` | `null` | AI-generated SAR narrative |
+| `assigned_to` | `Text` | `null` | Analyst user ID |
+| `created_at` | `Timestamp` | `now()` | Record creation timestamp |
+| `updated_at` | `Timestamp` | `now()` | Last modification timestamp |
 
-**Relationships:** Has many `Transaction[]`, `Evidence[]`, `AuditLog[]`
+**Relationships:** Has many `transactions`, `evidence`, `auditLogs`
 
 ---
 
-#### `Transaction`
+#### `transactions`
 Individual financial transactions linked to a case.
 
-| Field | Type | Default | Description |
+| Column | Type | Default | Description |
 |---|---|---|---|
-| `id` | `String` (UUID) | Auto-generated | Primary key |
-| `caseId` | `String` | — | Foreign key → `Case.id` (cascade delete) |
-| `externalTxId` | `String` | `null` | Original ID from bank CSV/API |
+| `id` | `UUID` | `gen_random_uuid()` | Primary key |
+| `case_id` | `UUID` | — | Foreign key → `cases.id` (cascade delete) |
+| `external_tx_id` | `Text` | `null` | Original ID from bank CSV/API |
 | `amount` | `Decimal(15,2)` | — | Transaction amount |
-| `currency` | `String` | `"INR"` | Currency code |
-| `timestamp` | `DateTime` | — | When the transaction occurred |
-| `senderDetails` | `Json` | — | `{ acc_id, name, country }` |
-| `receiverDetails` | `Json` | — | `{ acc_id, name, country }` |
-| `category` | `String` | `null` | e.g., "Wire Transfer", "ATM Withdrawal" |
-| `isFlagged` | `Boolean` | `false` | Whether the transaction is flagged as suspicious |
+| `currency` | `Text` | `"INR"` | Currency code |
+| `timestamp` | `Timestamp` | — | When the transaction occurred |
+| `sender_details` | `JSONB` | — | `{ acc_id, name, country }` |
+| `receiver_details` | `JSONB` | — | `{ acc_id, name, country }` |
+| `category` | `Text` | `null` | e.g., "Wire Transfer", "ATM Withdrawal" |
+| `is_flagged` | `Boolean` | `false` | Whether the transaction is flagged as suspicious |
 
 ---
 
-#### `Evidence`
+#### `evidence`
 Detected patterns and evidence items linked to a case.
 
-| Field | Type | Default | Description |
+| Column | Type | Default | Description |
 |---|---|---|---|
-| `id` | `String` (UUID) | Auto-generated | Primary key |
-| `caseId` | `String` | — | Foreign key → `Case.id` (cascade delete) |
-| `evidenceType` | `String` | — | e.g., `"SMURFING_PATTERN"`, `"VELOCITY_SPIKE"` |
-| `description` | `String` | — | e.g., "108 small transactions in 24 hours" |
-| `linkedTxIds` | `String[]` | — | Array of Transaction IDs that prove this evidence |
-| `createdAt` | `DateTime` | `now()` | Record creation timestamp |
+| `id` | `UUID` | `gen_random_uuid()` | Primary key |
+| `case_id` | `UUID` | — | Foreign key → `cases.id` (cascade delete) |
+| `evidence_type` | `Text` | — | e.g., `"SMURFING_PATTERN"`, `"VELOCITY_SPIKE"` |
+| `description` | `Text` | — | e.g., "108 small transactions in 24 hours" |
+| `linked_tx_ids` | `Text[]` | — | Array of Transaction IDs that prove this evidence |
+| `created_at` | `Timestamp` | `now()` | Record creation timestamp |
 
 ---
 
-#### `AuditLog`
+#### `audit_logs`
 Immutable log of all system and analyst actions.
 
-| Field | Type | Default | Description |
+| Column | Type | Default | Description |
 |---|---|---|---|
-| `id` | `String` (UUID) | Auto-generated | Primary key |
-| `caseId` | `String` | — | Foreign key → `Case.id` |
-| `action` | `String` | — | e.g., `"STATUS_CHANGE"`, `"ML_ANALYSIS_COMPLETED"` |
-| `actor` | `String` | — | `"SYSTEM"` or analyst name |
-| `payload` | `Json` | `null` | Snapshot of what changed |
-| `timestamp` | `DateTime` | `now()` | When the action occurred |
+| `id` | `UUID` | `gen_random_uuid()` | Primary key |
+| `case_id` | `UUID` | — | Foreign key → `cases.id` |
+| `action` | `Text` | — | e.g., `"CASE_INGESTED"`, `"ML_ANALYSIS_COMPLETED"` |
+| `actor` | `Text` | — | `"SYSTEM"` or analyst name |
+| `payload` | `JSONB` | `null` | Snapshot of what changed |
+| `details` | `Text` | `null` | Human-readable description of the action |
+| `timestamp` | `Timestamp` | `now()` | When the action occurred |
 
 ---
 
 ### Enums
 
-#### `CaseStatus`
+#### `case_status`
 Tracks the pipeline lifecycle of a case.
 
 | Value | Description |
 |---|---|
 | `INGESTED` | Raw data has been received and stored |
-| `ENRICHING` | Data is being enriched with external sources |
 | `ANALYZING` | ML models are processing the data |
-| `GENERATING_NARRATIVE` | LLM is writing the SAR narrative |
-| `COMPLETED` | Full pipeline has finished |
+| `FLAGGED` | ML analysis flagged the case as suspicious |
+| `DRAFT` | SAR narrative draft has been generated |
+| `IN_REVIEW` | Analyst is reviewing the case |
+| `APPROVED` | Case has been approved for filing |
+| `FILED` | SAR has been filed with the regulatory body |
 | `FAILED` | An error occurred during processing |
 
-#### `RiskLevel`
+#### `risk_level`
 Categorical risk classification for a case.
 
 | Value |
@@ -258,13 +283,10 @@ npm install
 #    Create a .env file in /backend with:
 #    DATABASE_URL="postgresql://<user>:<password>@<host>/<database>?sslmode=require"
 
-# 4. Run Prisma migrations
-npx prisma migrate dev
+# 4. Run Drizzle migrations
+npx drizzle-kit push
 
-# 5. Generate the Prisma client
-npx prisma generate
-
-# 6. Start the development server
+# 5. Start the development server
 npm run start
 ```
 
@@ -279,33 +301,36 @@ curl http://localhost:3000/health
 
 # Root endpoint
 curl http://localhost:3000/
-# → "Server is up and running!"
+# → "SAR Generator API is live!"
 ```
 
 ---
 
 ## 📡 API Endpoints
 
-### Currently Active
+### Base Endpoints
 
-| Method | Endpoint | Controller | Description |
+| Method | Endpoint | Handler | Description |
 |---|---|---|---|
 | `GET` | `/` | `index.js` | Server status message |
 | `GET` | `/health` | `index.js` | Health check |
-| `GET` | `/api/cases` | `caseController.getAllCases` | Retrieve all cases |
 
-### Implemented (Not Yet Routed)
+### Layer 1: Ingestion (`/api/ingest`)
 
-These controllers exist but are **not yet wired** into `routes/`:
+| Method | Endpoint | Controller | Description |
+|---|---|---|---|
+| `POST` | `/api/ingest` | `IngestionController.ingestData` | Validates, normalizes transactions & creates a new case with regulatory metadata |
 
-| Controller | Function | Description |
-|---|---|---|
-| `IngestionController` | `ingestData` | Validates, normalizes, and stores transactions as a new case |
-| `AnalysisController` | `analyzeCase` | Triggers mock ML analysis, updates risk score & insights |
-| `caseController` | `postcase` | Create a new case |
-| `caseController` | `getcasebyid` | Find a case by ID with transactions |
-| `caseController` | `analysecase` | Trigger analysis (status → PROCESSING) |
-| `caseController` | `deletecase` | Delete a case by ID |
+### Case Management & Analysis (`/api/cases`)
+
+| Method | Endpoint | Controller | Description |
+|---|---|---|---|
+| `GET` | `/api/cases` | `caseController.getAllCases` | Retrieve all cases (with transactions) |
+| `GET` | `/api/cases/:id` | `caseController.getcasebyid` | Find a case by ID (with transactions) |
+| `DELETE` | `/api/cases/:id` | `caseController.deletecase` | Delete a case by ID |
+| `POST` | `/api/cases/:id/analyze` | `AnalysisController.analyzeCase` | Trigger simulated ML analysis pipeline |
+| `GET` | `/api/cases/:id/audit` | `AuditController.getAuditTrail` | Retrieve audit trail for a case (sorted by latest) |
+| `PATCH` | `/api/cases/:id/checklist` | `caseController.updateChecklist` | Update the compliance checklist for a case |
 
 ### Planned (Not Yet Implemented)
 
@@ -313,13 +338,19 @@ These controllers exist but are **not yet wired** into `routes/`:
 |---|---|
 | `EvidenceController` | Link evidence items (patterns, anomalies) to cases |
 | `NarrativeController` | Generate SAR narratives using LLM integration |
-| `AuditController` | Query and manage the full audit trail |
 
 ---
 
 ## 🗺️ Roadmap
 
-- [ ] Wire all existing controllers to Express routes
+- [x] Set up Drizzle ORM with Neon PostgreSQL
+- [x] Define database schema with enums and relations
+- [x] Implement data ingestion with regulatory metadata
+- [x] Implement case CRUD operations
+- [x] Implement mock ML analysis pipeline
+- [x] Wire all existing controllers to Express routes
+- [x] Implement audit trail query endpoint
+- [x] Add compliance checklist update endpoint
 - [ ] Implement Evidence linking logic
 - [ ] Integrate LLM (e.g., OpenAI / Gemini) for narrative generation
 - [ ] Build the Analysis Service with real ML model calls
