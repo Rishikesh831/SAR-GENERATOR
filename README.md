@@ -1,6 +1,6 @@
 # 🛡️ Explainable SAR Narrative Generator
 
-> An AI-powered backend system that ingests financial transaction data, runs ML-based risk analysis, and generates **Suspicious Activity Report (SAR)** narratives with full explainability and audit trails.
+> An AI-powered backend system that ingests financial transaction data, runs ML-based risk analysis, extracts evidence, and generates **Suspicious Activity Report (SAR)** narratives with full explainability and audit trails.
 
 ---
 
@@ -11,9 +11,9 @@
 | **Data Ingestion** (Layer 1–2) | ✅ Implemented & Routed | CSV/JSON transaction ingestion with validation, normalization & regulatory metadata |
 | **Case Management** | ✅ Implemented & Routed | Full CRUD — list, get by ID, delete + compliance checklist updates |
 | **Risk Analysis** (Layer 3–4) | ✅ Implemented & Routed (Mock) | Simulated ML pipeline with mock risk scores, pattern detection & violated laws |
-| **Audit Logging** (Layer 7) | ✅ Implemented & Routed | Full audit trail query — logs created during Ingestion, Analysis & Checklist flows |
-| **Evidence Linking** (Layer 5) | 🔲 Not Started | Controller file created, logic pending |
-| **Narrative Generation** (Layer 6) | 🔲 Not Started | Controller file created, LLM integration pending |
+| **Evidence Linking** (Layer 5) | ✅ Implemented & Routed | Extracts graph & typology evidence from ML insights, validates active patterns, status → `DRAFT` |
+| **Narrative Generation** (Layer 6) | ✅ Implemented & Routed (Mock) | Compliance-gated mock SAR generation, saves narrative & status → `IN_REVIEW` |
+| **Audit Logging** (Layer 7) | ✅ Implemented & Routed | Full audit trail query — logs created during Ingestion, Analysis, Evidence, Narrative & Checklist flows |
 | **Analysis Service** | 🔲 Not Started | Service file created, business logic pending |
 | **Frontend** | 🔲 Not Started | Planned for a future phase |
 
@@ -35,6 +35,20 @@ The system follows a **7-Layer Pipeline Architecture** for processing suspicious
 └─────────────────────────────────────────────────────────┘
 ```
 
+### Pipeline Flow
+
+```
+Ingest → Analyze → Extract Evidence → [Analyst Approves Checklist] → Generate Narrative → IN_REVIEW
+```
+
+Each step is gated and audited:
+
+1. **Ingest** — Creates case + transactions with regulatory metadata (status: `INGESTED`)
+2. **Analyze** — Simulated ML scoring, flags patterns, sets violated laws (status: `FLAGGED`)
+3. **Evidence** — Links graph/typology evidence to the case (status: `DRAFT`)
+4. **Checklist** — Analyst verifies identity, transactions, and evidence (human gate)
+5. **Narrative** — Blocked until `evidence_attached` is `true`, then generates SAR draft (status: `IN_REVIEW`)
+
 ---
 
 ## 🛠️ Tech Stack
@@ -49,6 +63,7 @@ The system follows a **7-Layer Pipeline Architecture** for processing suspicious
 | **dotenv** | Environment variable management |
 | **cors** | Cross-Origin Resource Sharing middleware |
 | **nodemon** | Hot-reload during development |
+| **tsx** | TypeScript execution for schema files |
 
 ---
 
@@ -62,11 +77,11 @@ SAR-GENERATOR/
 │   │   ├── AnalysisController.js          ✅ Triggers simulated ML analysis pipeline
 │   │   ├── caseController.js              ✅ CRUD + compliance checklist operations
 │   │   ├── AuditController.js             ✅ Retrieves audit trail for a case
-│   │   ├── EvidenceController.js          🔲 Empty — pending implementation
-│   │   └── NarrativeController.js         🔲 Empty — pending implementation
+│   │   ├── EvidenceController.js          ✅ Extracts graph & typology evidence
+│   │   └── NarrativeController.js         ✅ Compliance-gated mock SAR narrative generation
 │   │
 │   ├── routes/
-│   │   ├── caseRoutes.js                  # Case CRUD, analysis, audit & checklist routes
+│   │   ├── caseRoutes.js                  # Case CRUD, analysis, evidence, narrative & audit routes
 │   │   └── ingestionRoutes.js             # Data ingestion endpoint
 │   │
 │   ├── services/
@@ -77,7 +92,7 @@ SAR-GENERATOR/
 │   │
 │   ├── src/
 │   │   └── db/
-│   │       └── schemas.ts                 # Drizzle schema (4 tables, 2 enums, relations)
+│   │       └── schemas.ts                 # Drizzle schema (4 tables, 2 enums, full relations)
 │   │
 │   ├── drizzle/
 │   │   ├── 0000_stormy_mandroid.sql       # Initial migration SQL
@@ -211,8 +226,8 @@ Detected patterns and evidence items linked to a case.
 |---|---|---|---|
 | `id` | `UUID` | `gen_random_uuid()` | Primary key |
 | `case_id` | `UUID` | — | Foreign key → `cases.id` (cascade delete) |
-| `evidence_type` | `Text` | — | e.g., `"SMURFING_PATTERN"`, `"VELOCITY_SPIKE"` |
-| `description` | `Text` | — | e.g., "108 small transactions in 24 hours" |
+| `evidence_type` | `Text` | — | e.g., `"NETWORK_CHAIN"`, `"STRUCTURING_SMURFING"`, `"VELOCITY_SPIKE"` |
+| `description` | `Text` | — | e.g., "Detected suspicious flow across 3 connected entity nodes." |
 | `linked_tx_ids` | `Text[]` | — | Array of Transaction IDs that prove this evidence |
 | `created_at` | `Timestamp` | `now()` | Record creation timestamp |
 
@@ -225,8 +240,8 @@ Immutable log of all system and analyst actions.
 |---|---|---|---|
 | `id` | `UUID` | `gen_random_uuid()` | Primary key |
 | `case_id` | `UUID` | — | Foreign key → `cases.id` |
-| `action` | `Text` | — | e.g., `"CASE_INGESTED"`, `"ML_ANALYSIS_COMPLETED"` |
-| `actor` | `Text` | — | `"SYSTEM"` or analyst name |
+| `action` | `Text` | — | e.g., `"CASE_INGESTED"`, `"ML_ANALYSIS_COMPLETED"`, `"EVIDENCE_GENERATED"`, `"NARRATIVE_GENERATED"` |
+| `actor` | `Text` | — | `"SYSTEM"`, `"LLM_LLAMA_3_1"`, or analyst name |
 | `payload` | `JSONB` | `null` | Snapshot of what changed |
 | `details` | `Text` | `null` | Human-readable description of the action |
 | `timestamp` | `Timestamp` | `now()` | When the action occurred |
@@ -243,8 +258,8 @@ Tracks the pipeline lifecycle of a case.
 | `INGESTED` | Raw data has been received and stored |
 | `ANALYZING` | ML models are processing the data |
 | `FLAGGED` | ML analysis flagged the case as suspicious |
-| `DRAFT` | SAR narrative draft has been generated |
-| `IN_REVIEW` | Analyst is reviewing the case |
+| `DRAFT` | Evidence extracted, awaiting analyst review |
+| `IN_REVIEW` | SAR narrative generated, analyst is reviewing |
 | `APPROVED` | Case has been approved for filing |
 | `FILED` | SAR has been filed with the regulatory body |
 | `FAILED` | An error occurred during processing |
@@ -331,13 +346,36 @@ curl http://localhost:3000/
 | `POST` | `/api/cases/:id/analyze` | `AnalysisController.analyzeCase` | Trigger simulated ML analysis pipeline |
 | `GET` | `/api/cases/:id/audit` | `AuditController.getAuditTrail` | Retrieve audit trail for a case (sorted by latest) |
 | `PATCH` | `/api/cases/:id/checklist` | `caseController.updateChecklist` | Update the compliance checklist for a case |
+| `POST` | `/api/cases/:id/evidence` | `EvidenceController.extractEvidence` | Extract & link graph/typology evidence from ML insights |
+| `POST` | `/api/cases/:id/generate-narrative` | `NarrativeController.generateNarrative` | Generate SAR narrative (compliance-gated, requires `evidence_attached: true`) |
 
-### Planned (Not Yet Implemented)
+---
 
-| Controller | Purpose |
-|---|---|
-| `EvidenceController` | Link evidence items (patterns, anomalies) to cases |
-| `NarrativeController` | Generate SAR narratives using LLM integration |
+## 🔄 Full Pipeline Walkthrough
+
+Here's the complete end-to-end flow using the API:
+
+```bash
+# Step 1: Ingest transaction data → Creates a new Case (INGESTED)
+POST /api/ingest
+Body: { "transactions": [...], "customerMetadata": {...} }
+
+# Step 2: Trigger ML Analysis → Scores risk, detects patterns (FLAGGED)
+POST /api/cases/:id/analyze
+
+# Step 3: Extract Evidence → Links graph & typology evidence (DRAFT)
+POST /api/cases/:id/evidence
+
+# Step 4: Analyst approves checklist (Human-in-the-loop gate)
+PATCH /api/cases/:id/checklist
+Body: { "checklist": { "identity_verified": true, "evidence_attached": true, ... } }
+
+# Step 5: Generate SAR Narrative → Mock LLM output (IN_REVIEW)
+POST /api/cases/:id/generate-narrative
+
+# Audit: View full audit trail at any point
+GET /api/cases/:id/audit
+```
 
 ---
 
@@ -351,8 +389,9 @@ curl http://localhost:3000/
 - [x] Wire all existing controllers to Express routes
 - [x] Implement audit trail query endpoint
 - [x] Add compliance checklist update endpoint
-- [ ] Implement Evidence linking logic
-- [ ] Integrate LLM (e.g., OpenAI / Gemini) for narrative generation
+- [x] Implement Evidence extraction & linking logic
+- [x] Implement mock SAR Narrative generation with compliance gate
+- [ ] Integrate real LLM (e.g., Llama 3.1 / Gemini / OpenAI) for narrative generation
 - [ ] Build the Analysis Service with real ML model calls
 - [ ] Add authentication & authorization middleware
 - [ ] Build the frontend dashboard

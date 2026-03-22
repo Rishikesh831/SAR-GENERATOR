@@ -36,10 +36,18 @@ export const analyzeCase = async (req, res) => {
             risk_score: 0.94,
             risk_level: "HIGH",
             alerts: [
-                { type: "STRUCTURING_SMURFING", confidence: 0.97, explanation: "Pattern detected..." }
+                { type: "STRUCTURING_SMURFING", explanation: "Pattern detected: 47 micro-deposits." }
             ],
             graph_patterns: [
-                { pattern_type: "smurfing", account_id: "A756", risk_score: 0.97 }
+                {
+                    pattern_type: "smurfing",
+                    // ADD NODES HERE TO GET 'TRUE'
+                    nodes: ["A756", "B202", "C990"],
+                    links: [
+                        { source: "A756", target: "B202" },
+                        { source: "B202", target: "C990" }
+                    ]
+                }
             ]
         };
 

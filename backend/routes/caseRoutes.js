@@ -8,6 +8,8 @@ import {
 import { analyzeCase } from "../controllers/AnalysisController.js"; // The simulated AI logic
 import { getAuditTrail } from "../controllers/AuditController.js";
 import { updateChecklist } from "../controllers/caseController.js";
+import { extractEvidence } from "../controllers/EvidenceController.js";
+import { generateNarrative } from "../controllers/NarrativeController.js";
 
 const router = express.Router();
 
@@ -22,5 +24,9 @@ router.post("/:id/analyze", analyzeCase);
 
 router.get("/:id/audit", getAuditTrail); // NEW: For the history timeline
 router.patch("/:id/checklist", updateChecklist); // NEW: For the approval checkboxes
+
+router.post("/:id/evidence", extractEvidence);
+
+router.post("/:id/generate-narrative", generateNarrative);
 
 export default router;

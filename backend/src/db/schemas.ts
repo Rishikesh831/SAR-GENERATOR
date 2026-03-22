@@ -90,15 +90,32 @@ export const auditLogs = pgTable("audit_logs", {
 });
 
 // RELATIONS
+// 1. Update Cases Relations
 export const casesRelations = relations(cases, ({ many }) => ({
     transactions: many(transactions),
-    evidence: many(evidence),
+    evidence: many(evidence), // <--- THIS WAS LIKELY MISSING OR MISCONFIGURED
     auditLogs: many(auditLogs),
+}));
+
+// 2. You also need the Inverse Relations (One-to-One back to Case)
+// This tells Drizzle how to "find" the case from an evidence ID
+export const evidenceRelations = relations(evidence, ({ one }) => ({
+    case: one(cases, {
+        fields: [evidence.caseId],
+        references: [cases.id],
+    }),
 }));
 
 export const transactionsRelations = relations(transactions, ({ one }) => ({
     case: one(cases, {
         fields: [transactions.caseId],
+        references: [cases.id],
+    }),
+}));
+
+export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
+    case: one(cases, {
+        fields: [auditLogs.caseId],
         references: [cases.id],
     }),
 }));
