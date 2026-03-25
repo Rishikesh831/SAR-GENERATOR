@@ -1,6 +1,6 @@
 # 🛡️ Explainable SAR Narrative Generator
 
-> An AI-powered backend system that ingests financial transaction data, runs ML-based risk analysis, extracts evidence, and generates **Suspicious Activity Report (SAR)** narratives with full explainability and audit trails.
+> An AI-powered backend system that ingests financial transaction data, runs ML-based risk analysis, extracts evidence, and generates **Suspicious Activity Report (SAR)** narratives with full explainability and audit trails — featuring **real-time WebSocket updates** and **background job processing**.
 
 ---
 
@@ -12,8 +12,11 @@
 | **Case Management** | ✅ Implemented & Routed | Full CRUD — list, get by ID, delete + compliance checklist updates |
 | **Risk Analysis** (Layer 3–4) | ✅ Implemented & Routed (Mock) | Simulated ML pipeline with mock risk scores, pattern detection & violated laws |
 | **Evidence Linking** (Layer 5) | ✅ Implemented & Routed | Extracts graph & typology evidence from ML insights, validates active patterns, status → `DRAFT` |
-| **Narrative Generation** (Layer 6) | ✅ Implemented & Routed (Mock) | Compliance-gated mock SAR generation, saves narrative & status → `IN_REVIEW` |
+| **Narrative Generation** (Layer 6) | ✅ Implemented & Routed (Queue-based) | Compliance-gated, queued via **BullMQ + Redis**, processed by background worker, real-time result via **Socket.IO** |
 | **Audit Logging** (Layer 7) | ✅ Implemented & Routed | Full audit trail query — logs created during Ingestion, Analysis, Evidence, Narrative & Checklist flows |
+| **Background Worker** | ✅ Implemented | BullMQ worker auto-processes narrative jobs with retry & exponential backoff |
+| **Real-Time Updates** | ✅ Implemented | Socket.IO broadcasts `narrative_ready` events to analysts on case rooms |
+| **Docker Support** | ✅ Implemented | Dockerfile for containerized deployment |
 | **Analysis Service** | 🔲 Not Started | Service file created, business logic pending |
 | **Frontend** | 🔲 Not Started | Planned for a future phase |
 
@@ -21,7 +24,7 @@
 
 ## 🏗️ Architecture Overview
 
-The system follows a **7-Layer Pipeline Architecture** for processing suspicious financial activities:
+The system follows a **7-Layer Pipeline Architecture** for processing suspicious financial activities, enhanced with an **asynchronous job queue** and **real-time WebSocket notifications**:
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -32,13 +35,16 @@ The system follows a **7-Layer Pipeline Architecture** for processing suspicious
 │ (CSV)   │ (KYC/AML)│ (ML/AI)  │ (Link)   │  (LLM)      │
 ├─────────┴──────────┴──────────┴──────────┴──────────────┤
 │                   Layer 7: Audit Trail                  │
+├─────────────────────────────────────────────────────────┤
+│  ⚡ BullMQ Worker (Redis)  │  🔌 Socket.IO (Real-time) │
 └─────────────────────────────────────────────────────────┘
 ```
 
 ### Pipeline Flow
 
 ```
-Ingest → Analyze → Extract Evidence → [Analyst Approves Checklist] → Generate Narrative → IN_REVIEW
+Ingest → Analyze → Extract Evidence → [Analyst Approves Checklist] → Queue Narrative Job →
+  ↳ BullMQ Worker generates narrative → DB Update → Socket.IO emits 'narrative_ready' → IN_REVIEW
 ```
 
 Each step is gated and audited:
@@ -47,7 +53,9 @@ Each step is gated and audited:
 2. **Analyze** — Simulated ML scoring, flags patterns, sets violated laws (status: `FLAGGED`)
 3. **Evidence** — Links graph/typology evidence to the case (status: `DRAFT`)
 4. **Checklist** — Analyst verifies identity, transactions, and evidence (human gate)
-5. **Narrative** — Blocked until `evidence_attached` is `true`, then generates SAR draft (status: `IN_REVIEW`)
+5. **Narrative** — Blocked until `evidence_attached` is `true`, then queues job (status: `IN_QUEUE`)
+6. **Worker** — Background worker picks up job, generates narrative, updates DB (status: `IN_REVIEW`)
+7. **Real-time** — Socket.IO emits `narrative_ready` to all analysts watching the case room
 
 ---
 
@@ -60,10 +68,15 @@ Each step is gated and audited:
 | **Drizzle-Kit** | Schema migration tooling & SQL generation |
 | **Neon (PostgreSQL)** | Serverless cloud-hosted PostgreSQL database |
 | **@neondatabase/serverless** | Neon DB connection via WebSocket pooling |
+| **BullMQ** | Redis-backed job queue for background narrative generation |
+| **ioredis** | Redis client for BullMQ and job queue connectivity |
+| **Socket.IO** | Real-time WebSocket communication for live case updates |
+| **Helmet** | HTTP security headers middleware |
 | **dotenv** | Environment variable management |
 | **cors** | Cross-Origin Resource Sharing middleware |
 | **nodemon** | Hot-reload during development |
 | **tsx** | TypeScript execution for schema files |
+| **Docker** | Containerized deployment |
 
 ---
 
@@ -78,7 +91,7 @@ SAR-GENERATOR/
 │   │   ├── caseController.js              ✅ CRUD + compliance checklist operations
 │   │   ├── AuditController.js             ✅ Retrieves audit trail for a case
 │   │   ├── EvidenceController.js          ✅ Extracts graph & typology evidence
-│   │   └── NarrativeController.js         ✅ Compliance-gated mock SAR narrative generation
+│   │   └── NarrativeController.js         ✅ Compliance-gated, queues job via BullMQ
 │   │
 │   ├── routes/
 │   │   ├── caseRoutes.js                  # Case CRUD, analysis, evidence, narrative & audit routes
@@ -88,7 +101,11 @@ SAR-GENERATOR/
 │   │   └── analysisService.js             🔲 Empty — pending business logic
 │   │
 │   ├── middlewares/
-│   │   └── dbconfig.js                    # Drizzle + Neon DB config & client export
+│   │   ├── dbconfig.js                    # Drizzle + Neon DB config & client export
+│   │   └── redis.js                       # ioredis connection config for BullMQ
+│   │
+│   ├── utils/
+│   │   └── socket.js                      # Socket.IO initialization & singleton accessor
 │   │
 │   ├── src/
 │   │   └── db/
@@ -98,12 +115,13 @@ SAR-GENERATOR/
 │   │   ├── 0000_stormy_mandroid.sql       # Initial migration SQL
 │   │   └── meta/                          # Drizzle migration metadata
 │   │
-│   ├── generated/                         # Auto-generated files (gitignored)
-│   ├── utils/                             # Utility helpers (empty)
-│   ├── index.js                           # Express app entry point
+│   ├── worker.js                          # BullMQ background worker for narrative generation
+│   ├── index.js                           # Express + HTTP + Socket.IO entry point
+│   ├── Dockerfile                         # Docker container config (Node 20 Alpine)
+│   ├── .dockerignore                      # Docker build exclusions
 │   ├── drizzle.config.ts                  # Drizzle-Kit CLI configuration
 │   ├── package.json                       # Dependencies & scripts
-│   └── .env                               # Environment variables (DATABASE_URL)
+│   └── .env                               # Environment variables (DATABASE_URL, REDIS_HOST, etc.)
 │
 ├── .gitignore
 └── README.md
@@ -240,8 +258,8 @@ Immutable log of all system and analyst actions.
 |---|---|---|---|
 | `id` | `UUID` | `gen_random_uuid()` | Primary key |
 | `case_id` | `UUID` | — | Foreign key → `cases.id` |
-| `action` | `Text` | — | e.g., `"CASE_INGESTED"`, `"ML_ANALYSIS_COMPLETED"`, `"EVIDENCE_GENERATED"`, `"NARRATIVE_GENERATED"` |
-| `actor` | `Text` | — | `"SYSTEM"`, `"LLM_LLAMA_3_1"`, or analyst name |
+| `action` | `Text` | — | e.g., `"CASE_INGESTED"`, `"ML_ANALYSIS_COMPLETED"`, `"PUSHED TO QUEUE"`, `"NARRATIVE_GENERATED"` |
+| `actor` | `Text` | — | `"SYSTEM"`, `"SYSTEM_WORKER_LLAMA"`, or analyst name |
 | `payload` | `JSONB` | `null` | Snapshot of what changed |
 | `details` | `Text` | `null` | Human-readable description of the action |
 | `timestamp` | `Timestamp` | `now()` | When the action occurred |
@@ -260,6 +278,7 @@ Tracks the pipeline lifecycle of a case.
 | `FLAGGED` | ML analysis flagged the case as suspicious |
 | `DRAFT` | Evidence extracted, awaiting analyst review |
 | `IN_REVIEW` | SAR narrative generated, analyst is reviewing |
+| `IN_QUEUE` | Narrative job queued in BullMQ, awaiting worker processing |
 | `APPROVED` | Case has been approved for filing |
 | `FILED` | SAR has been filed with the regulatory body |
 | `FAILED` | An error occurred during processing |
@@ -283,6 +302,8 @@ Categorical risk classification for a case.
 - **Node.js** v18+
 - **npm** v9+
 - A **Neon** PostgreSQL database (or any PostgreSQL instance)
+- **Redis** server (local or cloud — required for BullMQ job queue)
+- **Docker** (optional, for containerized deployment)
 
 ### Installation
 
@@ -297,25 +318,40 @@ npm install
 # 3. Set up environment variables
 #    Create a .env file in /backend with:
 #    DATABASE_URL="postgresql://<user>:<password>@<host>/<database>?sslmode=require"
+#    REDIS_HOST="127.0.0.1"   (or "redis" if using Docker Compose)
+#    REDIS_PORT=6379
 
-# 4. Run Drizzle migrations
+# 4. Start Redis (if running locally)
+redis-server
+
+# 5. Run Drizzle migrations
 npx drizzle-kit push
 
-# 5. Start the development server
+# 6. Start the development server
 npm run start
 ```
 
-The server will be running at `http://localhost:3000`.
+The server will be running at `http://localhost:5000`.
+
+### Docker Deployment
+
+```bash
+# Build the Docker image
+docker build -t sar-generator-backend ./backend
+
+# Run the container
+docker run -p 5000:3001 --env-file ./backend/.env sar-generator-backend
+```
 
 ### Verify It Works
 
 ```bash
 # Health check
-curl http://localhost:3000/health
+curl http://localhost:5000/health
 # → { "status": "OK" }
 
 # Root endpoint
-curl http://localhost:3000/
+curl http://localhost:5000/
 # → "SAR Generator API is live!"
 ```
 
@@ -347,7 +383,64 @@ curl http://localhost:3000/
 | `GET` | `/api/cases/:id/audit` | `AuditController.getAuditTrail` | Retrieve audit trail for a case (sorted by latest) |
 | `PATCH` | `/api/cases/:id/checklist` | `caseController.updateChecklist` | Update the compliance checklist for a case |
 | `POST` | `/api/cases/:id/evidence` | `EvidenceController.extractEvidence` | Extract & link graph/typology evidence from ML insights |
-| `POST` | `/api/cases/:id/generate-narrative` | `NarrativeController.generateNarrative` | Generate SAR narrative (compliance-gated, requires `evidence_attached: true`) |
+| `POST` | `/api/cases/:id/generate-narrative` | `NarrativeController.generateNarrative` | Queue SAR narrative generation (compliance-gated, returns `202` with `jobId`) |
+
+---
+
+## 🔌 Real-Time Events (Socket.IO)
+
+The server exposes a **Socket.IO** endpoint for real-time analyst notifications.
+
+### Connection
+
+```javascript
+import { io } from "socket.io-client";
+const socket = io("http://localhost:5000");
+```
+
+### Events
+
+| Event | Direction | Payload | Description |
+|---|---|---|---|
+| `join-case` | Client → Server | `caseId` (string) | Join a case-specific room to receive updates |
+| `narrative_ready` | Server → Client | `{ caseId, status, narrative }` | Emitted when the background worker finishes generating a narrative |
+
+### Usage Example
+
+```javascript
+// 1. Connect & join a case room
+socket.emit('join-case', 'case-uuid-123');
+
+// 2. Listen for narrative completion
+socket.on('narrative_ready', (data) => {
+    console.log(`Narrative for ${data.caseId}:`, data.narrative);
+});
+```
+
+---
+
+## ⚙️ Background Worker (BullMQ)
+
+Narrative generation is offloaded to a **BullMQ background worker** to avoid blocking the API:
+
+| Component | File | Description |
+|---|---|---|
+| **Queue** | `controllers/NarrativeController.js` | Adds jobs to `narrative-generation` queue |
+| **Worker** | `worker.js` | Processes jobs: fetches case context → generates narrative → saves to DB → emits Socket.IO event |
+| **Redis Config** | `middlewares/redis.js` | Configures ioredis connection (supports local & Docker environments) |
+
+### Job Lifecycle
+
+```
+NarrativeController (HTTP 202) → Redis Queue → BullMQ Worker → DB Update → Socket.IO Emit
+```
+
+### Worker Features
+
+- **Auto-retry**: Up to 3 attempts with exponential backoff (1s → 2s → 4s)
+- **Auto-cleanup**: Completed jobs are removed from Redis
+- **Full context**: Worker fetches case + transactions + evidence before generating
+- **Real-time push**: Emits `narrative_ready` via Socket.IO on completion
 
 ---
 
@@ -370,8 +463,12 @@ POST /api/cases/:id/evidence
 PATCH /api/cases/:id/checklist
 Body: { "checklist": { "identity_verified": true, "evidence_attached": true, ... } }
 
-# Step 5: Generate SAR Narrative → Mock LLM output (IN_REVIEW)
+# Step 5: Queue SAR Narrative → Returns 202 with jobId (IN_QUEUE)
 POST /api/cases/:id/generate-narrative
+# → { "message": "Narrative generation queued", "jobId": "..." }
+
+# Step 6: Worker auto-processes → Generates narrative (IN_REVIEW)
+# → Socket.IO emits 'narrative_ready' to case room
 
 # Audit: View full audit trail at any point
 GET /api/cases/:id/audit
@@ -391,24 +488,18 @@ GET /api/cases/:id/audit
 - [x] Add compliance checklist update endpoint
 - [x] Implement Evidence extraction & linking logic
 - [x] Implement mock SAR Narrative generation with compliance gate
+- [x] Add BullMQ + Redis background job queue for narrative generation
+- [x] Add Socket.IO for real-time analyst notifications
+- [x] Implement background worker with retry & exponential backoff
+- [x] Add Helmet security middleware
+- [x] Add Docker support (Dockerfile + .dockerignore)
 - [ ] Integrate real LLM (e.g., Llama 3.1 / Gemini / OpenAI) for narrative generation
 - [ ] Build the Analysis Service with real ML model calls
 - [ ] Add authentication & authorization middleware
 - [ ] Build the frontend dashboard
-- [ ] Add WebSocket support for real-time case status updates
+- [ ] Add Docker Compose for full-stack orchestration (Node + Redis)
 - [ ] Deploy backend (Render) and frontend (Vercel)
 
----
-
-## 👥 Team
-
-This project is being built by a **3-person backend team** with the following areas of ownership:
-
-| Member | Focus Area |
-|---|---|
-| **Member 1** | Data Ingestion, Normalization, and Case CRUD |
-| **Member 2** | ML Analysis Pipeline, Evidence Linking, and Risk Scoring |
-| **Member 3** | Narrative Generation (LLM), Audit Trails, and API Routing |
 
 ---
 
