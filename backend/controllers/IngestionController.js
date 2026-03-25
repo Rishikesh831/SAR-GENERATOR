@@ -6,6 +6,7 @@ export const ingestData = async (req, res) => {
         const { transactions, customerMetadata } = req.body;
 
         // 1. 🔍 Basic Validation
+        // use express-validator for now 
         if (!transactions || !Array.isArray(transactions)) {
             return res.status(400).json({ message: "Invalid transaction array" });
         }

@@ -8,6 +8,7 @@ export const caseStatusEnum = pgEnum("case_status", [
     "FLAGGED",
     "DRAFT",
     "IN_REVIEW",
+    "IN_QUEUE",
     "APPROVED",
     "FILED",
     "FAILED"
