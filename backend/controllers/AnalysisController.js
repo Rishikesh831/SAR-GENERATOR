@@ -29,6 +29,7 @@ export const analyzeCase = async (req, res) => {
             .where(eq(cases.id, id));
 
         // Wait for 2 seconds to mimic heavy computation
+        // we put the grpc here 
         await delay(2000);
 
         // 3. 🕸️ MOCK ML RESULTS

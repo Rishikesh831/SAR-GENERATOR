@@ -8,6 +8,7 @@ export const caseStatusEnum = pgEnum("case_status", [
     "FLAGGED",
     "DRAFT",
     "IN_REVIEW",
+    "IN_QUEUE",
     "APPROVED",
     "FILED",
     "FAILED"
@@ -21,12 +22,15 @@ export const riskLevelEnum = pgEnum("risk_level", [
 export const cases = pgTable("cases", {
     id: uuid("id").primaryKey().defaultRandom(),
     status: caseStatusEnum("status").default("INGESTED").notNull(),
+    displayId: text("display_id").unique(),  // "SAR-0001" for frontend display
     riskScore: decimal("risk_score", { precision: 3, scale: 2 }),
     riskLevel: riskLevelEnum("risk_level").default("LOW"),
     mlInsights: jsonb("ml_insights"),
 
     // REASON: Storing customer info directly in the case for rapid development
     customerDetails: jsonb("customer_details"),
+    customerId: uuid("customer_id").references(() => customers.id),
+
 
     // --- REGULATORY FIELDS ---
     jurisdiction: text("jurisdiction"),
@@ -56,6 +60,7 @@ export const cases = pgTable("cases", {
 // Transaction Table
 export const transactions = pgTable("transactions", {
     id: uuid("id").primaryKey().defaultRandom(),
+    displayId: text("display_id").unique(),  // "TXN-000001"
     caseId: uuid("case_id").references(() => cases.id, { onDelete: 'cascade' }).notNull(),
     externalTxId: text("external_tx_id"),
     amount: decimal("amount", { precision: 15, scale: 2 }).notNull(),
@@ -89,13 +94,35 @@ export const auditLogs = pgTable("audit_logs", {
     timestamp: timestamp("timestamp").defaultNow().notNull(),
 });
 
+
+// Customer Table
+export const customers = pgTable("customers", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    displayId: text("display_id").unique(),               // "CUST-0001"
+    name: text("name").notNull(),
+    accounts: text("accounts").array().default([]),
+    riskRating: text("risk_rating").default("low"),        // "high" | "medium" | "low"
+    kycStatus: text("kyc_status").default("pending"),      // "verified" | "pending" | "expired"
+    businessType: text("business_type"),
+    country: text("country"),
+    flagCount: decimal("flag_count", { precision: 10, scale: 0 }).default("0"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+
 // RELATIONS
-// 1. Update Cases Relations
-export const casesRelations = relations(cases, ({ many }) => ({
+// Change existing casesRelations to:
+export const casesRelations = relations(cases, ({ one, many }) => ({
+    customer: one(customers, {
+        fields: [cases.customerId],
+        references: [customers.id],
+    }),
     transactions: many(transactions),
-    evidence: many(evidence), // <--- THIS WAS LIKELY MISSING OR MISCONFIGURED
+    evidence: many(evidence),
     auditLogs: many(auditLogs),
 }));
+
 
 // 2. You also need the Inverse Relations (One-to-One back to Case)
 // This tells Drizzle how to "find" the case from an evidence ID
@@ -118,4 +145,8 @@ export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
         fields: [auditLogs.caseId],
         references: [cases.id],
     }),
+}));
+
+export const customersRelations = relations(customers, ({ many }) => ({
+    cases: many(cases),
 }));

@@ -2,6 +2,12 @@ import { db } from "../middlewares/dbconfig.js";
 import { cases, auditLogs } from "../src/db/schemas.ts";
 import { eq } from "drizzle-orm";
 
+// redis imports
+import { Queue } from 'bullmq';
+import { redisConnection } from '../middlewares/redis.js';
+
+const narrativeQueue = new Queue('narrative-generation', { connection: redisConnection });
+
 export const generateNarrative = async (req, res) => {
     const { id } = req.params;
 
@@ -21,6 +27,20 @@ export const generateNarrative = async (req, res) => {
                 message: "Narrative blocked: Analyst must approve evidence first."
             });
         }
+
+
+        const job = await narrativeQueue.add('generate-sar',
+            { caseId: id },
+            {
+                attempts: 3, // Retry up to 3 times
+                backoff: {
+                    type: 'exponential', // Wait longer each time (1s, 2s, 4s...)
+                    delay: 1000,
+                },
+                removeOnComplete: true, // Clean up Redis memory
+            }
+        );
+
 
         // 3. ASSEMBLE THE CONTEXT (The "Prompt")
         const promptContext = {
@@ -54,23 +74,23 @@ export const generateNarrative = async (req, res) => {
             await tx.update(cases)
                 .set({
                     summaryLlm: mockNarrative,
-                    status: "IN_REVIEW", // Move from DRAFT to REVIEW
+                    status: "IN_QUEUE", // Move from DRAFT to REVIEW
                     updatedAt: new Date()
                 })
                 .where(eq(cases.id, id));
 
             await tx.insert(auditLogs).values({
                 caseId: id,
-                action: "NARRATIVE_GENERATED",
-                actor: "LLM_LLAMA_3_1", // Label the AI for the audit trail
+                action: "PUSHED TO QUEUE",
+                actor: "SYSTEM", // Label the AI for the audit trail
                 payload: { promptSent: promptContext }, // Storing the "Why"
-                details: "Automated SAR Narrative generated based on approved evidence."
+                details: "Queued Automated SAR Narrative generated based on approved evidence."
             });
         });
 
-        return res.status(200).json({
-            message: "Narrative generated and moved to IN_REVIEW",
-            narrative: mockNarrative
+        return res.status(202).json({
+            message: "Narrative generation queued",
+            jobId: job.id
         });
 
     } catch (error) {

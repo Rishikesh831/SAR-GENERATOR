@@ -122,3 +122,45 @@ export const updateChecklist = async (req, res) => {
         return res.status(500).json({ error: error.message });
     }
 };
+
+
+// 6. Generic Case Update (status, assignedTo, etc.)
+export const updateCase = async (req, res) => {
+    const { id } = req.params;
+    const updates = req.body;
+
+    try {
+        const statusMap = {
+            draft: "DRAFT",
+            review: "IN_REVIEW",
+            approved: "APPROVED",
+            filed: "FILED",
+        };
+
+        const dbUpdates = { updatedAt: new Date() };
+        if (updates.status) dbUpdates.status = statusMap[updates.status] || updates.status;
+        if (updates.assignedTo) dbUpdates.assignedTo = updates.assignedTo;
+        if (updates.narrative) dbUpdates.summaryLlm = updates.narrative;
+        if (updates.riskLevel) dbUpdates.riskLevel = updates.riskLevel;
+
+        const [updated] = await db.update(cases)
+            .set(dbUpdates)
+            .where(eq(cases.id, id))
+            .returning();
+
+        if (!updated) {
+            return res.status(404).json({ message: "Case not found" });
+        }
+
+        await db.insert(auditLogs).values({
+            caseId: id,
+            action: `CASE_${(dbUpdates.status || "UPDATED").toUpperCase()}`,
+            actor: updates.actor || "ANALYST",
+            details: `Case updated: ${Object.keys(updates).join(", ")}`,
+        });
+
+        return res.status(200).json({ message: "Case updated", data: updated });
+    } catch (error) {
+        return res.status(500).json({ error: error.message });
+    }
+};
