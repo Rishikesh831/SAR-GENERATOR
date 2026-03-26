@@ -53,7 +53,7 @@ class DetectorConfig:
 
 # ─── 1. Smurfing Detection ────────────────────────────────────────────────────
 def detect_smurfing(
-    G: nx.DiGraph,
+    G: nx.MultiDiGraph,
     config: DetectorConfig = DetectorConfig(),
 ) -> list[dict]:
     """
@@ -73,11 +73,9 @@ def detect_smurfing(
         amounts: list[float] = []
         timestamps: list[str] = []
         for sender in predecessors:
-            edata = G[sender][node]
-            amounts.append(edata.get("total_amount", 0.0))
-            # Use first/last timestamp stored per edge
-            for tx in edata.get("transactions", []):
-                ts = tx.get("timestamp", "")
+            for edata in G[sender][node].values():
+                amounts.append(edata.get("amount", 0.0))
+                ts = edata.get("timestamp", "")
                 if ts:
                     timestamps.append(ts)
 
@@ -115,7 +113,7 @@ def detect_smurfing(
 
 # ─── 2. Funnel Account Detection ──────────────────────────────────────────────
 def detect_funnel_accounts(
-    G: nx.DiGraph,
+    G: nx.MultiDiGraph,
     config: DetectorConfig = DetectorConfig(),
 ) -> list[dict]:
     """
@@ -158,7 +156,7 @@ def detect_funnel_accounts(
 
 # ─── 3. Layering Detection ────────────────────────────────────────────────────
 def detect_layering(
-    G: nx.DiGraph,
+    G: nx.MultiDiGraph,
     config: DetectorConfig = DetectorConfig(),
 ) -> list[dict]:
     """
@@ -206,7 +204,7 @@ def detect_layering(
                     for i in range(len(current_path) - 1):
                         a, b = current_path[i], current_path[i + 1]
                         if G.has_edge(a, b):
-                            amounts.append(G[a][b].get("total_amount", 0.0))
+                            amounts.append(sum(edata.get("amount", 0.0) for edata in G[a][b].values()))
 
                     min_amt = float(min(amounts)) if amounts else 0.0
                     avg_amt = float(sum(amounts) / len(amounts)) if amounts else 0.0
@@ -235,7 +233,7 @@ def detect_layering(
 
 # ─── 4. Circular Transfer Detection ───────────────────────────────────────────
 def detect_circular_transfers(
-    G: nx.DiGraph,
+    G: nx.MultiDiGraph,
     config: DetectorConfig = DetectorConfig(),
 ) -> list[dict]:
     """
@@ -298,7 +296,7 @@ def detect_circular_transfers(
                             a = current_path[i]
                             b = current_path[(i + 1) % cycle_len]
                             if G.has_edge(a, b):
-                                total_amount += G[a][b].get("total_amount", 0.0)
+                                total_amount += sum(edata.get("amount", 0.0) for edata in G[a][b].values())
 
                         length_score = max(1.0 - (cycle_len - 2) / max(config.CIRCULAR_MAX_LENGTH, 1), 0.1)
                         amount_score = min(total_amount / 50_000.0, 1.0)
@@ -328,7 +326,7 @@ def detect_circular_transfers(
 
 # ─── Unified Runner ───────────────────────────────────────────────────────────
 def run_all_detectors(
-    G: nx.DiGraph,
+    G: nx.MultiDiGraph,
     config: DetectorConfig = DetectorConfig(),
 ) -> dict[str, list[dict]]:
     """Run all four detectors and return combined results keyed by pattern name."""

@@ -1,0 +1,48 @@
+
+================================================================
+  LAYER 3 — SUSPICION DETECTOR: VALIDATION REPORT
+================================================================
+
+[1/4] Generating synthetic ground-truth dataset …
+      Total rows : 1,020
+      Fraud rows : 20  (2.0%)
+      Clean rows : 1,000
+
+[2/4] Generating Prior Vector via External Context Agent …
+      Prior Vector risk_multiplier : 1.0
+      Typology                     : structuring
+      Region                       : West Africa ^
+
+[3/4] Training base XGBoost model …
+
+[4/4] Executing static vs context-aware scoring runs …
+
+----------------------------------------------------------------
+  METRIC                        RUN A (Static)   RUN B (Aware)
+----------------------------------------------------------------
+  Recall @ Top 10 scores                20.0%          50.0%
+  Precision @ Top 20 alerts             30.0%         100.0%
+  ROC-AUC                               0.9733          1.0000
+----------------------------------------------------------------
+
+  Lift Score (Recall_B / Recall_A) : 2.50 <<< CONTEXT AGENT IS WORKING!
+----------------------------------------------------------------
+
+[chart] Saved → D:\SAR-Generator\ML-Service\validation_chart.png
+
+=== RAW JSON REPORT ===
+{
+  "run_a": {
+    "mode": "Static (risk_multiplier=0.05)",
+    "recall_top10": 0.2,
+    "precision_top20": 0.3,
+    "roc_auc": 0.9733
+  },
+  "run_b": {
+    "mode": "Context-Aware (risk_multiplier=1.0)",
+    "recall_top10": 0.5,
+    "precision_top20": 1.0,
+    "roc_auc": 1.0
+  },
+  "lift": 2.5
+}

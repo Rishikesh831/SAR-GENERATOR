@@ -1,0 +1,59 @@
+================================================================
+  FinCEN Advisory - West Africa narcotics structuring
+================================================================
+{
+  "context_timestamp": "2026-03-25T13:07:51Z",
+  "world_state": {
+    "region_risk": "West Africa ^",
+    "typology_focus": "structuring",
+    "commodity_flag": "narcotics",
+    "enforcement_rec": "HSBC_pattern",
+    "risk_multiplier": 1.0
+  },
+  "justification": "Financial crime indicators detected \u2014 4 high-risk regions; 3 typologies; 2 commodity flags; (severe commodity bonus); 2 enforcement patterns; (corroboration \u00d71.10); risk_multiplier set to 1.0."
+}
+
+================================================================
+  FATF Ransomware SE Asia
+================================================================
+{
+  "context_timestamp": "2026-03-25T13:07:51Z",
+  "world_state": {
+    "region_risk": "SE Asia",
+    "typology_focus": "crypto_obfuscation",
+    "commodity_flag": "crypto",
+    "enforcement_rec": "BEC_pattern",
+    "risk_multiplier": 0.935
+  },
+  "justification": "Financial crime indicators detected \u2014 region:SE Asia; typology:crypto_obfuscation; commodity:crypto; 2 enforcement patterns; (corroboration \u00d71.10); risk_multiplier set to 0.935."
+}
+
+================================================================
+  FATF Grey-list Central Asia Hawala
+================================================================
+{
+  "context_timestamp": "2026-03-25T13:07:51Z",
+  "world_state": {
+    "region_risk": "Central Asia ^",
+    "typology_focus": "real_estate_ml",
+    "commodity_flag": "None",
+    "enforcement_rec": "Azerbaijani_Laundromat",
+    "risk_multiplier": 1.0
+  },
+  "justification": "Financial crime indicators detected \u2014 3 high-risk regions; 3 typologies; 2 enforcement patterns; (corroboration \u00d71.10); risk_multiplier set to 1.0."
+}
+
+================================================================
+  Irrelevant baseline text
+================================================================
+{
+  "context_timestamp": "2026-03-25T13:07:51Z",
+  "world_state": {
+    "region_risk": "Undetermined",
+    "typology_focus": "None",
+    "commodity_flag": "None",
+    "enforcement_rec": "None",
+    "risk_multiplier": 0.05
+  },
+  "justification": "Text does not contain material financial-crime indicators; baseline risk_multiplier applied."
+}

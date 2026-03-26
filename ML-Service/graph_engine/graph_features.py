@@ -57,19 +57,20 @@ class GraphFeatureEngine:
         degree_features = self._compute_degree_features(G)
 
         print("[GraphFeatureEngine] Computing PageRank …")
-        pagerank = nx.pagerank(G, alpha=0.85, max_iter=200, tol=1e-6)
+        G_simple = nx.DiGraph(G)
+        pagerank = nx.pagerank(G_simple, alpha=0.85, max_iter=200, tol=1e-6)
 
         print("[GraphFeatureEngine] Computing betweenness centrality …")
         # For large graphs use approximation (k=min(500, n))
-        n = G.number_of_nodes()
+        n = G_simple.number_of_nodes()
         k_sample = min(100, n)   # small k = fast approximation, still meaningful
         betweenness = nx.betweenness_centrality(
-            G, k=k_sample, normalized=True, weight="total_amount"
+            G_simple, k=k_sample, normalized=True, weight="total_amount"
         )
 
         print("[GraphFeatureEngine] Computing clustering coefficient …")
         # nx.clustering works on undirected; for directed we use the undirected view
-        clustering = nx.clustering(G.to_undirected())
+        clustering = nx.clustering(G_simple.to_undirected())
 
         rows: list[dict] = []
         for node in G.nodes():

@@ -39,11 +39,11 @@ class GraphBuilder:
     """
 
     def __init__(self):
-        self.graph: nx.DiGraph | None = None
+        self.graph: nx.MultiDiGraph | None = None
         self.df: pd.DataFrame | None = None
 
     # ── Public API ────────────────────────────────────────────────────────────
-    def build_from_csv(self, filepath: str) -> nx.DiGraph:
+    def build_from_csv(self, filepath: str) -> nx.MultiDiGraph:
         """Load CSV and construct the directed transaction graph."""
         path = Path(filepath)
         if not path.exists():
@@ -52,12 +52,12 @@ class GraphBuilder:
         df = pd.read_csv(filepath, parse_dates=["timestamp"])
         return self.build_from_dataframe(df)
 
-    def build_from_dataframe(self, df: pd.DataFrame) -> nx.DiGraph:
+    def build_from_dataframe(self, df: pd.DataFrame) -> nx.MultiDiGraph:
         """Construct a directed transaction graph from a DataFrame."""
         self._validate_columns(df)
         self.df = df.copy()
 
-        G = nx.DiGraph()
+        G = nx.MultiDiGraph()
         G.graph["name"] = "AML Transaction Graph"
         G.graph["total_transactions"] = len(df)
 
@@ -78,29 +78,16 @@ class GraphBuilder:
             G.nodes[receiver]["total_received"] += float(row["amount"])
             G.nodes[receiver]["tx_received"] += 1
 
-            # ── Add edge (multi-edges are collapsed; the last wins for
-            #    simple graph; we store as a list attribute instead) ────────
-            tx_attr = {
-                "transaction_id": str(row["transaction_id"]),
-                "amount":         float(row["amount"]),
-                "timestamp":      str(row["timestamp"]),
-                "country":        str(row.get("country", "")),
-                "is_suspicious":  int(row.get("is_suspicious", 0)),
-                "pattern":        str(row.get("pattern", "normal")),
-            }
-
-            # Support parallel edges between same pair via edge key
-            if G.has_edge(sender, receiver):
-                G[sender][receiver]["transactions"].append(tx_attr)
-                G[sender][receiver]["total_amount"] += tx_attr["amount"]
-                G[sender][receiver]["tx_count"]     += 1
-            else:
-                G.add_edge(
-                    sender, receiver,
-                    transactions=[tx_attr],
-                    total_amount=tx_attr["amount"],
-                    tx_count=1,
-                )
+            # ── Add edge (independent transactions) ───────────────
+            G.add_edge(
+                sender, receiver,
+                transaction_id=str(row["transaction_id"]),
+                amount=float(row["amount"]),
+                timestamp=str(row["timestamp"]),
+                country=str(row.get("country", "")),
+                is_suspicious=int(row.get("is_suspicious", 0)),
+                pattern=str(row.get("pattern", "normal"))
+            )
 
         self.graph = G
         print(
