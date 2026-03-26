@@ -1,0 +1,13 @@
+pandas
+numpy
+scikit-learn
+xgboost
+shap
+networkx
+matplotlib
+pydantic
+pymupdf
+beautifulsoup4
+requests
+fastapi
+uvicorn
