@@ -20,7 +20,7 @@
 | **Customer Management** | ✅ Implemented | Dedicated `customers` table with risk ratings, KYC status, and case relations |
 | **Database Seeding** | ✅ Implemented | Seed script populates 6 customers, 3 cases, 9 transactions for demo |
 | **Docker Support** | ✅ Implemented | Dockerfile for containerized deployment |
-| **Frontend Integration** | 🔲 In Progress | Frontend exists on separate branch; wiring to backend in progress |
+| **Frontend Integration** | ✅ Implemented | Frontend fully integrated with backend via API client, Socket.IO, and Vite proxy |
 | **ML Model Integration** | 🔲 Planned | ML model deployed on Render; integration with `AnalysisController` pending |
 
 ---
@@ -444,6 +444,31 @@ curl http://localhost:5000/api/init
 # → { "customers": [...], "transactions": [...], "sarReports": [...], "auditEntries": [...] }
 ```
 
+### Running the Full Stack Locally
+
+To run the entire system (Frontend + Backend + Job Queue), you need 3 terminal sessions:
+
+**Terminal 1 (Redis):**
+```bash
+redis-server
+```
+
+**Terminal 2 (Backend):**
+```bash
+cd backend
+npm install
+npm start
+# Runs on http://localhost:5000
+```
+
+**Terminal 3 (Frontend):**
+```bash
+cd frontend
+npm install
+npm run dev
+# Runs on http://localhost:8080 (Proxies /api and /socket.io to backend)
+```
+
 ---
 
 ## 📡 API Endpoints
@@ -619,12 +644,14 @@ GET /api/cases/:id/audit
 - [x] Add `PATCH /api/cases/:id` — generic case update endpoint
 - [x] Create database seed script with demo data
 - [x] Configure CORS for frontend (ports 8080, 5173, 3000)
+- [x] Wire frontend `SARDataContext` to `GET /api/init`
+- [x] Add Socket.IO client to frontend for `narrative_ready` events
+- [x] Replace frontend synthetic data with backend API calls
+- [x] Add `POST /api/sar/save` so frontend-generated reports survive page refreshes
+- [x] Auto-incrementing human-readable IDs (`SAR-0004`, `TXN-000010`) via IngestionController
 - [ ] Integrate ML model from Render into `AnalysisController`
-- [ ] Wire frontend `SARDataContext` to `GET /api/init`
-- [ ] Add Socket.IO client to frontend for `narrative_ready` events
-- [ ] Replace frontend synthetic data with backend API calls
 - [ ] Add authentication & authorization middleware
-- [ ] Add Docker Compose for full-stack orchestration (Node + Redis)
+- [ ] Add Docker Compose for full-stack orchestration (Node + Redis + Frontend)
 - [ ] Deploy backend (Render) and frontend (Vercel)
 
 ---
