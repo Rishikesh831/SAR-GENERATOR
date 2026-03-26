@@ -9,3 +9,5 @@ pydantic
 pymupdf
 beautifulsoup4
 requests
+fastapi
+uvicorn
