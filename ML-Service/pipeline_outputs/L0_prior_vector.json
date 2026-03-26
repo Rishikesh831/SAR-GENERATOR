@@ -1,0 +1,11 @@
+{
+    "context_timestamp": "2026-03-26T12:00:00Z",
+    "world_state": {
+        "region_risk": "West Africa ^",
+        "typology_focus": "structuring",
+        "commodity_flag": "narcotics",
+        "enforcement_rec": "FinCEN_Files_pattern",
+        "risk_multiplier": 1.0
+    },
+    "justification": "Financial crime indicators detected \u2014 3 high-risk regions; typology:structuring; commodity:narcotics; (severe commodity bonus); enforcement:FinCEN_Files_pattern; (corroboration \u00d71.10); risk_multiplier set to 1.0."
+}

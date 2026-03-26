@@ -1,6 +1,6 @@
 """
 graph_features.py
-Layer 4 — Graph Intelligence Engine
+Layer 3 — Graph Intelligence Engine
 ─────────────────────────────────────
 Computes per-account network metrics that feed ML models (e.g. XGBoost).
 

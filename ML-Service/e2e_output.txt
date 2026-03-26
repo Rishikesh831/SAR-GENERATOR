@@ -1,0 +1,212 @@
+﻿
+================================================================
+  END-TO-END PIPELINE TEST
+================================================================
+
+================================================================
+  STAGE 0: EXTERNAL CONTEXT AGENT
+================================================================
+  Input     : FinCEN Advisory (West Africa / narcotics / structuring)
+  Output    : PriorVector JSON
+{
+    "context_timestamp": "2026-03-26T12:00:00Z",
+    "world_state": {
+        "region_risk": "West Africa ^",
+        "typology_focus": "structuring",
+        "commodity_flag": "narcotics",
+        "enforcement_rec": "FinCEN_Files_pattern",
+        "risk_multiplier": 1.0
+    },
+    "justification": "Financial crime indicators detected \u2014 3 high-risk regions; typology:structuring; commodity:narcotics; (severe commodity bonus); enforcement:FinCEN_Files_pattern; (corroboration \u00d71.10); risk_multiplier set to 1.0."
+}
+  Ô£ö  risk_multiplier = 1.0
+  Ô£ö  typology_focus  = structuring
+  Ô£ö  region_risk     = West Africa ^
+  Ô£ö  commodity_flag  = narcotics
+  Ô£ö  Prior Vector has meaningful signal ÔÇö will bias downstream layers
+
+================================================================
+  LAYER 1: DATA INGESTION
+================================================================
+  Ô£ö  Dataset found: d:\SAR-Generator\Dataset\synthetic_aml_transactions.csv (21.0 MB)
+  Ô£ö  Synthetic ground-truth: 1020 rows, 20 fraud, 1000 clean
+
+================================================================
+  LAYER 2: SUSPICION DETECTION (ML Engine)
+================================================================
+
+  ----------------------------------------------------------------
+  METRIC                        RUN A (Static)   RUN B (Aware)
+  ----------------------------------------------------------------
+  Recall @ Top 10                       20.0%          50.0%
+  Precision @ Top 20                    30.0%         100.0%
+  ----------------------------------------------------------------
+  Lift (Recall B / A) = 2.50
+  Ô£ö  Context Agent LIFT = 2.50x ÔÇö ML layer is context-aware Ô£ô
+  Ô£ö  Max adjusted score: 1.0000
+  Ô£ö  Output: array of 1020 anomaly scores passed to downstream
+
+================================================================
+  LAYER 3: GRAPH INTELLIGENCE (Context-Biased)
+================================================================
+
+ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+  LAYER 4 ÔÇö GRAPH INTELLIGENCE ENGINE
+ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+
+[Step 1] Building transaction graph ÔÇª
+[GraphBuilder] Graph built: 2000 nodes | 200858 edges | 200858 transactions
+  {'nodes': 2000, 'edges': 200858, 'transactions': 200858, 'is_directed': True, 'density': 0.05024}
+
+[Step 2] Running pattern detectors ÔÇª
+[PatternDetectors] Prior Vector bias ACTIVE ÔåÆ 'smurfing' thresholds relaxed
+[PatternDetectors] Running smurfing detection ÔÇª
+  ÔåÆ 70 smurfing signals
+[PatternDetectors] Running funnel account detection ÔÇª
+  ÔåÆ 50 funnel account signals
+[PatternDetectors] Running layering detection ÔÇª
+  ÔåÆ 200 layering signals
+[PatternDetectors] Running circular transfer detection ÔÇª
+  [Circular] Subgraph: 80 nodes, 416 edges
+  ÔåÆ 100 circular transfer signals
+
+[Step 3] Computing graph features ÔÇª
+[GraphFeatureEngine] Computing degree features ÔÇª
+[GraphFeatureEngine] Computing PageRank ÔÇª
+[GraphFeatureEngine] Computing betweenness centrality ÔÇª
+[GraphFeatureEngine] Computing clustering coefficient ÔÇª
+[GraphFeatureEngine] Features computed for 2000 accounts.
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+[Layer 4 Complete] Summary:
+  case_id: CASE-E2E-001
+  csv_path: d:\SAR-Generator\Dataset\synthetic_aml_transactions.csv
+  graph: {'nodes': 2000, 'edges': 200858, 'transactions': 200858, 'is_directed': True, 'density': 0.05024}
+  signals: {'smurfing': 70, 'funnel_accounts': 50, 'layering': 200, 'circular_transfer': 100}
+  total_signals: 420
+  accounts_profiled: 2000
+  elapsed_seconds: 73.45
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+
+ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+  LAYER 4 ÔÇö GRAPH INTELLIGENCE ENGINE
+ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+
+[Step 1] Building transaction graph ÔÇª
+[GraphBuilder] Graph built: 2000 nodes | 200858 edges | 200858 transactions
+  {'nodes': 2000, 'edges': 200858, 'transactions': 200858, 'is_directed': True, 'density': 0.05024}
+
+[Step 2] Running pattern detectors ÔÇª
+[PatternDetectors] No prior vector bias applied (static thresholds)
+[PatternDetectors] Running smurfing detection ÔÇª
+  ÔåÆ 50 smurfing signals
+[PatternDetectors] Running funnel account detection ÔÇª
+  ÔåÆ 50 funnel account signals
+[PatternDetectors] Running layering detection ÔÇª
+  ÔåÆ 200 layering signals
+[PatternDetectors] Running circular transfer detection ÔÇª
+  [Circular] Subgraph: 80 nodes, 416 edges
+  ÔåÆ 100 circular transfer signals
+
+[Step 3] Computing graph features ÔÇª
+[GraphFeatureEngine] Computing degree features ÔÇª
+[GraphFeatureEngine] Computing PageRank ÔÇª
+[GraphFeatureEngine] Computing betweenness centrality ÔÇª
+[GraphFeatureEngine] Computing clustering coefficient ÔÇª
+[GraphFeatureEngine] Features computed for 2000 accounts.
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+[Layer 4 Complete] Summary:
+  case_id: CASE-E2E-002
+  csv_path: d:\SAR-Generator\Dataset\synthetic_aml_transactions.csv
+  graph: {'nodes': 2000, 'edges': 200858, 'transactions': 200858, 'is_directed': True, 'density': 0.05024}
+  signals: {'smurfing': 50, 'funnel_accounts': 50, 'layering': 200, 'circular_transfer': 100}
+  total_signals: 400
+  accounts_profiled: 2000
+  elapsed_seconds: 98.65
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+
+  Signal comparison (Static vs Context-Biased):
+    smurfing               Static:   50   Biased:   70 (+20)
+    funnel_accounts        Static:   50   Biased:   50
+    layering               Static:  200   Biased:  200
+    circular_transfer      Static:  100   Biased:  100
+  Ô£ö  Graph Intelligence now receives and applies Prior Vector bias
+
+  Top 3 Smurfing Signals (biased run):
+    Account: A756 | Senders: 108 | TxCount: 111 | Risk: 0.9782
+    Account: A1195 | Senders: 113 | TxCount: 115 | Risk: 0.9766
+    Account: A631 | Senders: 104 | TxCount: 106 | Risk: 0.9763
+
+================================================================
+  LAYER 4: EVIDENCE BUILDER (Facts Only ÔÇö No Context Signal)
+================================================================
+
+  Output: CaseBundle JSON
+{
+  "case_id": "CASE-E2E-001",
+  "entity_id": "ACC-88392",
+  "evidence": [
+    {
+      "source_layer": "ML_L3",
+      "finding_type": "Model_Anomaly_Threshold_Exceeded",
+      "forensic_facts": {
+        "z_score": 3.8,
+        "anomaly_score": 1.0,
+        "top_features": {
+          "amount": 0.4,
+          "n_daily_txns": 0.35,
+          "velocity_spike": 0.25
+        }
+      },
+      "rationale": "Anomaly score of 1.00 exceeds threshold with Z-score 3.8."
+    },
+    {
+      "source_layer": "Graph_L4",
+      "finding_type": "Smurfing_Topology_Detected",
+      "forensic_facts": {
+        "nodes": 108,
+        "centrality_score": 0.978,
+        "total_volume_usd": 33830.45
+      },
+      "rationale": "Subgraph forms a smurfing structure with 108 nodes passing $33,830.45."
+    }
+  ]
+}
+  Ô£ö  PASSED: Evidence Bundle contains ZERO Context_L2 objects (architecture compliant)
+  Ô£ö  ML evidence objects: 1
+  Ô£ö  Graph evidence objects: 1
+
+================================================================
+  LAYER 5: SAR GENERATION (LLM)
+================================================================
+  Status: sar_generator.py is ready
+  Input:  CaseBundle JSON + ReportingBlueprint JSON
+  Output: LLM-generated SAR narrative
+  Requires: Local Ollama instance with llama3 model
+  ÔÜá  Skipped: Ollama not running. SAR text generation not executed.
+  Ô£ö  sar_generator.py module verified ÔÇö accepts --country, --blueprint, --evidence args
+
+================================================================
+  LAYER 6: HUMAN REVIEW
+================================================================
+  ÔÜá  Not implemented. Architecture requires audit & approval UI/workflow.
+  Recommendation: Export CaseBundle + SAR to a review dashboard
+
+================================================================
+  PIPELINE SUMMARY
+================================================================
+  Ô£ö  Context Agent            Prior Vector generated
+  Ô£ö  Layer 1: Ingestion       Dataset loaded (21.0 MB)
+  Ô£ö  Layer 2: ML Engine       Lift = 2.50x
+  Ô£ö  Layer 3: Graph Intel     Now context-biased
+  Ô£ö  Layer 4: Evidence        No context leakage
+  ÔÜá  Layer 5: SAR Gen         Needs Ollama
+  Ô£ÿ  Layer 6: Human Review    Not implemented
+
+================================================================
+  Pipeline test complete.
+================================================================
+

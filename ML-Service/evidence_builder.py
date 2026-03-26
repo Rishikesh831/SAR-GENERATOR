@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
 
 # ══════════════════════════════════════════════════════════════════════════════
-#  LAYER 5: THE EVIDENCE BUILDER (SCHEMA)
+#  LAYER 4: THE EVIDENCE BUILDER (SCHEMA)
 # ══════════════════════════════════════════════════════════════════════════════
 
 class EvidenceObject(BaseModel):
@@ -20,7 +20,7 @@ class EvidenceObject(BaseModel):
 
 class CaseBundle(BaseModel):
     """
-    The aggregate bundle of all evidence to be passed to the SAR generator (Layer 6).
+    The aggregate bundle of all evidence to be passed to the SAR generator (Layer 5).
     """
     case_id: str
     entity_id: str
@@ -31,7 +31,7 @@ class CaseBundle(BaseModel):
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-#  LAYER 5: EVIDENCE COLLECTOR
+#  LAYER 4: EVIDENCE COLLECTOR
 # ══════════════════════════════════════════════════════════════════════════════
 
 class EvidenceCollector:
@@ -78,27 +78,13 @@ class EvidenceCollector:
             )
         )
 
-    def add_context_evidence(self, prior_vector: Dict[str, Any]):
-        """
-        Aggregates Context Evidence: Regulatory tags from the Prior Vector.
-        CRITICAL CONSTRAINT: Strips out text, news, and geopolitical 'vibe'.
-        Passes strictly enumerated parameters.
-        """
-        world_state = prior_vector.get("world_state", {})
-        
-        self.evidence_list.append(
-            EvidenceObject(
-                source_layer="Context_L2",
-                finding_type="Regulatory_Prior_Match",
-                forensic_facts={
-                    "risk_multiplier": world_state.get("risk_multiplier", 1.0),
-                    "typology_tag": world_state.get("typology_focus", "None"),
-                    "region_tag": world_state.get("region_risk", "None"),
-                    "commodity_tag": world_state.get("commodity_flag", "None")
-                },
-                rationale=f"Transaction profile aligns explicitly with target typology ({world_state.get('typology_focus')})."
-            )
-        )
+    # ── ARCHITECTURAL CONSTRAINT (from system diagram) ─────────────────────
+    # The Evidence Builder layer must contain NO context signal.
+    # Only hard, math-based forensic facts from ML (L3) and Graph (L4)
+    # are permitted here. The Context Agent's PriorVector influences
+    # upstream layers (Suspicion Detector score adjustment, Graph bias)
+    # but must NOT appear as an evidence object in the final CaseBundle.
+    # ─────────────────────────────────────────────────────────────────────────
 
     def assemble_case(self) -> str:
         """
@@ -134,20 +120,11 @@ if __name__ == "__main__":
         edge_volume_usd=48500.00
     )
     
-    # 3. Add Context Evidence (Simulated PriorVector)
-    sample_prior = {
-        "context_timestamp": "2026-03-25T12:00:00Z",
-        "world_state": {
-            "risk_multiplier": 1.4,
-            "typology_focus": "structuring",
-            "region_risk": "West Africa ^",
-            "commodity_flag": "narcotics",
-            "enforcement_rec": "HSBC_pattern"
-        }
-    }
-    collector.add_context_evidence(sample_prior)
+    # NOTE: Context evidence is intentionally NOT added here.
+    # Per architecture: "no context signal" in the Evidence Builder layer.
+    # The PriorVector's influence is baked into the ML anomaly_score upstream.
     
     # Validate Output
     case_json = collector.assemble_case()
-    print("=== L5 ASSEMBLED CASE BUNDLE (JSON) ===")
+    print("=== L4 ASSEMBLED CASE BUNDLE (JSON) ===")
     print(case_json)

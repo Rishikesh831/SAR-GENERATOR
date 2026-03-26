@@ -1,7 +1,7 @@
 """
 suspicion_detector.py
 ──────────────────────────────────────────────────────────────────────────────
-Layer 3 — ML Suspicion Detection Engine
+Layer 2 — ML Suspicion Detection Engine
   + Model Validation Module (validation_report)
 
 Architecture
@@ -230,7 +230,7 @@ wired offshore to Cayman Islands or high-risk jurisdictions.
 
 def validation_report(show_plot: bool = True) -> dict:
     print("\n" + "=" * 64)
-    print("  LAYER 3 — SUSPICION DETECTOR: VALIDATION REPORT")
+    print("  LAYER 2 — SUSPICION DETECTOR: VALIDATION REPORT")
     print("=" * 64)
 
     # 1. GENERATE
@@ -341,7 +341,7 @@ def _draw_bar_chart(
     width  = 0.32
 
     fig, axes = plt.subplots(1, 2, figsize=(13, 5), gridspec_kw={"width_ratios": [3, 1]})
-    fig.suptitle("Layer 3 — Suspicion Detector: Context Agent Validation", fontsize=13, fontweight="bold", y=1.01)
+    fig.suptitle("Layer 2 — Suspicion Detector: Context Agent Validation", fontsize=13, fontweight="bold", y=1.01)
 
     ax = axes[0]
     bars_a = ax.bar(x - width/2, vals_a, width, label="Run A  Static", color="#4c72b0", edgecolor="white")
@@ -381,7 +381,7 @@ def _draw_bar_chart(
     plt.close(fig)
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Layer 3 — Validation")
+    parser = argparse.ArgumentParser(description="Layer 2 — Validation")
     parser.add_argument("--no-plot", action="store_true", help="Skip matplotlib format")
     args = parser.parse_args()
 

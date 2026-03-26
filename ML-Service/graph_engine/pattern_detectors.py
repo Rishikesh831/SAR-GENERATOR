@@ -1,6 +1,6 @@
 """
 pattern_detectors.py
-Layer 4 — Graph Intelligence Engine
+Layer 3 — Graph Intelligence Engine
 ─────────────────────────────────────
 Detects four AML typologies in the transaction graph.
 
@@ -324,27 +324,117 @@ def detect_circular_transfers(
     return signals
 
 
+# ─── Prior Vector → Typology Mapping ─────────────────────────────────────────
+# Maps the Context Agent's typology_focus string to the graph detectors that
+# should receive relaxed (more sensitive) thresholds.
+_TYPOLOGY_TO_DETECTOR = {
+    "structuring":           "smurfing",
+    "smurfing":              "smurfing",
+    "shell_company_layering": "layering",
+    "layering":              "layering",
+    "round_tripping":        "circular",
+    "circular":              "circular",
+    "funnel":                "funnel",
+    "hawala":                "funnel",
+}
+
+
+def _apply_prior_bias(
+    config: DetectorConfig,
+    prior_vector: dict | None,
+) -> tuple[DetectorConfig, str | None]:
+    """
+    If a prior_vector is provided and its typology_focus maps to a known
+    detector, return a *copy* of config with relaxed thresholds for that
+    detector.  This implements the architectural requirement:
+      "Typology detection biased toward active patterns in the prior vector."
+    """
+    if prior_vector is None:
+        return config, None
+
+    ws = prior_vector.get("world_state", {})
+    typology = ws.get("typology_focus", "None")
+    rm       = ws.get("risk_multiplier", 0.05)
+
+    if typology == "None" or rm <= 0.05:
+        return config, None
+
+    target = _TYPOLOGY_TO_DETECTOR.get(typology)
+    if target is None:
+        return config, None
+
+    # Create a shallow copy so we don't mutate the caller's config
+    import copy
+    biased = copy.copy(config)
+
+    # Bias factor: how aggressively to relax thresholds (higher RM = more bias)
+    # Scale: rm=0.5 → 20% relaxation, rm=1.0 → 40% relaxation
+    bias = min(rm * 0.4, 0.5)
+
+    if target == "smurfing":
+        biased.SMURF_MIN_SENDERS    = max(3, int(config.SMURF_MIN_SENDERS    * (1 - bias)))
+        biased.SMURF_MIN_TX_COUNT   = max(5, int(config.SMURF_MIN_TX_COUNT   * (1 - bias)))
+        biased.SMURF_MAX_AVG_AMOUNT = config.SMURF_MAX_AVG_AMOUNT * (1 + bias)
+        biased.SMURF_TOP_N          = int(config.SMURF_TOP_N * (1 + bias))
+
+    elif target == "layering":
+        biased.LAYERING_MIN_HOPS     = max(2, config.LAYERING_MIN_HOPS - 1)
+        biased.LAYERING_SOURCE_TOP_K = int(config.LAYERING_SOURCE_TOP_K * (1 + bias))
+        biased.LAYERING_MAX_PATHS    = int(config.LAYERING_MAX_PATHS * (1 + bias))
+
+    elif target == "circular":
+        biased.CIRCULAR_TOP_N_NODES = int(config.CIRCULAR_TOP_N_NODES * (1 + bias))
+        biased.CIRCULAR_MAX_LENGTH  = min(config.CIRCULAR_MAX_LENGTH + 1, 7)
+        biased.CIRCULAR_MAX_RESULTS = int(config.CIRCULAR_MAX_RESULTS * (1 + bias))
+
+    elif target == "funnel":
+        biased.FUNNEL_MIN_IN_DEGREE  = max(3, int(config.FUNNEL_MIN_IN_DEGREE  * (1 - bias)))
+        biased.FUNNEL_MIN_OUT_DEGREE = max(3, int(config.FUNNEL_MIN_OUT_DEGREE * (1 - bias)))
+        biased.FUNNEL_TOP_N          = int(config.FUNNEL_TOP_N * (1 + bias))
+
+    return biased, target
+
+
 # ─── Unified Runner ───────────────────────────────────────────────────────────
 def run_all_detectors(
     G: nx.MultiDiGraph,
     config: DetectorConfig = DetectorConfig(),
+    prior_vector: dict | None = None,
 ) -> dict[str, list[dict]]:
-    """Run all four detectors and return combined results keyed by pattern name."""
+    """
+    Run all four detectors and return combined results keyed by pattern name.
+
+    If a prior_vector (from the Context Agent) is provided, the detector
+    matching the typology_focus will run with relaxed thresholds — implementing
+    the architectural requirement of context-biased typology detection.
+    """
+    biased_config, biased_target = _apply_prior_bias(config, prior_vector)
+
+    if biased_target:
+        print(f"[PatternDetectors] Prior Vector bias ACTIVE → '{biased_target}' thresholds relaxed")
+    else:
+        print("[PatternDetectors] No prior vector bias applied (static thresholds)")
+
+    # Use biased config for the targeted detector, default config for others
+    smurf_cfg    = biased_config if biased_target == "smurfing" else config
+    funnel_cfg   = biased_config if biased_target == "funnel"   else config
+    layer_cfg    = biased_config if biased_target == "layering" else config
+    circular_cfg = biased_config if biased_target == "circular" else config
 
     print("[PatternDetectors] Running smurfing detection …")
-    smurfing = detect_smurfing(G, config)
+    smurfing = detect_smurfing(G, smurf_cfg)
     print(f"  → {len(smurfing)} smurfing signals")
 
     print("[PatternDetectors] Running funnel account detection …")
-    funnels = detect_funnel_accounts(G, config)
+    funnels = detect_funnel_accounts(G, funnel_cfg)
     print(f"  → {len(funnels)} funnel account signals")
 
     print("[PatternDetectors] Running layering detection …")
-    layering = detect_layering(G, config)
+    layering = detect_layering(G, layer_cfg)
     print(f"  → {len(layering)} layering signals")
 
     print("[PatternDetectors] Running circular transfer detection …")
-    circular = detect_circular_transfers(G, config)
+    circular = detect_circular_transfers(G, circular_cfg)
     print(f"  → {len(circular)} circular transfer signals")
 
     return {

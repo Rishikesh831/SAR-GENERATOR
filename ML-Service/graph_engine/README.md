@@ -1,6 +1,6 @@
 # Graph Intelligence Engine
 
-This module serves as Layer 4 of the Artificial Intelligence Investigation Pipeline, functioning as the **Transaction Graph Intelligence Engine**. It converts flat transaction histories into directed, relationship-based financial graphs. 
+This module serves as Layer 3 of the Artificial Intelligence Investigation Pipeline, functioning as the **Transaction Graph Intelligence Engine**. It converts flat transaction histories into directed, relationship-based financial graphs. 
 
 Its primary focus is to discover distinct topological anomalies tied to Anti-Money Laundering (AML) standards.
 
@@ -38,7 +38,7 @@ We implemented an iterative, heavily constrained **Depth First Search (DFS) Cycl
 
 ## Network-Level Feature Extraction (`graph_features.py`)
 
-In parallel to isolated anomaly detection, Layer 4 automatically extracts generalized topological features for every associated account in the subgraph. These metrics construct foundational context for supervised ML Models (e.g., XGBoost, Random Forest) trained to identify complex typological blend risks.
+In parallel to isolated anomaly detection, Layer 3 automatically extracts generalized topological features for every associated account in the subgraph. These metrics construct foundational context for supervised ML Models (e.g., XGBoost, Random Forest) trained to identify complex typological blend risks.
 
 Computed features across nodes include:
 - `in_degree` & `out_degree`: Distinct connections counting independent senders and receivers.
@@ -63,8 +63,8 @@ Outputs:
 - `outputs/graph_signals.json`: Contains structured anomaly topologies (Smurfing, Funnels, Circular Transfers, Layering).
 - `outputs/graph_features.csv`: Network metric dump per account.
 
-### Embedded Orchestration (Upstream Layer 5 Consumption)
-For integrated system environments, Layer 5 (Evidence Builder) natively imports the engine:
+### Embedded Orchestration (Upstream Layer 4 Consumption)
+For integrated system environments, Layer 4 (Evidence Builder) natively imports the engine:
 ```python
 from graph_engine.graph_pipeline import GraphPipeline
 

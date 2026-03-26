@@ -1,4 +1,4 @@
-What Layer 5 Enables
+# What Layer 4 Enables
 
 Once this exists, every other layer becomes plug-and-play.
 
@@ -39,9 +39,9 @@ Layer 4 — Graph Intelligence
         ↓
 Layer 2 — External Signals
         ↓
-Layer 5 — Evidence Builder
+Layer 4 — Evidence Builder
         ↓
-Layer 6 — SAR Narrative Generator
+Layer 5 — SAR Narrative Generator
         ↓
 Layer 7 — Audit Trail
 Brutal Advice (important)

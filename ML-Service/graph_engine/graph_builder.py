@@ -1,6 +1,6 @@
 """
 graph_builder.py
-Layer 4 — Graph Intelligence Engine
+Layer 3 — Graph Intelligence Engine
 ─────────────────────────────────────
 Converts raw transaction data into a directed NetworkX graph.
 

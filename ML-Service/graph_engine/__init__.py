@@ -1,6 +1,6 @@
 """
 graph_engine package
-Layer 4 — Graph Intelligence Engine
+Layer 3 — Graph Intelligence Engine
 """
 
 from graph_engine.graph_builder      import GraphBuilder

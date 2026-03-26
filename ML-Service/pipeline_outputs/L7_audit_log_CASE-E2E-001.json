@@ -1,0 +1,929 @@
+{
+    "case_id": "CASE-E2E-001",
+    "audit_trail": [
+        {
+            "timestamp": "2026-03-26T15:25:57.997251+00:00",
+            "layer": "SYSTEM",
+            "action": "AuditTrail Initialized",
+            "details": {
+                "case_id": "CASE-E2E-001"
+            }
+        },
+        {
+            "timestamp": "2026-03-26T15:25:57.997251+00:00",
+            "layer": "Context_L2",
+            "action": "Generated Prior Vector",
+            "details": {
+                "prior_vector": {
+                    "context_timestamp": "2026-03-26T12:00:00Z",
+                    "world_state": {
+                        "region_risk": "West Africa ^",
+                        "typology_focus": "structuring",
+                        "commodity_flag": "narcotics",
+                        "enforcement_rec": "FinCEN_Files_pattern",
+                        "risk_multiplier": 1.0
+                    },
+                    "justification": "Financial crime indicators detected \u2014 3 high-risk regions; typology:structuring; commodity:narcotics; (severe commodity bonus); enforcement:FinCEN_Files_pattern; (corroboration \u00d71.10); risk_multiplier set to 1.0."
+                },
+                "risk_multiplier": 1.0
+            }
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.908561+00:00",
+            "layer": "ML_L3",
+            "action": "Executed XGBoost Context Bias",
+            "details": {
+                "dataset_rows": 1020,
+                "flagged_transactions_count": 92,
+                "lift": 2.5,
+                "max_adjusted_score": 1.0
+            }
+        },
+        {
+            "timestamp": "2026-03-26T15:27:45.841463+00:00",
+            "layer": "Graph_L4",
+            "action": "Generated Subgraph Topologies",
+            "details": {
+                "smurfing_signals": 100,
+                "funnel_signals": 50,
+                "layering_signals": 200,
+                "circular_signals": 100,
+                "flagged_graph_nodes": 0
+            }
+        },
+        {
+            "timestamp": "2026-03-26T15:27:45.843493+00:00",
+            "layer": "Evidence_L5",
+            "action": "Built Fact-based CaseBundle",
+            "details": {
+                "entity_id": "ACC-88392",
+                "evidence_objects_count": 2
+            }
+        },
+        {
+            "timestamp": "2026-03-26T15:28:03.179245+00:00",
+            "layer": "SAR_L6",
+            "action": "Generated Language Model Narrative",
+            "details": {
+                "model": "llama3.2:latest"
+            }
+        },
+        {
+            "timestamp": "2026-03-26T15:28:03.179245+00:00",
+            "layer": "SYSTEM",
+            "action": "Audit Complete",
+            "details": {
+                "duration_seconds": 125.18,
+                "total_events": 6
+            }
+        },
+        {
+            "timestamp": "2026-03-26T15:28:29.638598+00:00",
+            "layer": "Review_L7",
+            "action": "Analyst Review: approved",
+            "details": {
+                "feedback": ""
+            }
+        },
+        {
+            "timestamp": "2026-03-26T15:28:29.638598+00:00",
+            "layer": "SYSTEM",
+            "action": "Audit Complete",
+            "details": {
+                "duration_seconds": 151.64,
+                "total_events": 8
+            }
+        }
+    ],
+    "flagged_transactions_count": 92,
+    "flagged_transactions": [
+        {
+            "timestamp": "2026-03-26T15:25:59.904044+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9301.366526182625,
+            "reason": "ML Anomaly Score High: 0.9273",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.904044+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9195.04989630757,
+            "reason": "ML Anomaly Score High: 0.9169",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.904044+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 8774.030346876034,
+            "reason": "ML Anomaly Score High: 1.0000",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.904044+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9903.329220528654,
+            "reason": "ML Anomaly Score High: 0.9039",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.904044+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9914.1301445655,
+            "reason": "ML Anomaly Score High: 0.9039",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.904044+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 8827.8376350013,
+            "reason": "ML Anomaly Score High: 0.8797",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.904044+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9042.03694532942,
+            "reason": "ML Anomaly Score High: 0.8797",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.904044+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 8980.780444311224,
+            "reason": "ML Anomaly Score High: 1.0000",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.904044+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 8854.304292639934,
+            "reason": "ML Anomaly Score High: 0.8797",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.904044+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9151.70486046676,
+            "reason": "ML Anomaly Score High: 1.0000",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.904044+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9534.500027598111,
+            "reason": "ML Anomaly Score High: 0.9178",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.904044+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 8955.391130996506,
+            "reason": "ML Anomaly Score High: 0.8797",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.904044+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9679.187919027905,
+            "reason": "ML Anomaly Score High: 0.9178",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.904044+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 8660.861231885949,
+            "reason": "ML Anomaly Score High: 1.0000",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.904044+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9054.606567402949,
+            "reason": "ML Anomaly Score High: 0.8797",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.904044+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 8838.667507917256,
+            "reason": "ML Anomaly Score High: 0.8797",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.904044+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9079.12584437755,
+            "reason": "ML Anomaly Score High: 0.8934",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.904044+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9476.852532434556,
+            "reason": "ML Anomaly Score High: 0.9178",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.905552+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9095.452718907763,
+            "reason": "ML Anomaly Score High: 0.8934",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.905552+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 8821.275277879626,
+            "reason": "ML Anomaly Score High: 0.8797",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.905552+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9902.87527891461,
+            "reason": "ML Anomaly Score High: 0.9039",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.905552+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 8781.226329854786,
+            "reason": "ML Anomaly Score High: 0.9175",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.905552+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9126.011319688414,
+            "reason": "ML Anomaly Score High: 0.8934",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.905552+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 8781.667464975679,
+            "reason": "ML Anomaly Score High: 1.0000",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.905552+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9137.044099113486,
+            "reason": "ML Anomaly Score High: 0.8934",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.905552+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9021.503262859133,
+            "reason": "ML Anomaly Score High: 0.8797",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.905552+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9261.781179252588,
+            "reason": "ML Anomaly Score High: 1.0000",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.905552+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9222.163563491895,
+            "reason": "ML Anomaly Score High: 0.9169",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.905552+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9167.079066226135,
+            "reason": "ML Anomaly Score High: 0.9169",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.905552+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9661.586947168611,
+            "reason": "ML Anomaly Score High: 0.9178",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.905552+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9501.827780451935,
+            "reason": "ML Anomaly Score High: 0.9178",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.905552+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9561.05799770777,
+            "reason": "ML Anomaly Score High: 0.9178",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.905552+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 8928.784905458753,
+            "reason": "ML Anomaly Score High: 0.8797",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.905552+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9015.867476016958,
+            "reason": "ML Anomaly Score High: 0.8797",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.905552+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9223.924645818204,
+            "reason": "ML Anomaly Score High: 0.9169",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.905552+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 8842.73975839051,
+            "reason": "ML Anomaly Score High: 1.0000",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.905552+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9061.321440736958,
+            "reason": "ML Anomaly Score High: 0.8797",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.905552+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 8645.118413808152,
+            "reason": "ML Anomaly Score High: 0.8673",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.905552+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9669.024895964596,
+            "reason": "ML Anomaly Score High: 0.9178",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.905552+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9088.33461666315,
+            "reason": "ML Anomaly Score High: 0.8934",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.905552+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 8744.924158524032,
+            "reason": "ML Anomaly Score High: 0.9175",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.906561+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9508.607238632656,
+            "reason": "ML Anomaly Score High: 1.0000",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.906561+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9301.81233131083,
+            "reason": "ML Anomaly Score High: 0.9273",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.906561+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 8651.558142737442,
+            "reason": "ML Anomaly Score High: 0.8673",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.906561+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9280.165708207074,
+            "reason": "ML Anomaly Score High: 0.9273",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.906561+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9273.117758755789,
+            "reason": "ML Anomaly Score High: 0.9273",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.906561+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9655.389047284389,
+            "reason": "ML Anomaly Score High: 1.0000",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.906561+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9502.752540828378,
+            "reason": "ML Anomaly Score High: 0.9178",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.906561+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9582.138262489501,
+            "reason": "ML Anomaly Score High: 1.0000",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.906561+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9557.989708440602,
+            "reason": "ML Anomaly Score High: 0.9178",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.906561+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9154.56456651892,
+            "reason": "ML Anomaly Score High: 1.0000",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.906561+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9059.217820749522,
+            "reason": "ML Anomaly Score High: 0.8797",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.906561+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9086.868755684962,
+            "reason": "ML Anomaly Score High: 0.8934",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.906561+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9904.067868105825,
+            "reason": "ML Anomaly Score High: 1.0000",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.906561+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9310.174561563961,
+            "reason": "ML Anomaly Score High: 1.0000",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.906561+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 8782.522980215439,
+            "reason": "ML Anomaly Score High: 0.9175",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.906561+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 8792.491237397413,
+            "reason": "ML Anomaly Score High: 0.8797",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.906561+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 8995.743384052412,
+            "reason": "ML Anomaly Score High: 0.8797",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.906561+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9282.854090079576,
+            "reason": "ML Anomaly Score High: 0.9273",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.906561+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9556.55264624173,
+            "reason": "ML Anomaly Score High: 0.9178",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.906561+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9278.80484756643,
+            "reason": "ML Anomaly Score High: 1.0000",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.906561+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9519.947789699214,
+            "reason": "ML Anomaly Score High: 0.9178",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.906561+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9614.446481872355,
+            "reason": "ML Anomaly Score High: 0.9178",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.906561+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9146.18346009927,
+            "reason": "ML Anomaly Score High: 0.9169",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.906561+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9064.72427780444,
+            "reason": "ML Anomaly Score High: 0.8797",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.907560+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 8952.3455351787,
+            "reason": "ML Anomaly Score High: 0.8797",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.907560+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9917.334316641838,
+            "reason": "ML Anomaly Score High: 0.9039",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.907560+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 8641.334794178523,
+            "reason": "ML Anomaly Score High: 0.8673",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.907560+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 8802.599010162703,
+            "reason": "ML Anomaly Score High: 0.8797",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.907560+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9917.594784084886,
+            "reason": "ML Anomaly Score High: 1.0000",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.907560+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9107.08609818223,
+            "reason": "ML Anomaly Score High: 0.8934",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.907560+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9184.149382994867,
+            "reason": "ML Anomaly Score High: 0.9169",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.907560+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9479.134635649205,
+            "reason": "ML Anomaly Score High: 1.0000",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.907560+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 8965.670623436543,
+            "reason": "ML Anomaly Score High: 0.8797",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.907560+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9143.110155914761,
+            "reason": "ML Anomaly Score High: 0.9169",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.907560+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9244.129806176523,
+            "reason": "ML Anomaly Score High: 0.9169",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.907560+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 8808.523869726498,
+            "reason": "ML Anomaly Score High: 0.8797",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.907560+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9192.12906857958,
+            "reason": "ML Anomaly Score High: 0.9169",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.907560+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9244.389127790577,
+            "reason": "ML Anomaly Score High: 0.9273",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.907560+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9198.170403095526,
+            "reason": "ML Anomaly Score High: 0.9169",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.907560+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 8926.31130472554,
+            "reason": "ML Anomaly Score High: 0.8797",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.907560+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9920.032373798676,
+            "reason": "ML Anomaly Score High: 0.9039",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.907560+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 8783.855874017609,
+            "reason": "ML Anomaly Score High: 0.9175",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.907560+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9922.31581740167,
+            "reason": "ML Anomaly Score High: 0.9039",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.907560+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9245.973905845703,
+            "reason": "ML Anomaly Score High: 1.0000",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.907560+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9305.291106657816,
+            "reason": "ML Anomaly Score High: 0.9273",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.907560+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9067.08642373775,
+            "reason": "ML Anomaly Score High: 1.0000",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.907560+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 8753.14068937746,
+            "reason": "ML Anomaly Score High: 1.0000",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.908561+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9156.32450694808,
+            "reason": "ML Anomaly Score High: 1.0000",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.908561+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9304.195397704623,
+            "reason": "ML Anomaly Score High: 0.9273",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.908561+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 9168.66326648742,
+            "reason": "ML Anomaly Score High: 0.9169",
+            "flagged_by_layer": "ML_L3"
+        },
+        {
+            "timestamp": "2026-03-26T15:25:59.908561+00:00",
+            "transaction_id": "Unknown",
+            "sender": "",
+            "receiver": "",
+            "amount": 8905.242340510791,
+            "reason": "ML Anomaly Score High: 0.8797",
+            "flagged_by_layer": "ML_L3"
+        }
+    ]
+}

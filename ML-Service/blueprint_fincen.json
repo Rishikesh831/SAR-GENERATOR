@@ -1,0 +1,24 @@
+{
+  "InstitutionName": "[Reporting Institution]",
+  "FilingInstitution": {
+    "Name": "[Bank Name]",
+    "Address": "[Bank Address]",
+    "City": "[City]",
+    "State": "[State]",
+    "ZIP": "[ZIP]"
+  },
+  "SuspiciousActivityInformation": {
+    "DateRange": "Calculated from Evidence Bundle",
+    "CumulativeAmount": "Calculated from Evidence Bundle",
+    "Characterization": "Structuring / Money Laundering (Smurfing)"
+  },
+  "NarrativeInstructions": [
+    "Write a formal FINCEN Suspicious Activity Report narrative.",
+    "Introduce the subject(s) clearly.",
+    "Explain the transaction flow detected by the graph intelligence.",
+    "Detail the anomalies found by the ML Suspicion Detection.",
+    "Do NOT add speculative motives; restrict the narrative to the objective facts in the Evidence Bundle.",
+    "Mention West African networks or narcotics ONLY if explicitly listed in the Evidence Bundle.",
+    "Summarize why the activity is suspicious."
+  ]
+}

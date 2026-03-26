@@ -1,18 +1,18 @@
 """
 graph_pipeline.py
-Layer 4 — Graph Intelligence Engine
+Layer 3 — Graph Intelligence Engine
 ─────────────────────────────────────
 Orchestrates the full Layer 4 pipeline:
 
   Load CSV → Build Graph → Run Detectors → Compute Features → Output Signals
 
-This is the single entry-point consumed by the Layer 5 Evidence Builder.
+This is the single entry-point consumed by the Layer 4 Evidence Builder.
 
 Usage (standalone)
 ------------------
     python graph_pipeline.py
 
-Usage (as a module from Layer 5)
+Usage (as a module from Layer 4)
 ---------------------------------
     from graph_engine.graph_pipeline import GraphPipeline
 
@@ -42,7 +42,7 @@ from graph_engine.graph_features   import compute_graph_features
 # ─── Pipeline ─────────────────────────────────────────────────────────────────
 class GraphPipeline:
     """
-    Full Layer 4 orchestration: data → graph → patterns → features → signals.
+    Full Layer 3 orchestration: data → graph → patterns → features → signals.
 
     Parameters
     ----------
@@ -59,10 +59,12 @@ class GraphPipeline:
         csv_path: str,
         config: DetectorConfig | None = None,
         case_id: str = "UNKNOWN",
+        prior_vector: dict | None = None,
     ):
         self.csv_path = csv_path
         self.config   = config or DetectorConfig()
         self.case_id  = case_id
+        self.prior_vector = prior_vector
 
         # Outputs (populated after run())
         self.graph       = None
@@ -73,7 +75,7 @@ class GraphPipeline:
     # ── Main entry-point ─────────────────────────────────────────────────────
     def run(self) -> dict:
         """
-        Execute the full Layer 4 pipeline.
+        Execute the full Layer 3 pipeline.
 
         Returns
         -------
@@ -85,7 +87,7 @@ class GraphPipeline:
         """
         t0 = time.time()
         print("\n" + "═" * 60)
-        print("  LAYER 4 — GRAPH INTELLIGENCE ENGINE")
+        print("  LAYER 3 — GRAPH INTELLIGENCE ENGINE")
         print("═" * 60)
 
         # ── Step 1: Build graph ───────────────────────────────────────────
@@ -98,7 +100,7 @@ class GraphPipeline:
 
         # ── Step 2: Run pattern detectors ─────────────────────────────────
         print("\n[Step 2] Running pattern detectors …")
-        self.signals = run_all_detectors(G, self.config)
+        self.signals = run_all_detectors(G, self.config, prior_vector=self.prior_vector)
 
         # Tag every signal with case_id
         for pattern_signals in self.signals.values():
@@ -127,7 +129,7 @@ class GraphPipeline:
         }
 
         print("\n" + "─" * 60)
-        print("[Layer 4 Complete] Summary:")
+        print("[Layer 3 Complete] Summary:")
         for k, v in self.summary.items():
             print(f"  {k}: {v}")
         print("─" * 60 + "\n")
@@ -141,7 +143,7 @@ class GraphPipeline:
 
     # ── Export helpers ────────────────────────────────────────────────────────
     def export_signals_json(self, output_path: str = "graph_signals.json") -> str:
-        """Serialize detection signals to JSON for Layer 5 consumption."""
+        """Serialize detection signals to JSON for Layer 4 consumption."""
         if not self.signals:
             raise RuntimeError("Run the pipeline first (call .run()).")
 
@@ -174,9 +176,9 @@ class GraphPipeline:
         print(f"[Export] Features written → {out.resolve()}")
         return str(out.resolve())
 
-    # ── Layer 5 interface ─────────────────────────────────────────────────────
+    # ── Layer 4 interface ─────────────────────────────────────────────────────
     def get_signals_flat(self) -> list[dict]:
-        """Return all signals as a single flat list (for Layer 5 Evidence Builder)."""
+        """Return all signals as a single flat list (for Layer 4 Evidence Builder)."""
         flat = []
         for pattern_sigs in self.signals.values():
             flat.extend(pattern_sigs)
@@ -259,4 +261,4 @@ if __name__ == "__main__":
     pipeline.export_signals_json(str(out_dir / "graph_signals.json"))
     pipeline.export_features_csv(str(out_dir / "graph_features.csv"))
 
-    print("\n[Done] Layer 4 Graph Intelligence Engine completed successfully.")
+    print("\n[Done] Layer 3 Graph Intelligence Engine completed successfully.")

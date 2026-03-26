@@ -34,7 +34,7 @@ class PriorVector:
     enforcement_rec: str = "None"           # technical pattern reference
     risk_multiplier: float = 0.05           # 0.05 baseline → 1.0 max alert
 
-    # ── Extra metadata (not in schema but useful for Layer 5) ───────────────
+    # ── Extra metadata (not in schema but useful for Layer 4) ───────────────
     raw_signals: dict = field(default_factory=dict, repr=False)
 
     # ── Serialisation ────────────────────────────────────────────────────────
@@ -57,7 +57,7 @@ class PriorVector:
         return json.dumps(self.to_dict(), indent=indent)
 
     def to_evidence_dict(self) -> dict:
-        """Extended dict for Layer 5 Evidence Builder (includes raw_signals)."""
+        """Extended dict for Layer 4 Evidence Builder (includes raw_signals)."""
         d = self.to_dict()
         d["raw_signals"] = self.raw_signals
         return d
