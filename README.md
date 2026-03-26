@@ -1,6 +1,6 @@
 # 🛡️ Explainable SAR Narrative Generator
 
-> An AI-powered backend system that ingests financial transaction data, runs ML-based risk analysis, extracts evidence, and generates **Suspicious Activity Report (SAR)** narratives with full explainability and audit trails — featuring **real-time WebSocket updates** and **background job processing**.
+> An AI-powered system that ingests financial transaction data, runs ML-based risk analysis, extracts evidence, and generates **Suspicious Activity Report (SAR)** narratives with full explainability and audit trails — featuring **real-time WebSocket updates**, **background job processing**, and a **frontend integration layer**.
 
 ---
 
@@ -9,45 +9,83 @@
 | Module | Status | Notes |
 |---|---|---|
 | **Data Ingestion** (Layer 1–2) | ✅ Implemented & Routed | CSV/JSON transaction ingestion with validation, normalization & regulatory metadata |
-| **Case Management** | ✅ Implemented & Routed | Full CRUD — list, get by ID, delete + compliance checklist updates |
+| **Case Management** | ✅ Implemented & Routed | Full CRUD — list, get by ID, delete, generic update + compliance checklist |
 | **Risk Analysis** (Layer 3–4) | ✅ Implemented & Routed (Mock) | Simulated ML pipeline with mock risk scores, pattern detection & violated laws |
 | **Evidence Linking** (Layer 5) | ✅ Implemented & Routed | Extracts graph & typology evidence from ML insights, validates active patterns, status → `DRAFT` |
 | **Narrative Generation** (Layer 6) | ✅ Implemented & Routed (Queue-based) | Compliance-gated, queued via **BullMQ + Redis**, processed by background worker, real-time result via **Socket.IO** |
 | **Audit Logging** (Layer 7) | ✅ Implemented & Routed | Full audit trail query — logs created during Ingestion, Analysis, Evidence, Narrative & Checklist flows |
 | **Background Worker** | ✅ Implemented | BullMQ worker auto-processes narrative jobs with retry & exponential backoff |
 | **Real-Time Updates** | ✅ Implemented | Socket.IO broadcasts `narrative_ready` events to analysts on case rooms |
+| **Frontend Init API** | ✅ Implemented | Single `GET /api/init` endpoint delivers all data the frontend needs in one call |
+| **Customer Management** | ✅ Implemented | Dedicated `customers` table with risk ratings, KYC status, and case relations |
+| **Database Seeding** | ✅ Implemented | Seed script populates 6 customers, 3 cases, 9 transactions for demo |
 | **Docker Support** | ✅ Implemented | Dockerfile for containerized deployment |
-| **Analysis Service** | 🔲 Not Started | Service file created, business logic pending |
-| **Frontend** | 🔲 Not Started | Planned for a future phase |
+| **Frontend Integration** | 🔲 In Progress | Frontend exists on separate branch; wiring to backend in progress |
+| **ML Model Integration** | 🔲 Planned | ML model deployed on Render; integration with `AnalysisController` pending |
 
 ---
 
 ## 🏗️ Architecture Overview
 
-The system follows a **7-Layer Pipeline Architecture** for processing suspicious financial activities, enhanced with an **asynchronous job queue** and **real-time WebSocket notifications**:
+The system follows a **7-Layer Pipeline Architecture** for processing suspicious financial activities, enhanced with an **asynchronous job queue**, **real-time WebSocket notifications**, and a **frontend data bridge**:
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                   SAR Generator Pipeline                │
-├─────────┬──────────┬──────────┬──────────┬──────────────┤
-│ Layer 1 │ Layer 2  │ Layer 3-4│ Layer 5  │  Layer 6     │
-│ Ingest  │ Enrich   │ Analyze  │ Evidence │  Narrative   │
-│ (CSV)   │ (KYC/AML)│ (ML/AI)  │ (Link)   │  (LLM)      │
-├─────────┴──────────┴──────────┴──────────┴──────────────┤
-│                   Layer 7: Audit Trail                  │
-├─────────────────────────────────────────────────────────┤
-│  ⚡ BullMQ Worker (Redis)  │  🔌 Socket.IO (Real-time) │
-└─────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│                     SAR Generator Pipeline                       │
+├─────────┬──────────┬──────────┬──────────┬───────────────────────┤
+│ Layer 1 │ Layer 2  │ Layer 3-4│ Layer 5  │  Layer 6              │
+│ Ingest  │ Enrich   │ Analyze  │ Evidence │  Narrative            │
+│ (CSV)   │ (KYC/AML)│ (ML/AI)  │ (Link)   │  (LLM/BullMQ)       │
+├─────────┴──────────┴──────────┴──────────┴───────────────────────┤
+│                      Layer 7: Audit Trail                        │
+├──────────────────────────────────────────────────────────────────┤
+│  ⚡ BullMQ Worker (Redis)  │  🔌 Socket.IO  │  📡 GET /api/init  │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
-### Pipeline Flow
+### Full System Flow
 
 ```
-Ingest → Analyze → Extract Evidence → [Analyst Approves Checklist] → Queue Narrative Job →
-  ↳ BullMQ Worker generates narrative → DB Update → Socket.IO emits 'narrative_ready' → IN_REVIEW
+                          ┌──────────────────┐
+                          │   Frontend (SPA)  │
+                          │  React + Vite     │
+                          └────────┬─────────┘
+                                   │
+                    ┌──────────────┼──────────────┐
+                    │              │              │
+               GET /api/init   PATCH /api/    Socket.IO
+               (page load)     cases/:id      (real-time)
+                    │              │              │
+                    ▼              ▼              ▲
+┌──────────────────────────────────────────────────────────────┐
+│                    Express + HTTP Server                      │
+├──────────────────────────────────────────────────────────────┤
+│                                                              │
+│  POST /api/ingest ──► Case Created (INGESTED)                │
+│         │                                                    │
+│  POST /api/cases/:id/analyze ──► ML Scoring (FLAGGED)        │
+│         │                                                    │
+│  POST /api/cases/:id/evidence ──► Evidence Linked (DRAFT)    │
+│         │                                                    │
+│  PATCH /api/cases/:id/checklist ──► Human Gate ✋             │
+│         │                                                    │
+│  POST /api/cases/:id/generate-narrative                      │
+│         │                                                    │
+│         ▼                                                    │
+│  ┌─────────────┐    ┌──────────────┐    ┌────────────────┐   │
+│  │ BullMQ Queue │───►│ Redis Server │───►│ BullMQ Worker  │   │
+│  └─────────────┘    └──────────────┘    └──────┬─────────┘   │
+│                                                │             │
+│                                    DB Update + Socket.IO     │
+│                                    (narrative_ready)         │
+│                                                │             │
+├──────────────────────────────────────────────────────────────┤
+│                PostgreSQL (Neon) — 5 Tables                   │
+│  customers │ cases │ transactions │ evidence │ audit_logs     │
+└──────────────────────────────────────────────────────────────┘
 ```
 
-Each step is gated and audited:
+### Pipeline Steps
 
 1. **Ingest** — Creates case + transactions with regulatory metadata (status: `INGESTED`)
 2. **Analyze** — Simulated ML scoring, flags patterns, sets violated laws (status: `FLAGGED`)
@@ -73,7 +111,7 @@ Each step is gated and audited:
 | **Socket.IO** | Real-time WebSocket communication for live case updates |
 | **Helmet** | HTTP security headers middleware |
 | **dotenv** | Environment variable management |
-| **cors** | Cross-Origin Resource Sharing middleware |
+| **cors** | Cross-Origin Resource Sharing middleware (configured for frontend) |
 | **nodemon** | Hot-reload during development |
 | **tsx** | TypeScript execution for schema files |
 | **Docker** | Containerized deployment |
@@ -86,19 +124,20 @@ Each step is gated and audited:
 SAR-GENERATOR/
 ├── backend/
 │   ├── controllers/                  # Request handlers for each domain
+│   │   ├── InitController.js              ✅ GET /api/init — delivers all frontend data in one call
 │   │   ├── IngestionController.js         ✅ Validates, normalizes & ingests transactions
 │   │   ├── AnalysisController.js          ✅ Triggers simulated ML analysis pipeline
-│   │   ├── caseController.js              ✅ CRUD + compliance checklist operations
+│   │   ├── caseController.js              ✅ CRUD + compliance checklist + generic case update
 │   │   ├── AuditController.js             ✅ Retrieves audit trail for a case
 │   │   ├── EvidenceController.js          ✅ Extracts graph & typology evidence
 │   │   └── NarrativeController.js         ✅ Compliance-gated, queues job via BullMQ
 │   │
 │   ├── routes/
-│   │   ├── caseRoutes.js                  # Case CRUD, analysis, evidence, narrative & audit routes
+│   │   ├── caseRoutes.js                  # Case CRUD, update, analysis, evidence, narrative & audit
 │   │   └── ingestionRoutes.js             # Data ingestion endpoint
 │   │
 │   ├── services/
-│   │   └── analysisService.js             🔲 Empty — pending business logic
+│   │   └── analysisService.js             🔲 Empty — pending ML integration
 │   │
 │   ├── middlewares/
 │   │   ├── dbconfig.js                    # Drizzle + Neon DB config & client export
@@ -109,12 +148,13 @@ SAR-GENERATOR/
 │   │
 │   ├── src/
 │   │   └── db/
-│   │       └── schemas.ts                 # Drizzle schema (4 tables, 2 enums, full relations)
+│   │       └── schemas.ts                 # Drizzle schema (5 tables, 2 enums, full relations)
 │   │
 │   ├── drizzle/
 │   │   ├── 0000_stormy_mandroid.sql       # Initial migration SQL
 │   │   └── meta/                          # Drizzle migration metadata
 │   │
+│   ├── seed.js                            # Database seeder (6 customers, 3 cases, 9 txns)
 │   ├── worker.js                          # BullMQ background worker for narrative generation
 │   ├── index.js                           # Express + HTTP + Socket.IO entry point
 │   ├── Dockerfile                         # Docker container config (Node 20 Alpine)
@@ -131,19 +171,36 @@ SAR-GENERATOR/
 
 ## 📊 Database Schema
 
-The database is powered by **PostgreSQL (Neon)** and managed through **Drizzle ORM**. Below is a summary of all tables, enums, and relations defined in `src/db/schemas.ts`.
+The database is powered by **PostgreSQL (Neon)** and managed through **Drizzle ORM**. The schema defines **5 tables**, **2 enums**, and full bidirectional relations in `src/db/schemas.ts`.
 
 ### Entity Relationship Diagram
 
 ```mermaid
 erDiagram
+    Customer ||--o{ Case : "has many"
     Case ||--o{ Transaction : "has many"
     Case ||--o{ Evidence : "has many"
     Case ||--o{ AuditLog : "has many"
 
+    Customer {
+        UUID id PK
+        String displayId UK
+        String name
+        StringArray accounts
+        String riskRating
+        String kycStatus
+        String businessType
+        String country
+        Decimal flagCount
+        Timestamp createdAt
+        Timestamp updatedAt
+    }
+
     Case {
         UUID id PK
+        String displayId UK
         CaseStatus status
+        UUID customerId FK
         Decimal riskScore
         RiskLevel riskLevel
         Json mlInsights
@@ -161,6 +218,7 @@ erDiagram
 
     Transaction {
         UUID id PK
+        String displayId UK
         UUID caseId FK
         String externalTxId
         Decimal amount
@@ -194,17 +252,40 @@ erDiagram
 
 ### Tables
 
+#### `customers` *(NEW)*
+Customer entities tracked by the system.
+
+| Column | Type | Default | Description |
+|---|---|---|---|
+| `id` | `UUID` | `gen_random_uuid()` | Primary key |
+| `display_id` | `Text` | `null` | Human-readable ID (e.g., `"CUST-0001"`) |
+| `name` | `Text` | — | Customer name |
+| `accounts` | `Text[]` | `[]` | Associated account IDs |
+| `risk_rating` | `Text` | `"low"` | `"high"` / `"medium"` / `"low"` |
+| `kyc_status` | `Text` | `"pending"` | `"verified"` / `"pending"` / `"expired"` |
+| `business_type` | `Text` | `null` | e.g., "Investment Firm", "Crypto Exchange" |
+| `country` | `Text` | `null` | Country code |
+| `flag_count` | `Decimal` | `"0"` | Number of flagged transactions |
+| `created_at` | `Timestamp` | `now()` | Record creation timestamp |
+| `updated_at` | `Timestamp` | `now()` | Last modification timestamp |
+
+**Relationships:** Has many `cases`
+
+---
+
 #### `cases`
 The central entity representing a suspicious activity investigation.
 
 | Column | Type | Default | Description |
 |---|---|---|---|
 | `id` | `UUID` | `gen_random_uuid()` | Primary key |
+| `display_id` | `Text` | `null` | Human-readable ID for frontend (e.g., `"SAR-0001"`) |
 | `status` | `case_status` enum | `INGESTED` | Current pipeline stage |
+| `customer_id` | `UUID` | `null` | Foreign key → `customers.id` |
 | `risk_score` | `Decimal(3,2)` | `null` | ML-computed risk score (e.g., `0.94`) |
 | `risk_level` | `risk_level` enum | `LOW` | Categorical risk classification |
 | `ml_insights` | `JSONB` | `null` | Smurfing/funneling patterns, SHAP values, graph data |
-| `customer_details` | `JSONB` | `null` | Customer metadata for rapid development |
+| `customer_details` | `JSONB` | `null` | Denormalized customer metadata for rapid lookups |
 | `jurisdiction` | `Text` | `null` | Regulatory jurisdiction (e.g., `"FIU-IND (India)"`) |
 | `violated_laws` | `Text[]` | `null` | Array of violated law references (e.g., `"PMLA Section 3"`) |
 | `deadline_date` | `Timestamp` | `null` | 30-day regulatory filing deadline |
@@ -215,7 +296,7 @@ The central entity representing a suspicious activity investigation.
 | `created_at` | `Timestamp` | `now()` | Record creation timestamp |
 | `updated_at` | `Timestamp` | `now()` | Last modification timestamp |
 
-**Relationships:** Has many `transactions`, `evidence`, `auditLogs`
+**Relationships:** Belongs to `customer`, has many `transactions`, `evidence`, `auditLogs`
 
 ---
 
@@ -225,6 +306,7 @@ Individual financial transactions linked to a case.
 | Column | Type | Default | Description |
 |---|---|---|---|
 | `id` | `UUID` | `gen_random_uuid()` | Primary key |
+| `display_id` | `Text` | `null` | Human-readable ID (e.g., `"TXN-000001"`) |
 | `case_id` | `UUID` | — | Foreign key → `cases.id` (cascade delete) |
 | `external_tx_id` | `Text` | `null` | Original ID from bank CSV/API |
 | `amount` | `Decimal(15,2)` | — | Transaction amount |
@@ -244,7 +326,7 @@ Detected patterns and evidence items linked to a case.
 |---|---|---|---|
 | `id` | `UUID` | `gen_random_uuid()` | Primary key |
 | `case_id` | `UUID` | — | Foreign key → `cases.id` (cascade delete) |
-| `evidence_type` | `Text` | — | e.g., `"NETWORK_CHAIN"`, `"STRUCTURING_SMURFING"`, `"VELOCITY_SPIKE"` |
+| `evidence_type` | `Text` | — | e.g., `"NETWORK_CHAIN"`, `"STRUCTURING_SMURFING"` |
 | `description` | `Text` | — | e.g., "Detected suspicious flow across 3 connected entity nodes." |
 | `linked_tx_ids` | `Text[]` | — | Array of Transaction IDs that prove this evidence |
 | `created_at` | `Timestamp` | `now()` | Record creation timestamp |
@@ -327,7 +409,10 @@ redis-server
 # 5. Run Drizzle migrations
 npx drizzle-kit push
 
-# 6. Start the development server
+# 6. Seed the database with demo data
+node seed.js
+
+# 7. Start the development server
 npm run start
 ```
 
@@ -348,11 +433,15 @@ docker run -p 5000:3001 --env-file ./backend/.env sar-generator-backend
 ```bash
 # Health check
 curl http://localhost:5000/health
-# → { "status": "OK" }
+# → { "status": "OK", "timestamp": "..." }
 
 # Root endpoint
 curl http://localhost:5000/
-# → "SAR Generator API is live!"
+# → { "status": "online", "message": "SAR Generator API is live!" }
+
+# Frontend init data (should return seeded data)
+curl http://localhost:5000/api/init
+# → { "customers": [...], "transactions": [...], "sarReports": [...], "auditEntries": [...] }
 ```
 
 ---
@@ -363,8 +452,14 @@ curl http://localhost:5000/
 
 | Method | Endpoint | Handler | Description |
 |---|---|---|---|
-| `GET` | `/` | `index.js` | Server status message |
-| `GET` | `/health` | `index.js` | Health check |
+| `GET` | `/` | `index.js` | Server status (JSON) |
+| `GET` | `/health` | `index.js` | Health check with timestamp |
+
+### Frontend Data Bridge
+
+| Method | Endpoint | Controller | Description |
+|---|---|---|---|
+| `GET` | `/api/init` | `InitController.getInitialData` | Returns all customers, transactions, SAR reports & audit entries in one call. Shapes backend data to match frontend TypeScript types. |
 
 ### Layer 1: Ingestion (`/api/ingest`)
 
@@ -378,6 +473,7 @@ curl http://localhost:5000/
 |---|---|---|---|
 | `GET` | `/api/cases` | `caseController.getAllCases` | Retrieve all cases (with transactions) |
 | `GET` | `/api/cases/:id` | `caseController.getcasebyid` | Find a case by ID (with transactions) |
+| `PATCH` | `/api/cases/:id` | `caseController.updateCase` | Generic case update (status, assignedTo, narrative, riskLevel) |
 | `DELETE` | `/api/cases/:id` | `caseController.deletecase` | Delete a case by ID |
 | `POST` | `/api/cases/:id/analyze` | `AnalysisController.analyzeCase` | Trigger simulated ML analysis pipeline |
 | `GET` | `/api/cases/:id/audit` | `AuditController.getAuditTrail` | Retrieve audit trail for a case (sorted by latest) |
@@ -444,11 +540,31 @@ NarrativeController (HTTP 202) → Redis Queue → BullMQ Worker → DB Update �
 
 ---
 
+## 🌱 Database Seeding
+
+The project includes a seed script (`seed.js`) that populates the database with demo data for development and testing:
+
+```bash
+node seed.js
+```
+
+**Seeds:**
+- **6 customers** — Meridian Holdings, Oakwood Financial, Zenith Trading, Crimson Bay, Silvergate Capital, Baltic Freight
+- **3 cases** — FLAGGED (Meridian), DRAFT (Zenith), IN_REVIEW (Silvergate)
+- **9 transactions** — Wire transfers, ACH, crypto exchange, trade finance
+- **3 audit logs** — Ingestion records for each case
+
+---
+
 ## 🔄 Full Pipeline Walkthrough
 
 Here's the complete end-to-end flow using the API:
 
 ```bash
+# Step 0: Load frontend data (page load)
+GET /api/init
+# → { customers: [...], transactions: [...], sarReports: [...], auditEntries: [...] }
+
 # Step 1: Ingest transaction data → Creates a new Case (INGESTED)
 POST /api/ingest
 Body: { "transactions": [...], "customerMetadata": {...} }
@@ -469,6 +585,10 @@ POST /api/cases/:id/generate-narrative
 
 # Step 6: Worker auto-processes → Generates narrative (IN_REVIEW)
 # → Socket.IO emits 'narrative_ready' to case room
+
+# Step 7: Approve or update case status
+PATCH /api/cases/:id
+Body: { "status": "approved" }
 
 # Audit: View full audit trail at any point
 GET /api/cases/:id/audit
@@ -493,13 +613,19 @@ GET /api/cases/:id/audit
 - [x] Implement background worker with retry & exponential backoff
 - [x] Add Helmet security middleware
 - [x] Add Docker support (Dockerfile + .dockerignore)
-- [ ] Integrate real LLM (e.g., Llama 3.1 / Gemini / OpenAI) for narrative generation
-- [ ] Build the Analysis Service with real ML model calls
+- [x] Add `customers` table with full schema & relations
+- [x] Add `displayId` fields for frontend-friendly IDs on cases & transactions
+- [x] Add `GET /api/init` — single-call frontend data bridge
+- [x] Add `PATCH /api/cases/:id` — generic case update endpoint
+- [x] Create database seed script with demo data
+- [x] Configure CORS for frontend (ports 8080, 5173, 3000)
+- [ ] Integrate ML model from Render into `AnalysisController`
+- [ ] Wire frontend `SARDataContext` to `GET /api/init`
+- [ ] Add Socket.IO client to frontend for `narrative_ready` events
+- [ ] Replace frontend synthetic data with backend API calls
 - [ ] Add authentication & authorization middleware
-- [ ] Build the frontend dashboard
 - [ ] Add Docker Compose for full-stack orchestration (Node + Redis)
 - [ ] Deploy backend (Render) and frontend (Vercel)
-
 
 ---
 
