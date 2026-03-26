@@ -1,45 +1,68 @@
 import express from "express";
 import helmet from "helmet";
 import cors from "cors";
+import dotenv from "dotenv";
+import { createServer } from "http";
+
+dotenv.config();
+
+// Route imports
 import caseRoutes from "./routes/caseRoutes.js";
 import ingestionRoutes from "./routes/ingestionRoutes.js";
-import { createServer } from 'http'; // 1. Import Node's HTTP module
+import { getInitialData } from "./controllers/InitController.js";
+
+// Socket.IO
+import { initSocket } from "./utils/socket.js";
 
 const app = express();
-const httpServer = createServer(app); // 3. Wrap Express with HTTP Server
-
-// Initialize Socket.io
-import { initSocket } from "./utils/socket.js";
+const httpServer = createServer(app);
 const io = initSocket(httpServer);
-
 const PORT = process.env.PORT || 5000;
 
-// Middleware (LEAVE THESE AS 'app')
-app.use(cors());
-app.use(express.json());
+// ─── Middleware ─────────────────────────────────────
+app.use(cors({
+    origin: [
+        "http://localhost:8080",
+        "http://localhost:5173",
+        "http://localhost:3000",
+        "http://127.0.0.1:8080",
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+}));
+app.use(express.json({ limit: "50mb" }));
 app.use(helmet());
 
-// Base Endpoints (LEAVE THESE AS 'app')
-app.get('/', (req, res) => res.send('SAR Generator API is live!'));
-app.get('/health', (req, res) => res.status(200).json({ status: 'OK' }));
+// ─── Health / Status ────────────────────────────────
+app.get("/", (req, res) =>
+    res.json({ status: "online", message: "SAR Generator API is live!" })
+);
+app.get("/health", (req, res) =>
+    res.status(200).json({ status: "OK", timestamp: new Date().toISOString() })
+);
 
-// Layer 1: Ingestion Routes
+// ─── API Routes ─────────────────────────────────────
+app.get("/api/init", getInitialData);            // NEW: Single startup call
 app.use("/api/ingest", ingestionRoutes);
 app.use("/api/cases", caseRoutes);
 
-// Socket.io Connection Logic
-io.on('connection', (socket) => {
-    console.log(`🔌 Analyst Connected: ${socket.id}`);
-
-    socket.on('join-case', (caseId) => {
+// ─── Socket.IO ─────────────────────────────────────
+io.on("connection", (socket) => {
+    console.log(`🔌 Client connected: ${socket.id}`);
+    socket.on("join-case", (caseId) => {
         socket.join(caseId);
-        console.log(`📁 Joined Case Room: ${caseId}`);
+        console.log(`📁 Joined case room: ${caseId}`);
     });
 });
 
-// 4. CRITICAL CHANGE: Listen on 'httpServer', NOT 'app'
+// ─── Start ─────────────────────────────────────────
 httpServer.listen(PORT, () => {
-    console.log(`🚀 Server & Sockets listening on port ${PORT}`);
+    console.log(`🚀 Server & Sockets on http://localhost:${PORT}`);
+    console.log(`   GET  /api/init    — Frontend startup data`);
+    console.log(`   POST /api/ingest  — Transaction ingestion`);
+    console.log(`   GET  /api/cases   — All cases`);
 });
 
-import './worker.js';
+// Start background worker
+import "./worker.js";
