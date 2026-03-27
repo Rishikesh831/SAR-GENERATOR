@@ -8,7 +8,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ProfileProvider } from "@/context/ProfileContext";
 import { SARDataProvider } from "@/context/SARDataContext";
 import AppLayout from "@/components/AppLayout";
-import LiveTransactionBridge from "@/components/LiveTransactionBridge";
 import Dashboard from "@/pages/Dashboard";
 import Transactions from "@/pages/Transactions";
 import FlaggedClusters from "@/pages/FlaggedClusters";
@@ -66,7 +65,6 @@ const App = () => {
         >
           <QueryClientProvider client={queryClient}>
             <SARDataProvider>
-              <LiveTransactionBridge />
               <ProfileProvider>
                 <TooltipProvider>
                   <Toaster />

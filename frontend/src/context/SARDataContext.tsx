@@ -1,8 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from "react";
 import {
-  transactions as seedTransactions,
-  sarReports as seedSARs,
-  customers as seedCustomers,
   SARReport,
   Transaction,
   Customer,
@@ -12,6 +9,11 @@ import {
 } from "@/data/synthetic";
 import type { FullSARReport } from "@/lib/csvLoader";
 import { useCsvLiveFeed } from "@/hooks/useCSVData";
+
+function randomBetween(min: number, max: number) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
 import {
   detectAllThreatsFromData,
   summarizeThreats,
@@ -19,7 +21,7 @@ import {
   type ThreatSummary,
 } from "@/lib/threatDetection";
 import { io, type Socket } from "socket.io-client";
-import { fetchInitData, patchCase, updateChecklist, queueNarrative } from "@/lib/apiClient";
+import { fetchInitData, patchCase, updateChecklist, queueNarrative, resolveCustomerCluster } from "@/lib/apiClient";
 
 // ─── Live Feed ─────────────────────────────────────────────────────────────────
 
@@ -37,126 +39,6 @@ export interface LiveFeedItem {
   currency?: string;
   country?: string;
   read: boolean;
-}
-
-const MONITORING_SOURCES = [
-  "FinCEN FBAR Feed",
-  "SWIFT Compliance Monitor",
-  "Interpol Financial Link",
-  "Refinitiv World-Check",
-  "Europol SIENA",
-  "OFAC SDN Real-time",
-  "Acuris Risk Intelligence",
-  "EDD Trusted Network",
-  "TransUnion AML",
-  "Barclays Internal Monitor",
-];
-
-const FEED_TEMPLATES: {
-  title: string;
-  desc: (entity: string, amount: string, country: string) => string;
-  severity: FeedSeverity;
-}[] = [
-  {
-    title: "New Cross-Border Wire Detected",
-    desc: (e, a, c) => `${e} initiated ${a} wire to ${c} — jurisdiction flagged on FATF grey list`,
-    severity: "high",
-  },
-  {
-    title: "Structuring Pattern Alert",
-    desc: (e, a) => `${e} made 3 consecutive deposits below $10K totalling ${a} — CTR avoidance suspected`,
-    severity: "critical",
-  },
-  {
-    title: "KYC Anomaly Flagged",
-    desc: (e) => `${e} KYC documents expire in 48hrs — ${e} shows recent high-value activity`,
-    severity: "high",
-  },
-  {
-    title: "Crypto Conversion Chain",
-    desc: (e, a) => `${e}: BTC→XMR→USDT conversion chain of ${a} detected across 4 wallets`,
-    severity: "high",
-  },
-  {
-    title: "Velocity Breach — Rule R-407",
-    desc: (e, a) => `${e} surpassed 10-transaction hourly velocity. Amount: ${a} in 60 min`,
-    severity: "critical",
-  },
-  {
-    title: "Entity Match — Interpol Link",
-    desc: (e, _, c) => `Possible name match for ${e} on Interpol financial crimes watchlist (${c})`,
-    severity: "critical",
-  },
-  {
-    title: "Round-Amount Cluster",
-    desc: (e, a) => `${e}: 6 transactions of exactly ${a} to separate shell accounts`,
-    severity: "medium",
-  },
-  {
-    title: "Trade Invoice Mismatch",
-    desc: (e, a, c) => `${e}: Letter of Credit ${a} — declared vs market value discrepancy +340% from ${c}`,
-    severity: "medium",
-  },
-  {
-    title: "New Account Rapid Funding",
-    desc: (e, a) => `New account under ${e} received ${a} within 48hrs of opening — no business rationale`,
-    severity: "high",
-  },
-  {
-    title: "OFAC Screening Hit",
-    desc: (e, _, c) => `Fuzzy match: ${e} vs OFAC SDN list entity in ${c} — investigation required`,
-    severity: "critical",
-  },
-];
-
-const ENTITY_NAMES = [
-  "Elena Petrov", "James Morgan", "Chen Volkov", "Aisha Al-Rashid",
-  "Ivan Schmidt", "Fatima Santos", "Carlos Kim", "Priya Mueller",
-  "Robert Tanaka", "Maria Ibrahim", "Thomas Patel", "Yuki Garcia",
-];
-const COUNTRIES = ["BVI", "CY", "PA", "BS", "KY", "RU", "SG", "HK", "AE", "LU"];
-const CURRENCIES = ["USD", "EUR", "GBP", "BTC", "ETH"];
-
-function randomFrom<T>(arr: T[]): T {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
-function randomBetween(min: number, max: number) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-function formatAmount(n: number, currency: string) {
-  if (currency === "BTC") return `${(n / 50000).toFixed(2)} BTC`;
-  if (currency === "ETH") return `${(n / 3000).toFixed(1)} ETH`;
-  return `$${n.toLocaleString()}`;
-}
-
-function generateFeedItem(index: number): LiveFeedItem {
-  const template = randomFrom(FEED_TEMPLATES);
-  const entity = randomFrom(ENTITY_NAMES);
-  const amount = randomBetween(15000, 4500000);
-  const currency = randomFrom(CURRENCIES);
-  const country = randomFrom(COUNTRIES);
-  return {
-    id: `FEED-${Date.now()}-${index}`,
-    source: randomFrom(MONITORING_SOURCES),
-    title: template.title,
-    description: template.desc(entity, formatAmount(amount, currency), country),
-    severity: template.severity,
-    timestamp: new Date(),
-    entityName: entity,
-    amount,
-    currency,
-    country,
-    read: false,
-  };
-}
-
-// Seed 6 initial feed items (slightly aged)
-function seedFeed(): LiveFeedItem[] {
-  return Array.from({ length: 6 }, (_, i) => ({
-    ...generateFeedItem(i),
-    timestamp: new Date(Date.now() - (6 - i) * 45_000),
-    read: i > 3,
-  }));
 }
 
 // ─── Context ───────────────────────────────────────────────────────────────────
@@ -215,48 +97,7 @@ export interface SystemUser {
   createdAt: string;
 }
 
-const INITIAL_SYSTEM_USERS: SystemUser[] = [
-  {
-    id: "USR-0001",
-    name: "J. Morrison",
-    email: "j.morrison@barclays.com",
-    role: "Senior Analyst",
-    status: "Active",
-    createdAt: "2026-01-10",
-  },
-  {
-    id: "USR-0002",
-    name: "S. Chen",
-    email: "s.chen@barclays.com",
-    role: "Analyst",
-    status: "Active",
-    createdAt: "2026-01-11",
-  },
-  {
-    id: "USR-0003",
-    name: "A. Petrov",
-    email: "a.petrov@barclays.com",
-    role: "Compliance Officer",
-    status: "Active",
-    createdAt: "2026-01-08",
-  },
-  {
-    id: "USR-0004",
-    name: "M. Garcia",
-    email: "m.garcia@barclays.com",
-    role: "Analyst",
-    status: "Active",
-    createdAt: "2026-01-14",
-  },
-  {
-    id: "USR-0005",
-    name: "R. Kim",
-    email: "r.kim@barclays.com",
-    role: "Senior Analyst",
-    status: "Away",
-    createdAt: "2026-01-16",
-  },
-];
+const INITIAL_SYSTEM_USERS: SystemUser[] = [];
 
 interface SARDataContextValue {
   sarReports: SARReport[];
@@ -409,16 +250,16 @@ function computeStats(
 
 const SARDataContext = createContext<SARDataContextValue>({} as SARDataContextValue);
 
-let _sarCounter = seedSARs.length + 1;
-let _txnCounter = seedTransactions.length + 1;
+let _sarCounter = 1;
+let _txnCounter = 1;
 let _userCounter = INITIAL_SYSTEM_USERS.length + 1;
 
 export function SARDataProvider({ children }: { children: ReactNode }) {
   const csvLiveFeed = useCsvLiveFeed(24);
-  const [customers, setCustomers] = useState<Customer[]>(seedCustomers);
-  const [sarReports, setSARReports] = useState<SARReport[]>([...seedSARs]);
-  const [transactions, setTransactions] = useState<Transaction[]>([...seedTransactions]);
-  const [liveFeed, setLiveFeed] = useState<LiveFeedItem[]>(seedFeed);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [sarReports, setSARReports] = useState<SARReport[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [liveFeed, setLiveFeed] = useState<LiveFeedItem[]>([]);
   const [resolvedClusters, setResolvedClusters] = useState<string[]>([]);
   const [activeInvestigationEntity, setActiveInvestigationEntity] = useState<string | null>(null);
   const [investigations, setInvestigations] = useState<InvestigationRecord[]>([]);
@@ -900,6 +741,8 @@ export function SARDataProvider({ children }: { children: ReactNode }) {
     setResolvedClusters((prev) =>
       prev.includes(clusterId) ? prev : [...prev, clusterId]
     );
+    // Backend API Call to persistently clear cases for this customer
+    resolveCustomerCluster(clusterId);
   }, []);
 
   const beginInvestigation = useCallback(

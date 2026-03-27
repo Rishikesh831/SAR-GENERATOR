@@ -92,42 +92,23 @@ async function fetchCSV(path: string): Promise<string> {
 }
 
 export async function loadTransactions(): Promise<CsvTransaction[]> {
-  return parseCSV<CsvTransaction>(
-    await fetchCSV("/sar_dummy_transactions_4000_v2.csv"),
-    15
-  );
+  return [];
 }
 
 export async function loadNetworkGraph(): Promise<NetworkEdge[]> {
-  return parseCSV<NetworkEdge>(
-    await fetchCSV("/network_graph_dataset.csv"),
-    4
-  );
+  return [];
 }
 
 export async function loadHistoricalSARs(): Promise<HistoricalSAR[]> {
-  return parseCSV<HistoricalSAR>(
-    await fetchCSV("/historical_sar_dataset.csv"),
-    5
-  );
+  return [];
 }
 
 export async function loadExternalRisk(): Promise<ExternalRiskItem[]> {
-  return parseCSV<ExternalRiskItem>(
-    await fetchCSV("/external_risk_intelligence_dataset.csv"),
-    6
-  );
+  return [];
 }
 
 export async function loadAllCsvData(): Promise<AllCsvData> {
-  const [transactions, networkEdges, historicalSARs, externalRisk] =
-    await Promise.all([
-      loadTransactions(),
-      loadNetworkGraph(),
-      loadHistoricalSARs(),
-      loadExternalRisk(),
-    ]);
-  return { transactions, networkEdges, historicalSARs, externalRisk };
+  return { transactions: [], networkEdges: [], historicalSARs: [], externalRisk: [] };
 }
 
 // ─── SAR Report Engine ─────────────────────────────────────────────────────────

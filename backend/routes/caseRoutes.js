@@ -6,6 +6,7 @@ import {
     deletecase,
     updateChecklist,
     updateCase,            // ADD THIS
+    resolveCluster,
 } from "../controllers/caseController.js";
 import { analyzeCase } from "../controllers/AnalysisController.js";
 import { getAuditTrail } from "../controllers/AuditController.js";
@@ -18,6 +19,7 @@ const router = express.Router();
 router.get("/", getAllCases);
 router.get("/:id", getcasebyid);
 router.patch("/:id", updateCase);              // ADD THIS (generic update)
+router.post("/customer/:customerId/resolve", resolveCluster);
 router.delete("/:id", deletecase);
 
 // Pipeline

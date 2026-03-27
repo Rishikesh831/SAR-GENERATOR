@@ -100,8 +100,7 @@ export default function Transactions() {
   const flaggedCount = transactions.filter((t) => t.status === "flagged").length;
   const normalCount = transactions.filter((t) => t.status === "pending" || t.status === "cleared").length;
 
-  // Is a transaction CSV-sourced? (ACCT prefix from LiveTransactionBridge)
-  const isCsvSource = (t: Transaction) => t.customerId.startsWith("ACCT");
+
 
   return (
     <div className="space-y-4 animate-slide-in">
@@ -215,12 +214,10 @@ export default function Transactions() {
                 <TableHead>Status</TableHead>
                 <TableHead className="whitespace-nowrap">Flag Type</TableHead>
                 <TableHead>Country</TableHead>
-                <TableHead>Source</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {paged.map((tx) => {
-                const csv = isCsvSource(tx);
                 return (
                   <TableRow
                     key={tx.id}
@@ -237,10 +234,7 @@ export default function Transactions() {
                         {tx.riskScore > 80 && (
                           <AlertTriangle className="w-3 h-3 text-destructive shrink-0" />
                         )}
-                        <span className={cn(
-                          "text-sm font-medium truncate max-w-[140px]",
-                          csv ? "font-mono text-xs" : ""
-                        )}>
+                        <span className="text-sm font-medium truncate max-w-[140px]">
                           {tx.customerName}
                         </span>
                       </div>
@@ -263,7 +257,7 @@ export default function Transactions() {
                         }
                         className="text-[10px] capitalize whitespace-nowrap"
                       >
-                        {tx.status.replace("_", " ")}
+                        {(tx.status || "unknown").replace("_", " ")}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -277,16 +271,6 @@ export default function Transactions() {
                     </TableCell>
                     <TableCell>
                       <span className="text-[10px] font-mono text-muted-foreground">{tx.country || "—"}</span>
-                    </TableCell>
-                    <TableCell>
-                      <span className={cn(
-                        "text-[9px] font-medium px-1.5 py-0.5 rounded",
-                        csv
-                          ? "bg-blue-500/10 text-blue-600 dark:text-blue-400"
-                          : "bg-muted text-muted-foreground"
-                      )}>
-                        {csv ? "CSV" : "SYN"}
-                      </span>
                     </TableCell>
                   </TableRow>
                 );

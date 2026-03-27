@@ -40,6 +40,15 @@ export async function patchCase(dbId: string, updates: Record<string, unknown>):
   }
 }
 
+/** POST /api/cases/customer/:customerId/resolve — Clear customer cluster */
+export async function resolveCustomerCluster(customerId: string): Promise<void> {
+  try {
+    await fetch(`/api/cases/customer/${customerId}/resolve`, { method: "POST" });
+  } catch (err) {
+    console.warn("Cluster resolve failed:", (err as Error).message);
+  }
+}
+
 // ─── Pipeline ───────────────────────────────────────────────────────────────
 
 /** POST /api/ingest — Ingest transactions, creates a new case */

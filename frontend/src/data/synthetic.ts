@@ -127,161 +127,30 @@ function generateDate(daysAgo: number): string {
   return d.toISOString().split("T")[0];
 }
 
-// Generate customers
-export const customers: Customer[] = Array.from({ length: 50 }, (_, i) => ({
-  id: `CUST-${String(i + 1).padStart(4, "0")}`,
-  name: `${randomFrom(firstNames)} ${randomFrom(lastNames)}`,
-  accounts: Array.from({ length: randomBetween(2, 6) }, () => generateAccountNumber()),
-  riskRating: randomFrom<RiskLevel>(["high", "medium", "low"]),
-  kycStatus: randomFrom<"verified" | "pending" | "expired">(["verified", "verified", "verified", "pending", "expired"]),
-  businessType: randomFrom(businessTypes),
-  country: randomFrom(countries),
-  flagCount: randomBetween(0, 12),
-}));
+// Empty Data (only backend will be used)
+export const customers: Customer[] = [];
 
 // Generate transactions
-export const transactions: Transaction[] = Array.from({ length: 200 }, (_, i) => {
-  const customer = randomFrom(customers);
-  const riskScore = randomBetween(5, 99);
-  const isFlagged = riskScore > 60;
-  return {
-    id: `TXN-${String(i + 1).padStart(6, "0")}`,
-    customerId: customer.id,
-    customerName: customer.name,
-    amount: riskScore > 80 ? randomBetween(50000, 5000000) : randomBetween(100, 100000),
-    currency: randomFrom(currencies),
-    date: generateDate(randomBetween(0, 90)),
-    riskScore,
-    status: isFlagged ? randomFrom<TransactionStatus>(["flagged", "under_review"]) : randomFrom<TransactionStatus>(["cleared", "pending"]),
-    flagType: isFlagged ? randomFrom<FlagType>(["structuring", "round_amounts", "cross_border", "crypto", "high_value", "smurfing", "trade_based"]) : null,
-    senderAccount: randomFrom(customer.accounts),
-    receiverAccount: generateAccountNumber(),
-    country: randomFrom(countries),
-    type: randomFrom(txTypes),
-  };
-});
+export const transactions: Transaction[] = [];
 
-export const flaggedTransactions = transactions.filter((t) => t.status === "flagged" || t.status === "under_review");
+export const flaggedTransactions: Transaction[] = [];
 
-const analysts = ["J. Morrison", "S. Chen", "A. Petrov", "M. Garcia", "R. Kim"];
-const models = ["Claude Sonnet 3.5", "Llama 3.1 70B", "Mistral 7B"];
+export const sarReports: SARReport[] = [];
 
-const narrativeSnippets = [
-  "Between January 28, 2026, and February 10, 2026, the subject entity conducted a series of wire transfers totaling approximately $1,385,300 across multiple accounts, exhibiting patterns consistent with structuring and layering activity.",
-  "The subject initiated six transactions over a thirteen-day period, with four transactions flagged for suspicious activity indicators. Three outbound wire transfers were directed to Offshore Holdings Ltd, a registered entity in a high-risk jurisdiction (Cayman Islands), with no documented business relationship on file.",
-  "Cash deposits of $9,800, narrowly below the $10,000 Currency Transaction Report threshold, were made at Branch 441 on February 1, 2026. This deposit, combined with the pattern of wire activity, suggests potential structuring to evade reporting requirements.",
-  "Multiple circular transfers between shell entities were identified, with funds moving through four intermediate accounts before reaching final destination. This pattern is consistent with money laundering typology for layering activities.",
-];
+export const auditEntries: AuditEntry[] = [];
 
-const triggerRuleTemplates = [
-  { id: "R-101", name: "Structuring below $10K threshold", confidence: 98 },
-  { id: "R-204", name: "Rapid movement to offshore entity", confidence: 94 },
-  { id: "R-312", name: "Nominee account layering", confidence: 87 },
-  { id: "R-155", name: "Geographic risk — jurisdiction mismatch", confidence: 72 },
-  { id: "R-407", name: "Velocity check: 12+ txns in 30 min", confidence: 85 },
-];
-
-const riskBreakdownTemplates = [
-  [
-    { label: "Structuring", value: 98 },
-    { label: "Layering", value: 94 },
-    { label: "Jurisdiction", value: 72 },
-    { label: "Velocity", value: 85 },
-  ],
-  [
-    { label: "Cross-border", value: 92 },
-    { label: "Round amounts", value: 88 },
-    { label: "High value", value: 76 },
-    { label: "Crypto conversion", value: 89 },
-  ],
-];
-
-export const sarReports: SARReport[] = Array.from({ length: 20 }, (_, i) => {
-  const status = randomFrom<SARStatus>(["draft", "draft", "review", "review", "approved", "filed"]);
-  const customer = flaggedTransactions[i]?.customerName || customers[0].name;
-  const relatedTxs = flaggedTransactions.slice(i * 2, i * 2 + randomBetween(1, 4));
-
-  return {
-    id: `SAR-${String(2026000 + 4891 + i)}`,
-    transactionIds: relatedTxs.map((t) => t.id),
-    caseId: `CASE-${String(2026000 + 4891 + i)}`,
-    sourceTransactionId: relatedTxs[0]?.id,
-    customerId: flaggedTransactions[i]?.customerId || customers[0].id,
-    customerName: customer,
-    status,
-    createdAt: generateDate(randomBetween(1, 30)),
-    updatedAt: generateDate(randomBetween(0, 5)),
-    generatedAt: generateDate(randomBetween(1, 30)),
-    assignedTo: randomFrom(analysts),
-    confidenceScore: randomBetween(75, 98),
-    modelUsed: randomFrom(models),
-    promptVersion: `v${randomBetween(2, 3)}.${randomBetween(0, 5)}.${randomBetween(0, 9)}`,
-    lifecycleVersion: 1,
-    daysRemaining: status === "filed" ? 0 : randomBetween(1, 7),
-    priority: randomFrom<RiskLevel>(["high", "medium", "low"]),
-    narrative: randomFrom(narrativeSnippets),
-    deadline: generateDate(-randomBetween(1, 14)),
-    entityType: "Limited Liability Company",
-    ein: `XX-XXX${String(4891 + i).padEnd(4, "0")}`,
-    address: `${randomBetween(1000, 9999)} Commerce Blvd, Wilmington, DE 19801`,
-    industryType: "International Trade / Logistics",
-    riskBreakdown: randomFrom(riskBreakdownTemplates),
-    triggerRules: triggerRuleTemplates.slice(0, randomBetween(2, 4)),
-    evidenceAnchors: [
-      `${randomBetween(2, 6)} evidence anchors`,
-      `Transaction pattern analysis`,
-      `KYC deviation report`,
-    ],
-    timelineEvents: [
-      { date: generateDate(randomBetween(5, 10)), event: "Alert generated — structuring pattern detected" },
-      { date: generateDate(randomBetween(2, 4)), event: "Case assigned to analyst" },
-      { date: generateDate(0), event: "Narrative generated by AI model" },
-    ],
-  };
-});
-
-export const auditEntries: AuditEntry[] = Array.from({ length: 60 }, (_, i) => ({
-  id: `AUD-${String(i + 1).padStart(5, "0")}`,
-  sarId: sarReports[i % sarReports.length].id,
-  timestamp: new Date(Date.now() - randomBetween(0, 30 * 24 * 60 * 60 * 1000)).toISOString(),
-  user: randomFrom(analysts),
-  role: randomFrom(["Analyst", "Senior Analyst", "Compliance Officer"]),
-  action: randomFrom(["Created", "Generated", "Edited", "Approved", "Filed", "Reviewed", "Commented"]),
-  modelVersion: randomFrom(["Claude-v3.5", "Llama-3.1-70B", "Mistral-7B", undefined]),
-  promptVersionId: `v${randomBetween(2, 3)}.${randomBetween(0, 5)}.${randomBetween(0, 9)}`,
-  details: randomFrom([
-    "Initial SAR narrative generated",
-    "Modified suspicious activity description",
-    "Approved for filing with FinCEN",
-    "Added regulatory compliance notes",
-    "Updated subject information",
-    "Reviewed risk attribution graph",
-    "Filed with regulatory body",
-    "Flagged for additional investigation",
-  ]),
-}));
-
-export const recentAlerts: AlertItem[] = [
-  { id: "ALT-001", message: "Structuring detected: 5 deposits under $10,000 within 24hrs", time: "2 min ago", severity: "high", transactionId: flaggedTransactions[0]?.id || "TXN-000001" },
-  { id: "ALT-002", message: "Cross-border wire to sanctioned jurisdiction (DPRK)", time: "15 min ago", severity: "high", transactionId: flaggedTransactions[1]?.id || "TXN-000002" },
-  { id: "ALT-003", message: "Unusual crypto conversion pattern: BTC → XMR → fiat", time: "32 min ago", severity: "high", transactionId: flaggedTransactions[2]?.id || "TXN-000003" },
-  { id: "ALT-004", message: "Round amount transfers: 6 x $50,000.00 to shell entities", time: "1 hr ago", severity: "medium", transactionId: flaggedTransactions[3]?.id || "TXN-000004" },
-  { id: "ALT-005", message: "KYC expiry alert: High-risk customer Chen Volkov", time: "1 hr ago", severity: "medium", transactionId: flaggedTransactions[4]?.id || "TXN-000005" },
-  { id: "ALT-006", message: "Velocity check: 12 transactions in 30 minutes", time: "2 hrs ago", severity: "medium", transactionId: flaggedTransactions[5]?.id || "TXN-000006" },
-  { id: "ALT-007", message: "Trade-based ML indicator: Over-invoicing by 340%", time: "3 hrs ago", severity: "low", transactionId: flaggedTransactions[6]?.id || "TXN-000007" },
-  { id: "ALT-008", message: "New account rapid funding: $2.1M within 48hrs of opening", time: "4 hrs ago", severity: "high", transactionId: flaggedTransactions[7]?.id || "TXN-000008" },
-];
+export const recentAlerts: AlertItem[] = [];
 
 // Dashboard metrics
 export const dashboardMetrics = {
-  totalSARsFiled: { thisMonth: 47, thisYear: 312, trend: 12 },
-  pendingReviews: { count: 23, urgent: 5 },
-  falsePositiveRate: { percentage: 34.2, trend: -8.5 },
-  avgProcessingTime: { hours: 3.2, trend: -22 },
-  casesPerHour: 10000,
-  sarGenerationTime: "2-6s",
-  timeReduction: 52,
-  falsePositiveReduction: 41,
+  totalSARsFiled: { thisMonth: 0, thisYear: 0, trend: 0 },
+  pendingReviews: { count: 0, urgent: 0 },
+  falsePositiveRate: { percentage: 0, trend: 0 },
+  avgProcessingTime: { hours: 0, trend: 0 },
+  casesPerHour: 0,
+  sarGenerationTime: "N/A",
+  timeReduction: 0,
+  falsePositiveReduction: 0,
 };
 
 // SHAP feature attribution data for narrative lines

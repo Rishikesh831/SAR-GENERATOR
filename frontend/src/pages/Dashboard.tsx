@@ -35,7 +35,7 @@ import { useMemo, useState } from "react";
 import { useSARData } from "@/context/SARDataContext";
 import FlaggedClustersGlobe from "@/components/intelligence/preview";
 import { InvestigationTimeline } from "@/components/intelligence/InvestigationTimeline";
-import { RealTimeAlertFeed } from "@/components/intelligence/RealTimeAlertFeed";
+// import { RealTimeAlertFeed } from "@/components/intelligence/RealTimeAlertFeed";
 import { GlobalTransactionHeatmap } from "@/components/intelligence/GlobalTransactionHeatmap";
 import { SARNarrativePanel } from "@/components/intelligence/SARNarrativePanel";
 import { SystemHealthIndicators } from "@/components/intelligence/SystemHealthIndicators";
@@ -124,8 +124,8 @@ export default function Dashboard() {
     const falsePositiveRate =
       transactions.length > 0
         ? Math.round(
-            (transactions.filter((t) => t.status === "cleared").length / transactions.length) * 1000
-          ) / 10
+          (transactions.filter((t) => t.status === "cleared").length / transactions.length) * 1000
+        ) / 10
         : 0;
 
     const processingHours = sarReports
@@ -139,7 +139,7 @@ export default function Dashboard() {
 
     const avgProcessingTime = processingHours.length
       ? Math.round((processingHours.reduce((sum, v) => sum + v, 0) / processingHours.length) * 10) /
-        10
+      10
       : 0;
 
     return {
@@ -193,11 +193,10 @@ export default function Dashboard() {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id as "overview" | "threats" | "timeline" | "alerts" | "health")}
-            className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors whitespace-nowrap ${
-              activeTab === tab.id
-                ? "bg-primary text-primary-foreground border-b-2 border-primary"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-            }`}
+            className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors whitespace-nowrap ${activeTab === tab.id
+              ? "bg-primary text-primary-foreground border-b-2 border-primary"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+              }`}
           >
             {tab.label}
           </button>
@@ -229,227 +228,226 @@ export default function Dashboard() {
           )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <MetricCard
-          title="SARs Filed"
-          value={metrics.filedThisMonth}
-          subtitle={`${metrics.filedThisYear} this year`}
-          icon={FileText}
-        />
-        <MetricCard
-          title="Pending Reviews"
-          value={metrics.pendingReviews}
-          subtitle={`${metrics.urgentReviews} urgent`}
-          icon={Clock}
-        />
-        <MetricCard
-          title="False Positive Rate"
-          value={`${metrics.falsePositiveRate}%`}
-          subtitle="derived from live outcomes"
-          icon={Target}
-        />
-        <MetricCard
-          title="Avg Processing Time"
-          value={`${metrics.avgProcessingTime}h`}
-          subtitle="review-to-update cycle"
-          icon={Zap}
-        />
-      </div>
-
-      <Card className="border-risk-high/30 bg-risk-high/5 shadow-card">
-        <CardHeader className="pb-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Activity className="w-4 h-4 text-risk-high animate-pulse" />
-              <CardTitle className="text-sm font-semibold">
-                Live Threat Intelligence
-              </CardTitle>
-            </div>
-            <Button variant="ghost" size="sm" onClick={() => navigate("/flagged")} className="text-xs text-risk-high hover:text-risk-high">
-              Investigate All -&gt;
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap items-center gap-2 mb-3">
-            {threatSummary.critical > 0 && (
-              <Badge className="bg-red-500 text-white text-[10px] gap-1">
-                <AlertTriangle className="w-3 h-3" /> {threatSummary.critical} Critical
-              </Badge>
-            )}
-            <Badge variant="destructive" className="text-[10px] gap-1">
-              <AlertTriangle className="w-3 h-3" /> {threatSummary.high} High
-            </Badge>
-            <Badge variant="warning" className="text-[10px]">{threatSummary.medium} Medium</Badge>
-            <Badge variant="secondary" className="text-[10px]">{threatSummary.low} Low</Badge>
-            <span className="text-[10px] text-muted-foreground ml-auto">
-              ${(threatSummary.totalAmountAtRisk / 1_000_000).toFixed(1)}M at risk · {stats.totalFlagged} flagged txns · {stats.expiredKYC} expired KYC · {stats.highRiskCustomers} high-risk customers
-            </span>
+            <MetricCard
+              title="SARs Filed"
+              value={metrics.filedThisMonth}
+              subtitle={`${metrics.filedThisYear} this year`}
+              icon={FileText}
+            />
+            <MetricCard
+              title="Pending Reviews"
+              value={metrics.pendingReviews}
+              subtitle={`${metrics.urgentReviews} urgent`}
+              icon={Clock}
+            />
+            <MetricCard
+              title="False Positive Rate"
+              value={`${metrics.falsePositiveRate}%`}
+              subtitle="derived from live outcomes"
+              icon={Target}
+            />
+            <MetricCard
+              title="Avg Processing Time"
+              value={`${metrics.avgProcessingTime}h`}
+              subtitle="review-to-update cycle"
+              icon={Zap}
+            />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {threats.slice(0, 4).map((threat) => (
-              <button
-                key={threat.id}
-                onClick={() => navigate("/flagged")}
-                className={`text-left p-3 rounded-lg border-l-2 transition-colors hover:opacity-80 ${SEVERITY_BG[threat.severity]}`}
-              >
-                <div className="flex items-start gap-2">
-                  <TrendingUp className={`w-3.5 h-3.5 mt-0.5 shrink-0 ${SEVERITY_COLOR[threat.severity]}`} />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-semibold text-foreground leading-tight">{threat.title}</p>
-                    <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-2">{threat.description}</p>
-                    {threat.affectedCustomer && (
-                      <p className="text-[10px] text-primary font-medium mt-0.5">{threat.affectedCustomer}</p>
-                    )}
-                  </div>
-                  <span className={`text-[11px] font-bold shrink-0 ${SEVERITY_COLOR[threat.severity]}`}>
-                    {threat.riskScore}
-                  </span>
+          <Card className="border-risk-high/30 bg-risk-high/5 shadow-card">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-risk-high animate-pulse" />
+                  <CardTitle className="text-sm font-semibold">
+                    Live Threat Intelligence
+                  </CardTitle>
                 </div>
-              </button>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="shadow-card border-primary/20">
-        <CardHeader className="pb-2 flex flex-row items-center justify-between">
-          <CardTitle className="text-sm font-semibold">Continuous Transaction Monitoring</CardTitle>
-          <Button variant="outline" size="sm" className="text-xs gap-1" onClick={() => navigate("/transactions")}>View All Transactions <ArrowRight className="w-3 h-3" /></Button>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {monitoringPreview.map((tx) => (
-            <button
-              key={tx.id}
-              onClick={() => navigate(`/transactions?q=${encodeURIComponent(tx.id)}`)}
-              className="w-full text-left flex items-center justify-between p-2.5 rounded-md bg-muted/40 hover:bg-muted transition-colors"
-            >
-              <div className="min-w-0">
-                <p className="text-xs font-semibold text-foreground truncate">{tx.id} · {tx.customerName}</p>
-                <p className="text-[10px] text-muted-foreground">{tx.type} · {tx.country} · {tx.date}</p>
+                <Button variant="ghost" size="sm" onClick={() => navigate("/flagged")} className="text-xs text-risk-high hover:text-risk-high">
+                  Investigate All -&gt;
+                </Button>
               </div>
-              <div className="text-right shrink-0 ml-3">
-                <p className="text-xs font-mono font-semibold">{formatAmount(tx.amount)}</p>
-                <Badge variant={tx.riskScore >= 80 ? "riskHigh" : tx.riskScore >= 50 ? "riskMedium" : "riskLow"} className="text-[9px] mt-0.5">
-                  Risk {tx.riskScore}
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap items-center gap-2 mb-3">
+                {threatSummary.critical > 0 && (
+                  <Badge className="bg-red-500 text-white text-[10px] gap-1">
+                    <AlertTriangle className="w-3 h-3" /> {threatSummary.critical} Critical
+                  </Badge>
+                )}
+                <Badge variant="destructive" className="text-[10px] gap-1">
+                  <AlertTriangle className="w-3 h-3" /> {threatSummary.high} High
                 </Badge>
+                <Badge variant="warning" className="text-[10px]">{threatSummary.medium} Medium</Badge>
+                <Badge variant="secondary" className="text-[10px]">{threatSummary.low} Low</Badge>
+                <span className="text-[10px] text-muted-foreground ml-auto">
+                  ${(threatSummary.totalAmountAtRisk / 1_000_000).toFixed(1)}M at risk · {stats.totalFlagged} flagged txns · {stats.expiredKYC} expired KYC · {stats.highRiskCustomers} high-risk customers
+                </span>
               </div>
-            </button>
-          ))}
-        </CardContent>
-      </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <Card className="shadow-card">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold">
-              Risk Distribution
-              <span className="text-[10px] text-muted-foreground font-normal ml-1">({transactions.length} txns)</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-center">
-              <ResponsiveContainer width={180} height={180}>
-                <PieChart>
-                  <Pie data={stats.riskDistribution} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={3} dataKey="value">
-                    {stats.riskDistribution.map((entry, i) => (
-                      <Cell key={i} fill={entry.color} />
-                    ))}
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="flex flex-wrap justify-center gap-3 mt-2">
-              {stats.riskDistribution.map((r) => (
-                <div key={r.name} className="flex items-center gap-1.5 text-xs">
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: r.color }} />
-                  <span className="text-muted-foreground">{r.name}: {r.value}%</span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {threats.slice(0, 4).map((threat) => (
+                  <button
+                    key={threat.id}
+                    onClick={() => navigate("/flagged")}
+                    className={`text-left p-3 rounded-lg border-l-2 transition-colors hover:opacity-80 ${SEVERITY_BG[threat.severity]}`}
+                  >
+                    <div className="flex items-start gap-2">
+                      <TrendingUp className={`w-3.5 h-3.5 mt-0.5 shrink-0 ${SEVERITY_COLOR[threat.severity]}`} />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-semibold text-foreground leading-tight">{threat.title}</p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-2">{threat.description}</p>
+                        {threat.affectedCustomer && (
+                          <p className="text-[10px] text-primary font-medium mt-0.5">{threat.affectedCustomer}</p>
+                        )}
+                      </div>
+                      <span className={`text-[11px] font-bold shrink-0 ${SEVERITY_COLOR[threat.severity]}`}>
+                        {threat.riskScore}
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
 
-        <Card className="shadow-card">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold">SAR Filing Trend</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={monthlyTrend}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="month" fontSize={11} stroke="hsl(var(--muted-foreground))" />
-                <YAxis fontSize={11} stroke="hsl(var(--muted-foreground))" />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: "8px",
-                    fontSize: "12px",
-                  }}
-                />
-                <Bar dataKey="sars" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-card">
-          <CardHeader className="pb-2 flex flex-row items-center justify-between">
-            <CardTitle className="text-sm font-semibold">Recent SAR Reports</CardTitle>
-            <Button variant="ghost" size="sm" onClick={() => navigate("/sar/queue")} className="text-xs">View All</Button>
-          </CardHeader>
-          <CardContent className="space-y-2 max-h-[220px] overflow-y-auto">
-            {sarReports.slice(0, 6).map((sar) => {
-              const highlighted = sar.customerId === activeInvestigationEntity;
-              return (
-                <div
-                  key={sar.id}
-                  className={`flex items-center justify-between p-2 rounded-md cursor-pointer transition-colors ${
-                    highlighted ? "bg-primary/10 border border-primary/30" : "bg-muted/50 hover:bg-muted"
-                  }`}
-                  onClick={() => navigate(`/case/${sar.id}`)}
+          <Card className="shadow-card border-primary/20">
+            <CardHeader className="pb-2 flex flex-row items-center justify-between">
+              <CardTitle className="text-sm font-semibold">Continuous Transaction Monitoring</CardTitle>
+              <Button variant="outline" size="sm" className="text-xs gap-1" onClick={() => navigate("/transactions")}>View All Transactions <ArrowRight className="w-3 h-3" /></Button>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {monitoringPreview.map((tx) => (
+                <button
+                  key={tx.id}
+                  onClick={() => navigate(`/transactions?q=${encodeURIComponent(tx.id)}`)}
+                  className="w-full text-left flex items-center justify-between p-2.5 rounded-md bg-muted/40 hover:bg-muted transition-colors"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-1.5">
-                      {sar.status === "filed" ? (
-                        <CheckCircle className="w-4 h-4 text-success" />
-                      ) : sar.status === "approved" ? (
-                        <Shield className="w-4 h-4 text-primary" />
-                      ) : (
-                        <FileText className="w-4 h-4 text-muted-foreground" />
-                      )}
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-foreground">{sar.id}</p>
-                      <p className="text-[10px] text-muted-foreground">{sar.customerName}</p>
-                    </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-foreground truncate">{tx.id} · {tx.customerName}</p>
+                    <p className="text-[10px] text-muted-foreground">{tx.type} · {tx.country} · {tx.date}</p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge
-                      variant={
-                        sar.status === "filed"
-                          ? "success"
-                          : sar.status === "approved"
-                            ? "default"
-                            : sar.status === "review"
-                              ? "warning"
-                              : "secondary"
-                      }
-                      className="text-[10px] capitalize"
-                    >
-                      {sar.status}
+                  <div className="text-right shrink-0 ml-3">
+                    <p className="text-xs font-mono font-semibold">{formatAmount(tx.amount)}</p>
+                    <Badge variant={tx.riskScore >= 80 ? "riskHigh" : tx.riskScore >= 50 ? "riskMedium" : "riskLow"} className="text-[9px] mt-0.5">
+                      Risk {tx.riskScore}
                     </Badge>
-                    {sar.daysRemaining > 0 && sar.daysRemaining <= 2 && (
-                      <span className="text-[10px] text-risk-high font-medium">{sar.daysRemaining}d left</span>
-                    )}
                   </div>
+                </button>
+              ))}
+            </CardContent>
+          </Card>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <Card className="shadow-card">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-semibold">
+                  Risk Distribution
+                  <span className="text-[10px] text-muted-foreground font-normal ml-1">({transactions.length} txns)</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-center">
+                  <ResponsiveContainer width={180} height={180}>
+                    <PieChart>
+                      <Pie data={stats.riskDistribution} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={3} dataKey="value">
+                        {stats.riskDistribution.map((entry, i) => (
+                          <Cell key={i} fill={entry.color} />
+                        ))}
+                      </Pie>
+                    </PieChart>
+                  </ResponsiveContainer>
                 </div>
-              );
-            })}
-          </CardContent>
-        </Card>
-      </div>
+                <div className="flex flex-wrap justify-center gap-3 mt-2">
+                  {stats.riskDistribution.map((r) => (
+                    <div key={r.name} className="flex items-center gap-1.5 text-xs">
+                      <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: r.color }} />
+                      <span className="text-muted-foreground">{r.name}: {r.value}%</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-card">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-semibold">SAR Filing Trend</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={200}>
+                  <BarChart data={monthlyTrend}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="month" fontSize={11} stroke="hsl(var(--muted-foreground))" />
+                    <YAxis fontSize={11} stroke="hsl(var(--muted-foreground))" />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--card))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: "8px",
+                        fontSize: "12px",
+                      }}
+                    />
+                    <Bar dataKey="sars" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-card">
+              <CardHeader className="pb-2 flex flex-row items-center justify-between">
+                <CardTitle className="text-sm font-semibold">Recent SAR Reports</CardTitle>
+                <Button variant="ghost" size="sm" onClick={() => navigate("/sar/queue")} className="text-xs">View All</Button>
+              </CardHeader>
+              <CardContent className="space-y-2 max-h-[220px] overflow-y-auto">
+                {sarReports.slice(0, 6).map((sar) => {
+                  const highlighted = sar.customerId === activeInvestigationEntity;
+                  return (
+                    <div
+                      key={sar.id}
+                      className={`flex items-center justify-between p-2 rounded-md cursor-pointer transition-colors ${highlighted ? "bg-primary/10 border border-primary/30" : "bg-muted/50 hover:bg-muted"
+                        }`}
+                      onClick={() => navigate(`/case/${sar.id}`)}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-1.5">
+                          {sar.status === "filed" ? (
+                            <CheckCircle className="w-4 h-4 text-success" />
+                          ) : sar.status === "approved" ? (
+                            <Shield className="w-4 h-4 text-primary" />
+                          ) : (
+                            <FileText className="w-4 h-4 text-muted-foreground" />
+                          )}
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-foreground">{sar.id}</p>
+                          <p className="text-[10px] text-muted-foreground">{sar.customerName}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge
+                          variant={
+                            sar.status === "filed"
+                              ? "success"
+                              : sar.status === "approved"
+                                ? "default"
+                                : sar.status === "review"
+                                  ? "warning"
+                                  : "secondary"
+                          }
+                          className="text-[10px] capitalize"
+                        >
+                          {sar.status}
+                        </Badge>
+                        {sar.daysRemaining > 0 && sar.daysRemaining <= 2 && (
+                          <span className="text-[10px] text-risk-high font-medium">{sar.daysRemaining}d left</span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </CardContent>
+            </Card>
+          </div>
         </div>
       )}
 
@@ -485,7 +483,7 @@ export default function Dashboard() {
               <CardTitle className="text-sm font-semibold">Real-Time Alert Feed</CardTitle>
             </CardHeader>
             <CardContent className="h-full overflow-auto">
-              <RealTimeAlertFeed />
+              {/* <RealTimeAlertFeed /> */}
             </CardContent>
           </Card>
           <Card className="shadow-card border-primary/20 min-h-[420px] sm:min-h-[500px]">

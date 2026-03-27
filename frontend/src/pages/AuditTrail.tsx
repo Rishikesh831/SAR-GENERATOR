@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Search, Lock, Download } from "lucide-react";
-import { auditEntries as syntheticAuditEntries, type AuditEntry } from "@/data/synthetic";
+import type { AuditEntry } from "@/data/synthetic";
 import { useState, useMemo, useEffect } from "react";
 
 const actionColors: Record<string, string> = {
@@ -19,7 +19,7 @@ const actionColors: Record<string, string> = {
 
 export default function AuditTrail() {
   const [search, setSearch] = useState("");
-  const [auditEntries, setAuditEntries] = useState<AuditEntry[]>(syntheticAuditEntries);
+  const [auditEntries, setAuditEntries] = useState<AuditEntry[]>([]);
 
   useEffect(() => {
     fetch("/api/init")
@@ -27,7 +27,7 @@ export default function AuditTrail() {
       .then((data) => {
         if (data.auditEntries?.length > 0) setAuditEntries(data.auditEntries);
       })
-      .catch(() => { /* keep synthetic */ });
+      .catch(() => { /* keep empty */ });
   }, []);
 
   const filtered = useMemo(() => {

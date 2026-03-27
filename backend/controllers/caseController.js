@@ -164,3 +164,32 @@ export const updateCase = async (req, res) => {
         return res.status(500).json({ error: error.message });
     }
 };
+
+// 7. Resolve Cluster (Customer Level)
+export const resolveCluster = async (req, res) => {
+    const { customerId } = req.params;
+    try {
+        // Find cases for this customer
+        const customerCases = await db.query.cases.findMany({
+            where: eq(cases.customerId, customerId)
+        });
+        
+        // Mark all cases as CLEARED or handled
+        for (const c of customerCases) {
+            await db.update(cases)
+                .set({ status: "APPROVED", updatedAt: new Date() }) // or 'CLEARED'
+                .where(eq(cases.id, c.id));
+                
+            await db.insert(auditLogs).values({
+                caseId: c.id,
+                action: "CLUSTER_RESOLVED",
+                actor: "ANALYST", // Should come from auth
+                details: `Cluster/Case resolved by analyst from Flagged Clusters view.`,
+            });
+        }
+        
+        return res.status(200).json({ message: "Cluster resolved successfully" });
+    } catch (error) {
+        return res.status(500).json({ error: error.message });
+    }
+};

@@ -87,8 +87,11 @@ export const getInitialData = async (req, res) => {
                 currency: t.currency,
                 date: t.timestamp?.toISOString?.()?.split("T")[0] || "",
                 riskScore: Math.round(parseFloat(c.riskScore || "0") * 100),
-                status: t.isFlagged ? "flagged" : "pending",
-                flagType: null,
+                flagType: t.category?.toLowerCase()?.includes("crypto") ? "crypto" 
+                    : t.category?.toLowerCase()?.includes("trade") ? "trade_based" 
+                    : parseFloat(t.amount) > 50000 ? "high_value"
+                    : t.category?.toLowerCase()?.includes("wire") ? "cross_border"
+                    : "structuring",
                 senderAccount: t.senderDetails?.acc_id || "",
                 receiverAccount: t.receiverDetails?.acc_id || "",
                 country: t.senderDetails?.country || "Unknown",
