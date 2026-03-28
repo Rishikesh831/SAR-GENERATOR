@@ -161,8 +161,10 @@ export default function RiskGraph() {
   } = useSARData();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const entityFromQuery = searchParams.get("entity");
+  const openSar = searchParams.get("action") === "sar";
 
-  const [selectedNode, setSelectedNode] = useState<string | null>(null);
+  const [selectedNode, setSelectedNode] = useState<string | null>(() => searchParams.get("entity"));
   const [manuallySuspiciousNodes, setManuallySuspiciousNodes] = useState<string[]>([]);
   const [excludedNodes, setExcludedNodes] = useState<string[]>([]);
   const [sarModal, setSarModal] = useState<string | null>(null); // entityId
@@ -174,24 +176,20 @@ export default function RiskGraph() {
   const SVG_H = 560;
 
   useEffect(() => {
-    const entityFromQuery = searchParams.get("entity");
-    const openSar = searchParams.get("action") === "sar";
     if (!entityFromQuery) return;
-    
-    // Only update if it is different
+
     if (selectedNode !== entityFromQuery) {
       setSelectedNode(entityFromQuery);
-      beginInvestigation(entityFromQuery, "risk_graph");
     }
+    beginInvestigation(entityFromQuery, "risk_graph");
 
-    if (openSar && !sarModal && entityFromQuery) {
-      beginInvestigation(entityFromQuery, "risk_graph");
+    if (openSar && !sarModal) {
       setSarModal(entityFromQuery);
       setChecklist(CHECKLIST_ITEMS.map(() => false));
       setSarActiveTab("narrative");
       setGeneratedSarId(null);
     }
-  }, [searchParams, beginInvestigation, selectedNode, sarModal]);
+  }, [entityFromQuery, openSar, beginInvestigation, sarModal]);
 
   // ─── Build graph from CSV ────────────────────────────────────────────────────
 
