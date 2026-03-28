@@ -1,0 +1,274 @@
+﻿
+================================================================
+  END-TO-END PIPELINE TEST
+================================================================
+
+================================================================
+  STAGE 0: EXTERNAL CONTEXT AGENT
+================================================================
+  Input     : FinCEN Advisory + Feedback
+  Output    : PriorVector JSON
+{
+    "context_timestamp": "2026-03-26T12:00:00Z",
+    "world_state": {
+        "region_risk": "West Africa ^",
+        "typology_focus": "structuring",
+        "commodity_flag": "narcotics",
+        "enforcement_rec": "FinCEN_Files_pattern",
+        "risk_multiplier": 1.0
+    },
+    "justification": "Financial crime indicators detected \u2014 3 high-risk regions; typology:structuring; commodity:narcotics; (severe commodity bonus); enforcement:FinCEN_Files_pattern; (corroboration \u00d71.10); risk_multiplier set to 1.0."
+}
+  Ô£ö  risk_multiplier = 1.0
+  Ô£ö  typology_focus  = structuring
+  Ô£ö  region_risk     = West Africa
+  Ô£ö  commodity_flag  = narcotics
+  Ô£ö  Prior Vector has meaningful signal ÔÇö will bias downstream layers
+
+================================================================
+  LAYER 1: DATA INGESTION
+================================================================
+  Ô£ö  Dataset found: D:\SAR-Generator\Dataset\synthetic_aml_transactions.csv (21.2 MB)
+  Ô£ö  Synthetic ground-truth: 1020 rows, 20 fraud, 1000 clean
+
+================================================================
+  LAYER 2: SUSPICION DETECTION (ML Engine)
+================================================================
+
+  ----------------------------------------------------------------
+  METRIC                        RUN A (Static)   RUN B (Aware)
+  ----------------------------------------------------------------
+  Recall @ Top 10                       20.0%          50.0%
+  Precision @ Top 20                    30.0%         100.0%
+  ----------------------------------------------------------------
+  Lift (Recall B / A) = 2.50
+  Ô£ö  Context Agent LIFT = 2.50x ÔÇö ML layer is context-aware Ô£ô
+  Ô£ö  Max adjusted score: 1.0000
+  Ô£ö  Output: array of 1020 anomaly scores passed to downstream
+  Ô£ö  Layer 2 scores saved to L2_ml_scores.csv. Logged 92 flagged ML transactions to Audit.
+
+================================================================
+  LAYER 3: GRAPH INTELLIGENCE (Context-Biased)
+================================================================
+
+ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+  LAYER 3 ÔÇö GRAPH INTELLIGENCE ENGINE
+ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+
+[Step 1] Building transaction graph ÔÇª
+[GraphBuilder] Graph built: 2000 nodes | 200858 edges | 200858 transactions
+  {'nodes': 2000, 'edges': 200858, 'transactions': 200858, 'is_directed': True, 'density': 0.05024}
+
+[Step 2] Running pattern detectors ÔÇª
+[PatternDetectors] Prior Vector bias ACTIVE ÔåÆ 'smurfing' thresholds relaxed
+[PatternDetectors] Running smurfing detection ÔÇª
+  ÔåÆ 70 smurfing signals
+[PatternDetectors] Running funnel account detection ÔÇª
+  ÔåÆ 50 funnel account signals
+[PatternDetectors] Running layering detection ÔÇª
+  ÔåÆ 200 layering signals
+[PatternDetectors] Running circular transfer detection ÔÇª
+  [Circular] Subgraph: 80 nodes, 416 edges
+  ÔåÆ 100 circular transfer signals
+
+[Step 3] Computing graph features ÔÇª
+[GraphFeatureEngine] Computing degree features ÔÇª
+[GraphFeatureEngine] Computing PageRank ÔÇª
+[GraphFeatureEngine] Computing betweenness centrality ÔÇª
+[GraphFeatureEngine] Computing clustering coefficient ÔÇª
+[GraphFeatureEngine] Features computed for 2000 accounts.
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+[Layer 3 Complete] Summary:
+  case_id: CASE-E2E-001
+  csv_path: D:\SAR-Generator\Dataset\synthetic_aml_transactions.csv
+  graph: {'nodes': 2000, 'edges': 200858, 'transactions': 200858, 'is_directed': True, 'density': 0.05024}
+  signals: {'smurfing': 70, 'funnel_accounts': 50, 'layering': 200, 'circular_transfer': 100}
+  total_signals: 420
+  accounts_profiled: 2000
+  elapsed_seconds: 37.94
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+
+ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+  LAYER 3 ÔÇö GRAPH INTELLIGENCE ENGINE
+ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+
+[Step 1] Building transaction graph ÔÇª
+[GraphBuilder] Graph built: 2000 nodes | 200858 edges | 200858 transactions
+  {'nodes': 2000, 'edges': 200858, 'transactions': 200858, 'is_directed': True, 'density': 0.05024}
+
+[Step 2] Running pattern detectors ÔÇª
+[PatternDetectors] No prior vector bias applied (static thresholds)
+[PatternDetectors] Running smurfing detection ÔÇª
+  ÔåÆ 50 smurfing signals
+[PatternDetectors] Running funnel account detection ÔÇª
+  ÔåÆ 50 funnel account signals
+[PatternDetectors] Running layering detection ÔÇª
+  ÔåÆ 200 layering signals
+[PatternDetectors] Running circular transfer detection ÔÇª
+  [Circular] Subgraph: 80 nodes, 416 edges
+  ÔåÆ 100 circular transfer signals
+
+[Step 3] Computing graph features ÔÇª
+[GraphFeatureEngine] Computing degree features ÔÇª
+[GraphFeatureEngine] Computing PageRank ÔÇª
+[GraphFeatureEngine] Computing betweenness centrality ÔÇª
+[GraphFeatureEngine] Computing clustering coefficient ÔÇª
+[GraphFeatureEngine] Features computed for 2000 accounts.
+
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+[Layer 3 Complete] Summary:
+  case_id: CASE-E2E-002
+  csv_path: D:\SAR-Generator\Dataset\synthetic_aml_transactions.csv
+  graph: {'nodes': 2000, 'edges': 200858, 'transactions': 200858, 'is_directed': True, 'density': 0.05024}
+  signals: {'smurfing': 50, 'funnel_accounts': 50, 'layering': 200, 'circular_transfer': 100}
+  total_signals: 400
+  accounts_profiled: 2000
+  elapsed_seconds: 48.69
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+
+  Signal comparison (Static vs Context-Biased):
+    smurfing               Static:   50   Biased:   70 (+20)
+    funnel_accounts        Static:   50   Biased:   50
+    layering               Static:  200   Biased:  200
+    circular_transfer      Static:  100   Biased:  100
+[Export] Signals written ÔåÆ D:\SAR-Generator\ML-Service\pipeline_outputs\L3_graph_signals.json
+[Export] Features written ÔåÆ D:\SAR-Generator\ML-Service\pipeline_outputs\L3_graph_features.csv
+  Ô£ö  Layer 3 graph features saved. Logged 0 topological transactions to Audit.
+
+  Top 3 Smurfing Signals (biased run):
+    Account: A756 | Senders: 108 | TxCount: 111 | Risk: 0.9782
+    Account: A1195 | Senders: 113 | TxCount: 115 | Risk: 0.9766
+    Account: A631 | Senders: 104 | TxCount: 106 | Risk: 0.9763
+
+================================================================
+  LAYER 4: EVIDENCE BUILDER (Facts Only ÔÇö No Context Signal)
+================================================================
+
+  Output: CaseBundle JSON object
+  Ô£ö  Layer 4 CaseBundle saved to L4_evidence_bundle.json
+  Ô£ö  PASSED: Evidence Bundle contains ZERO Context_L2 objects (architecture compliant)
+  Ô£ö  ML evidence objects: 1
+  Ô£ö  Graph evidence objects: 1
+
+================================================================
+  LAYER 5: SAR GENERATION (LLM)
+================================================================
+  Status: sar_generator.py is ready
+  Input:  CaseBundle JSON + ReportingBlueprint JSON
+  Connecting to local Ollama server (llama3.2:latest)...
+  Ô£ö  Ollama server is reachable.
+
+  --- GENERATED SAR NARRATIVE --- 
+[FINCEN Report Number] - Suspicious Activity Report
+
+Institution Name: [Reporting Institution]
+Filing Institution:
+Name: [Bank Name]
+Address: [Bank Address]
+City: [City]
+State: [State]
+ZIP: [ZIP]
+
+Suspicious Activity Information:
+DateRange: Calculated from Evidence Bundle
+CumulativeAmount: Calculated from Evidence Bundle
+Characterization: Structuring / Money Laundering (Smurfing)
+
+Narrative Instructions:
+
+1. Write a formal FINCEN Suspicious Activity Report narrative.
+2. Introduce the subject(s) clearly.
+
+Subject: The entity identified as ACC-88392 and the transactions associated with it are under examination.
+
+3. Explain the transaction flow detected by the graph intelligence.
+
+The evidence reveals a subgraph structure with 108 nodes, passing a total volume of $33,830.45 USD. This structure is indicative of smurfing activity, where multiple entities are used to facilitate large cash transactions.
+
+4. Detail the anomalies found by the ML Suspicion Detection.
+
+Anomaly scores exceeding the threshold were detected for this entity, with a Z-score of 3.8 and an anomaly score of 1.00. Furthermore, the top features of the transaction flow reveal spikes in velocity and amounts, suggesting manipulation of the financial system.
+
+5. Do NOT add speculative motives; restrict the narrative to the objective facts in the Evidence Bundle.
+
+6. Mention West African networks or narcotics ONLY if explicitly listed in the Evidence Bundle.
+
+7. Summarize why the activity is suspicious.
+
+The entity ACC-88392 and its associated transactions are suspicious due to the presence of a smurfing structure, which indicates an attempt to circumvent reporting requirements. Additionally, the anomaly scores exceeding the threshold suggest manipulation of the financial system, further indicating potential structuring or money laundering activities.
+  ------------------------------- 
+
+  Ô£ö  SAR Text Successfully Generated and saved to L5_SAR_Narrative.txt
+
+================================================================
+  LAYER 6: HUMAN REVIEW & LAYER 7: AUDIT
+================================================================
+  Ô£ö  Review terminal triggered.
+  Recommendation: Export CaseBundle + SAR to a review dashboard
+
+================================================================
+  PIPELINE SUMMARY
+================================================================
+  Ô£ö  Context Agent            Prior Vector generated
+  Ô£ö  Layer 1: Ingestion       Dataset loaded (21.2 MB)
+  Ô£ö  Layer 2: ML Engine       Lift = 2.50x
+  Ô£ö  Layer 3: Graph Intel     Now context-biased
+  Ô£ö  Layer 4: Evidence        No context leakage
+  Ô£ö  Layer 5: SAR Gen         Generated successfully
+  Ô£ÿ  Layer 6: Human Review    Not implemented
+
+================================================================
+  Pipeline iteration complete.
+================================================================
+
+  Ô£ö  L7 Audit Trail explicitly locked and written to: D:\SAR-Generator\ML-Service\pipeline_outputs\L7_audit_log_CASE-E2E-001.json
+
+============================================================
+  HUMAN REVIEW REQUIRED FOR CASE CASE-E2E-001
+============================================================
+Please review the generated SAR narrative below:
+
+[FINCEN Report Number] - Suspicious Activity Report
+
+Institution Name: [Reporting Institution]
+Filing Institution:
+Name: [Bank Name]
+Address: [Bank Address]
+City: [City]
+State: [State]
+ZIP: [ZIP]
+
+Suspicious Activity Information:
+DateRange: Calculated from Evidence Bundle
+CumulativeAmount: Calculated from Evidence Bundle
+Characterization: Structuring / Money Laundering (Smurfing)
+
+Narrative Instructions:
+
+1. Write a formal FINCEN Suspicious Activity Report narrative.
+2. Introduce the subject(s) clearly.
+
+Subject: The entity identified as ACC-88392 and the transactions associated with it are under examination.
+
+3. Explain the transaction flow detected by the graph intelligence.
+
+The evidence reveals a subgraph structure with 108 nodes, passing a total volume of $33,830.45 USD. This structure is indicative of smurfing activity, where multiple entities are used to facilitate large cash transactions.
+
+4. Detail the anomalies found by the ML Suspicion Detection.
+
+Anomaly scores exceeding the threshold were detected for this entity, with a Z-score of 3.8 and an anomaly score of 1.00. Furthermore, the top features of the transaction flow reveal spikes in velocity and amounts, suggesting manipulation of the financial system.
+
+5. Do NOT add speculative motives; restrict the narrative to the objective facts in the Evidence Bundle.
+
+6. Mention West African networks or narcotics ONLY if explicitly listed in the Evidence Bundle.
+
+7. Summarize why the activity is suspicious.
+
+The entity ACC-88392 and its associated transactions are suspicious due to the presence of a smurfing structure, which indicates an attempt to circumvent reporting requirements. Additionally, the anomaly scores exceeding the threshold suggest manipulation of the financial system, further indicating potential structuring or money laundering activities.
+
+------------------------------------------------------------
+Approve this SAR for filing? (Y/N): SAR Approved.
+  Ô£ö  SAR Report finalized and securely approved! Exiting.

@@ -1,37 +1,37 @@
-[Reporting Institution]
+[FINCEN Report Number] - Suspicious Activity Report
 
-[Bank Name]
-[Bank Address],
-[City], [State], [ZIP]
+Institution Name: [Reporting Institution]
+Filing Institution:
+Name: [Bank Name]
+Address: [Bank Address]
+City: [City]
+State: [State]
+ZIP: [ZIP]
 
-Date: [Current Date]
+Suspicious Activity Information:
+DateRange: Calculated from Evidence Bundle
+CumulativeAmount: Calculated from Evidence Bundle
+Characterization: Structuring / Money Laundering (Smurfing)
 
-To: Financial Crimes Enforcement Network (FinCEN)
+Narrative Instructions:
 
-Subject: Suspicious Activity Report - Structuring / Money Laundering (Smurfing) - Case ID: CASE-E2E-001
+1. Write a formal FINCEN Suspicious Activity Report narrative.
+2. Introduce the subject(s) clearly.
 
-Introduction:
-The subject of this report is ACC-88392, which is associated with a series of transactions that have raised suspicions of structuring and money laundering via smurfing.
+Subject: The entity identified as ACC-88392 and the transactions associated with it are under examination.
 
-Transaction Flow:
-The suspicious activity detected by the graph intelligence involves a subgraph with 108 nodes. The nodes are connected to a central entity, passing a total volume of $33,830.45 in USD. The centrality score is 0.978, indicating a high degree of connectivity among these entities. This structure suggests that multiple individuals or entities are working together to move large amounts of money.
+3. Explain the transaction flow detected by the graph intelligence.
 
-Anomalies Found:
-The ML Suspicion Detection identified several anomalies in the transactions:
+The evidence reveals a subgraph structure with 108 nodes, passing a total volume of $33,830.45 USD. This structure is indicative of smurfing activity, where multiple entities are used to facilitate large cash transactions.
 
-1. An anomaly score of 1.00 exceeds the threshold with a Z-score of 3.8, indicating an unusual pattern of activity.
-2. The amount associated with this transaction is $0.4, which is a fraction of the total volume passed through the subgraph.
+4. Detail the anomalies found by the ML Suspicion Detection.
 
-Smurfing Structure:
-The subgraph identified in the graph intelligence shows that multiple entities are working together to move large amounts of money. This structure is consistent with smurfing, where individuals or entities split large transactions into smaller ones to avoid detection.
+Anomaly scores exceeding the threshold were detected for this entity, with a Z-score of 3.8 and an anomaly score of 1.00. Furthermore, the top features of the transaction flow reveal spikes in velocity and amounts, suggesting manipulation of the financial system.
 
-Suspicious Activity:
-This activity is suspicious because it involves a complex structure of entities working together to move large amounts of money. The combination of an anomaly score exceeding the threshold and the presence of a high centrality score among the nodes in the subgraph suggests that this activity may be indicative of structuring or money laundering via smurfing.
+5. Do NOT add speculative motives; restrict the narrative to the objective facts in the Evidence Bundle.
 
-Conclusion:
-In conclusion, based on the evidence provided, it appears that ACC-88392 is involved in suspicious activity consistent with structuring or money laundering via smurfing. Further investigation is required to determine the full extent of this activity and its potential connection to West African networks or narcotics.
+6. Mention West African networks or narcotics ONLY if explicitly listed in the Evidence Bundle.
 
-Signature:
-[Your Signature]
+7. Summarize why the activity is suspicious.
 
-Note: The above narrative adheres strictly to the guidelines provided, using only information found within the Evidence Bundle. Any information not present in the bundle has been left as [NOT PROVIDED].
+The entity ACC-88392 and its associated transactions are suspicious due to the presence of a smurfing structure, which indicates an attempt to circumvent reporting requirements. Additionally, the anomaly scores exceeding the threshold suggest manipulation of the financial system, further indicating potential structuring or money laundering activities.

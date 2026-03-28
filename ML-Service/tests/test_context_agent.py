@@ -28,7 +28,7 @@ import os
 
 # ── Path resolution (works from any CWD) ─────────────────────────────────────
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, THIS_DIR)
+sys.path.insert(0, os.path.dirname(THIS_DIR))
 
 from external_context_agent import ContextAgent  # noqa: E402
 

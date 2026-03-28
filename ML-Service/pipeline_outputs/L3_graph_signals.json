@@ -6113,12 +6113,24 @@
     {
       "pattern": "circular_transfer",
       "accounts": [
-        "A1363",
-        "A834"
+        "A1924",
+        "A900"
       ],
       "cycle_length": 2,
-      "total_amount": 1189.44,
-      "risk_score": 0.5119,
+      "total_amount": 1570.3,
+      "risk_score": 0.5157,
+      "source_layer": "graph_intelligence",
+      "case_id": "CASE-E2E-001"
+    },
+    {
+      "pattern": "circular_transfer",
+      "accounts": [
+        "A1823",
+        "A1924"
+      ],
+      "cycle_length": 2,
+      "total_amount": 1041.14,
+      "risk_score": 0.5104,
       "source_layer": "graph_intelligence",
       "case_id": "CASE-E2E-001"
     },
@@ -6137,52 +6149,103 @@
     {
       "pattern": "circular_transfer",
       "accounts": [
-        "A1363",
-        "A324",
-        "A834"
+        "A1835",
+        "A617"
       ],
-      "cycle_length": 3,
-      "total_amount": 2197.49,
-      "risk_score": 0.422,
+      "cycle_length": 2,
+      "total_amount": 369.28,
+      "risk_score": 0.5037,
       "source_layer": "graph_intelligence",
       "case_id": "CASE-E2E-001"
     },
     {
       "pattern": "circular_transfer",
       "accounts": [
-        "A1363",
-        "A536",
-        "A1823"
+        "A588",
+        "A877",
+        "A643"
       ],
       "cycle_length": 3,
-      "total_amount": 1849.85,
-      "risk_score": 0.4185,
+      "total_amount": 1772.93,
+      "risk_score": 0.4177,
       "source_layer": "graph_intelligence",
       "case_id": "CASE-E2E-001"
     },
     {
       "pattern": "circular_transfer",
       "accounts": [
-        "A1076",
-        "A1363",
-        "A834"
+        "A588",
+        "A87",
+        "A643"
       ],
       "cycle_length": 3,
-      "total_amount": 1609.02,
-      "risk_score": 0.4161,
+      "total_amount": 1197.07,
+      "risk_score": 0.412,
       "source_layer": "graph_intelligence",
       "case_id": "CASE-E2E-001"
     },
     {
       "pattern": "circular_transfer",
       "accounts": [
-        "A1076",
+        "A1835",
         "A475",
-        "A24"
+        "A324"
       ],
       "cycle_length": 3,
-      "total_amount": 1340.43,
-      "risk_score": 0.4134,
+      "total_amount": 1103.94,
+      "risk_score": 0.411,
+      "source_layer": "graph_intelligence",
+      "case_id": "CASE-E2E-001"
+    },
+    {
+      "pattern": "circular_transfer",
+      "accounts": [
+        "A1229",
+        "A645",
+        "A1565"
+      ],
+      "cycle_length": 3,
+      "total_amount": 994.48,
+      "risk_score": 0.4099,
+      "source_layer": "graph_intelligence",
+      "case_id": "CASE-E2E-001"
+    },
+    {
+      "pattern": "circular_transfer",
+      "accounts": [
+        "A1823",
+        "A277",
+        "A1881"
+      ],
+      "cycle_length": 3,
+      "total_amount": 979.94,
+      "risk_score": 0.4098,
+      "source_layer": "graph_intelligence",
+      "case_id": "CASE-E2E-001"
+    },
+    {
+      "pattern": "circular_transfer",
+      "accounts": [
+        "A24",
+        "A983",
+        "A617"
+      ],
+      "cycle_length": 3,
+      "total_amount": 915.91,
+      "risk_score": 0.4092,
+      "source_layer": "graph_intelligence",
+      "case_id": "CASE-E2E-001"
+    },
+    {
+      "pattern": "circular_transfer",
+      "accounts": [
+        "A1823",
+        "A277",
+        "A1951"
+      ],
+      "cycle_length": 3,
+      "total_amount": 806.47,
+      "risk_score": 0.4081,
       "source_layer": "graph_intelligence",
       "case_id": "CASE-E2E-001"
     },
@@ -6203,28 +6266,56 @@
     {
       "pattern": "circular_transfer",
       "accounts": [
-        "A1076",
-        "A1363",
-        "A324",
-        "A834"
+        "A1210",
+        "A194",
+        "A1275",
+        "A1234"
       ],
       "cycle_length": 4,
-      "total_amount": 2617.07,
-      "risk_score": 0.3262,
+      "total_amount": 2830.59,
+      "risk_score": 0.3283,
       "source_layer": "graph_intelligence",
       "case_id": "CASE-E2E-001"
     },
     {
       "pattern": "circular_transfer",
       "accounts": [
-        "A1363",
-        "A324",
-        "A1593",
-        "A1881"
+        "A1817",
+        "A87",
+        "A693",
+        "A972"
       ],
       "cycle_length": 4,
-      "total_amount": 2198.88,
-      "risk_score": 0.322,
+      "total_amount": 2464.74,
+      "risk_score": 0.3246,
+      "source_layer": "graph_intelligence",
+      "case_id": "CASE-E2E-001"
+    },
+    {
+      "pattern": "circular_transfer",
+      "accounts": [
+        "A1210",
+        "A657",
+        "A1275",
+        "A1234"
+      ],
+      "cycle_length": 4,
+      "total_amount": 2337.27,
+      "risk_score": 0.3234,
+      "source_layer": "graph_intelligence",
+      "case_id": "CASE-E2E-001"
+    },
+    {
+      "pattern": "circular_transfer",
+      "accounts": [
+        "A1924",
+        "A972",
+        "A87",
+        "A900"
+      ],
+      "cycle_length": 4,
+      "total_amount": 2207.77,
+      "risk_score": 0.3221,
       "source_layer": "graph_intelligence",
       "case_id": "CASE-E2E-001"
     },
@@ -6245,42 +6336,14 @@
     {
       "pattern": "circular_transfer",
       "accounts": [
-        "A1076",
-        "A1593",
-        "A1881",
-        "A16"
-      ],
-      "cycle_length": 4,
-      "total_amount": 1986.7,
-      "risk_score": 0.3199,
-      "source_layer": "graph_intelligence",
-      "case_id": "CASE-E2E-001"
-    },
-    {
-      "pattern": "circular_transfer",
-      "accounts": [
-        "A1076",
-        "A475",
-        "A643",
-        "A194"
-      ],
-      "cycle_length": 4,
-      "total_amount": 1978.08,
-      "risk_score": 0.3198,
-      "source_layer": "graph_intelligence",
-      "case_id": "CASE-E2E-001"
-    },
-    {
-      "pattern": "circular_transfer",
-      "accounts": [
-        "A1363",
-        "A536",
-        "A1565",
+        "A1823",
+        "A617",
+        "A24",
         "A1881"
       ],
       "cycle_length": 4,
-      "total_amount": 1974.35,
-      "risk_score": 0.3197,
+      "total_amount": 1982.92,
+      "risk_score": 0.3198,
       "source_layer": "graph_intelligence",
       "case_id": "CASE-E2E-001"
     },
@@ -6301,6 +6364,34 @@
     {
       "pattern": "circular_transfer",
       "accounts": [
+        "A1835",
+        "A617",
+        "A900",
+        "A324"
+      ],
+      "cycle_length": 4,
+      "total_amount": 1827.83,
+      "risk_score": 0.3183,
+      "source_layer": "graph_intelligence",
+      "case_id": "CASE-E2E-001"
+    },
+    {
+      "pattern": "circular_transfer",
+      "accounts": [
+        "A1823",
+        "A617",
+        "A900",
+        "A1924"
+      ],
+      "cycle_length": 4,
+      "total_amount": 1816.31,
+      "risk_score": 0.3182,
+      "source_layer": "graph_intelligence",
+      "case_id": "CASE-E2E-001"
+    },
+    {
+      "pattern": "circular_transfer",
+      "accounts": [
         "A1565",
         "A1921",
         "A972",
@@ -6315,28 +6406,28 @@
     {
       "pattern": "circular_transfer",
       "accounts": [
-        "A1363",
-        "A834",
-        "A1480",
-        "A1951"
+        "A1823",
+        "A277",
+        "A1881",
+        "A1924"
       ],
       "cycle_length": 4,
-      "total_amount": 1628.63,
-      "risk_score": 0.3163,
+      "total_amount": 1482.55,
+      "risk_score": 0.3148,
       "source_layer": "graph_intelligence",
       "case_id": "CASE-E2E-001"
     },
     {
       "pattern": "circular_transfer",
       "accounts": [
-        "A1363",
-        "A536",
-        "A324",
-        "A834"
+        "A1229",
+        "A645",
+        "A1565",
+        "A788"
       ],
       "cycle_length": 4,
-      "total_amount": 1474.79,
-      "risk_score": 0.3147,
+      "total_amount": 1354.6,
+      "risk_score": 0.3135,
       "source_layer": "graph_intelligence",
       "case_id": "CASE-E2E-001"
     },
@@ -6357,42 +6448,42 @@
     {
       "pattern": "circular_transfer",
       "accounts": [
-        "A1363",
-        "A536",
+        "A1817",
         "A87",
-        "A711"
-      ],
-      "cycle_length": 4,
-      "total_amount": 1312.41,
-      "risk_score": 0.3131,
-      "source_layer": "graph_intelligence",
-      "case_id": "CASE-E2E-001"
-    },
-    {
-      "pattern": "circular_transfer",
-      "accounts": [
-        "A1363",
-        "A536",
-        "A1565",
-        "A711"
-      ],
-      "cycle_length": 4,
-      "total_amount": 915.53,
-      "risk_score": 0.3092,
-      "source_layer": "graph_intelligence",
-      "case_id": "CASE-E2E-001"
-    },
-    {
-      "pattern": "circular_transfer",
-      "accounts": [
-        "A1363",
-        "A536",
         "A1921",
-        "A1881"
+        "A972"
       ],
       "cycle_length": 4,
-      "total_amount": 732.22,
-      "risk_score": 0.3073,
+      "total_amount": 1078.61,
+      "risk_score": 0.3108,
+      "source_layer": "graph_intelligence",
+      "case_id": "CASE-E2E-001"
+    },
+    {
+      "pattern": "circular_transfer",
+      "accounts": [
+        "A1229",
+        "A645",
+        "A1370",
+        "A972"
+      ],
+      "cycle_length": 4,
+      "total_amount": 1074.94,
+      "risk_score": 0.3107,
+      "source_layer": "graph_intelligence",
+      "case_id": "CASE-E2E-001"
+    },
+    {
+      "pattern": "circular_transfer",
+      "accounts": [
+        "A1835",
+        "A24",
+        "A983",
+        "A617"
+      ],
+      "cycle_length": 4,
+      "total_amount": 950.96,
+      "risk_score": 0.3095,
       "source_layer": "graph_intelligence",
       "case_id": "CASE-E2E-001"
     },
@@ -6414,45 +6505,15 @@
     {
       "pattern": "circular_transfer",
       "accounts": [
-        "A1363",
-        "A26",
-        "A1905",
-        "A536",
-        "A1823"
+        "A1210",
+        "A194",
+        "A495",
+        "A341",
+        "A1234"
       ],
       "cycle_length": 5,
-      "total_amount": 3625.5,
-      "risk_score": 0.2363,
-      "source_layer": "graph_intelligence",
-      "case_id": "CASE-E2E-001"
-    },
-    {
-      "pattern": "circular_transfer",
-      "accounts": [
-        "A1363",
-        "A324",
-        "A1593",
-        "A1881",
-        "A1823"
-      ],
-      "cycle_length": 5,
-      "total_amount": 3557.79,
-      "risk_score": 0.2356,
-      "source_layer": "graph_intelligence",
-      "case_id": "CASE-E2E-001"
-    },
-    {
-      "pattern": "circular_transfer",
-      "accounts": [
-        "A1076",
-        "A1363",
-        "A324",
-        "A1835",
-        "A24"
-      ],
-      "cycle_length": 5,
-      "total_amount": 3543.22,
-      "risk_score": 0.2354,
+      "total_amount": 3591.89,
+      "risk_score": 0.2359,
       "source_layer": "graph_intelligence",
       "case_id": "CASE-E2E-001"
     },
@@ -6474,51 +6535,6 @@
     {
       "pattern": "circular_transfer",
       "accounts": [
-        "A1363",
-        "A536",
-        "A1565",
-        "A1881",
-        "A1823"
-      ],
-      "cycle_length": 5,
-      "total_amount": 3333.26,
-      "risk_score": 0.2333,
-      "source_layer": "graph_intelligence",
-      "case_id": "CASE-E2E-001"
-    },
-    {
-      "pattern": "circular_transfer",
-      "accounts": [
-        "A1076",
-        "A1363",
-        "A324",
-        "A475",
-        "A24"
-      ],
-      "cycle_length": 5,
-      "total_amount": 3325.48,
-      "risk_score": 0.2333,
-      "source_layer": "graph_intelligence",
-      "case_id": "CASE-E2E-001"
-    },
-    {
-      "pattern": "circular_transfer",
-      "accounts": [
-        "A1363",
-        "A324",
-        "A1835",
-        "A24",
-        "A834"
-      ],
-      "cycle_length": 5,
-      "total_amount": 3247.4,
-      "risk_score": 0.2325,
-      "source_layer": "graph_intelligence",
-      "case_id": "CASE-E2E-001"
-    },
-    {
-      "pattern": "circular_transfer",
-      "accounts": [
         "A1565",
         "A1881",
         "A1823",
@@ -6528,51 +6544,6 @@
       "cycle_length": 5,
       "total_amount": 3189.87,
       "risk_score": 0.2319,
-      "source_layer": "graph_intelligence",
-      "case_id": "CASE-E2E-001"
-    },
-    {
-      "pattern": "circular_transfer",
-      "accounts": [
-        "A1363",
-        "A324",
-        "A475",
-        "A24",
-        "A834"
-      ],
-      "cycle_length": 5,
-      "total_amount": 3029.66,
-      "risk_score": 0.2303,
-      "source_layer": "graph_intelligence",
-      "case_id": "CASE-E2E-001"
-    },
-    {
-      "pattern": "circular_transfer",
-      "accounts": [
-        "A1363",
-        "A324",
-        "A1835",
-        "A24",
-        "A1881"
-      ],
-      "cycle_length": 5,
-      "total_amount": 3008.49,
-      "risk_score": 0.2301,
-      "source_layer": "graph_intelligence",
-      "case_id": "CASE-E2E-001"
-    },
-    {
-      "pattern": "circular_transfer",
-      "accounts": [
-        "A1076",
-        "A475",
-        "A1634",
-        "A617",
-        "A24"
-      ],
-      "cycle_length": 5,
-      "total_amount": 2978.33,
-      "risk_score": 0.2298,
       "source_layer": "graph_intelligence",
       "case_id": "CASE-E2E-001"
     },
@@ -6594,21 +6565,6 @@
     {
       "pattern": "circular_transfer",
       "accounts": [
-        "A1363",
-        "A834",
-        "A1480",
-        "A1951",
-        "A1823"
-      ],
-      "cycle_length": 5,
-      "total_amount": 2841.15,
-      "risk_score": 0.2284,
-      "source_layer": "graph_intelligence",
-      "case_id": "CASE-E2E-001"
-    },
-    {
-      "pattern": "circular_transfer",
-      "accounts": [
         "A1565",
         "A1921",
         "A1634",
@@ -6624,30 +6580,45 @@
     {
       "pattern": "circular_transfer",
       "accounts": [
-        "A1363",
-        "A324",
-        "A475",
-        "A24",
-        "A1881"
+        "A1823",
+        "A681",
+        "A833",
+        "A1905",
+        "A536"
       ],
       "cycle_length": 5,
-      "total_amount": 2790.75,
-      "risk_score": 0.2279,
+      "total_amount": 2736.95,
+      "risk_score": 0.2274,
       "source_layer": "graph_intelligence",
       "case_id": "CASE-E2E-001"
     },
     {
       "pattern": "circular_transfer",
       "accounts": [
-        "A1363",
-        "A834",
-        "A1480",
-        "A1493",
-        "A1823"
+        "A1924",
+        "A972",
+        "A720",
+        "A833",
+        "A900"
       ],
       "cycle_length": 5,
-      "total_amount": 2764.37,
-      "risk_score": 0.2276,
+      "total_amount": 2706.6,
+      "risk_score": 0.2271,
+      "source_layer": "graph_intelligence",
+      "case_id": "CASE-E2E-001"
+    },
+    {
+      "pattern": "circular_transfer",
+      "accounts": [
+        "A1835",
+        "A24",
+        "A1881",
+        "A1924",
+        "A972"
+      ],
+      "cycle_length": 5,
+      "total_amount": 2703.19,
+      "risk_score": 0.227,
       "source_layer": "graph_intelligence",
       "case_id": "CASE-E2E-001"
     },
@@ -6669,30 +6640,30 @@
     {
       "pattern": "circular_transfer",
       "accounts": [
-        "A1363",
-        "A324",
-        "A834",
-        "A1480",
-        "A1951"
+        "A1817",
+        "A87",
+        "A900",
+        "A1924",
+        "A1823"
       ],
       "cycle_length": 5,
-      "total_amount": 2636.68,
-      "risk_score": 0.2264,
+      "total_amount": 2616.72,
+      "risk_score": 0.2262,
       "source_layer": "graph_intelligence",
       "case_id": "CASE-E2E-001"
     },
     {
       "pattern": "circular_transfer",
       "accounts": [
-        "A711",
-        "A720",
-        "A833",
-        "A788",
-        "A989"
+        "A1835",
+        "A475",
+        "A1905",
+        "A536",
+        "A324"
       ],
       "cycle_length": 5,
-      "total_amount": 2623.1,
-      "risk_score": 0.2262,
+      "total_amount": 2610.51,
+      "risk_score": 0.2261,
       "source_layer": "graph_intelligence",
       "case_id": "CASE-E2E-001"
     },
@@ -6714,21 +6685,6 @@
     {
       "pattern": "circular_transfer",
       "accounts": [
-        "A1076",
-        "A475",
-        "A1634",
-        "A867",
-        "A194"
-      ],
-      "cycle_length": 5,
-      "total_amount": 2588.47,
-      "risk_score": 0.2259,
-      "source_layer": "graph_intelligence",
-      "case_id": "CASE-E2E-001"
-    },
-    {
-      "pattern": "circular_transfer",
-      "accounts": [
         "A1565",
         "A788",
         "A983",
@@ -6744,14 +6700,74 @@
     {
       "pattern": "circular_transfer",
       "accounts": [
-        "A1076",
-        "A1593",
-        "A681",
-        "A833",
-        "A194"
+        "A1817",
+        "A87",
+        "A900",
+        "A1924",
+        "A972"
       ],
       "cycle_length": 5,
-      "total_amount": 2460.04,
+      "total_amount": 2557.58,
+      "risk_score": 0.2256,
+      "source_layer": "graph_intelligence",
+      "case_id": "CASE-E2E-001"
+    },
+    {
+      "pattern": "circular_transfer",
+      "accounts": [
+        "A1823",
+        "A617",
+        "A24",
+        "A1881",
+        "A1924"
+      ],
+      "cycle_length": 5,
+      "total_amount": 2485.53,
+      "risk_score": 0.2249,
+      "source_layer": "graph_intelligence",
+      "case_id": "CASE-E2E-001"
+    },
+    {
+      "pattern": "circular_transfer",
+      "accounts": [
+        "A1817",
+        "A87",
+        "A693",
+        "A635",
+        "A26"
+      ],
+      "cycle_length": 5,
+      "total_amount": 2475.81,
+      "risk_score": 0.2248,
+      "source_layer": "graph_intelligence",
+      "case_id": "CASE-E2E-001"
+    },
+    {
+      "pattern": "circular_transfer",
+      "accounts": [
+        "A1823",
+        "A617",
+        "A899",
+        "A1921",
+        "A1881"
+      ],
+      "cycle_length": 5,
+      "total_amount": 2460.21,
+      "risk_score": 0.2246,
+      "source_layer": "graph_intelligence",
+      "case_id": "CASE-E2E-001"
+    },
+    {
+      "pattern": "circular_transfer",
+      "accounts": [
+        "A1817",
+        "A324",
+        "A475",
+        "A1905",
+        "A536"
+      ],
+      "cycle_length": 5,
+      "total_amount": 2460.95,
       "risk_score": 0.2246,
       "source_layer": "graph_intelligence",
       "case_id": "CASE-E2E-001"
@@ -6774,75 +6790,45 @@
     {
       "pattern": "circular_transfer",
       "accounts": [
-        "A1363",
-        "A536",
-        "A1817",
-        "A1493",
-        "A1823"
-      ],
-      "cycle_length": 5,
-      "total_amount": 2412.18,
-      "risk_score": 0.2241,
-      "source_layer": "graph_intelligence",
-      "case_id": "CASE-E2E-001"
-    },
-    {
-      "pattern": "circular_transfer",
-      "accounts": [
-        "A1363",
-        "A26",
-        "A9",
-        "A1480",
-        "A1951"
-      ],
-      "cycle_length": 5,
-      "total_amount": 2360.1,
-      "risk_score": 0.2236,
-      "source_layer": "graph_intelligence",
-      "case_id": "CASE-E2E-001"
-    },
-    {
-      "pattern": "circular_transfer",
-      "accounts": [
-        "A1363",
-        "A536",
         "A1823",
-        "A1924",
-        "A711"
-      ],
-      "cycle_length": 5,
-      "total_amount": 2350.84,
-      "risk_score": 0.2235,
-      "source_layer": "graph_intelligence",
-      "case_id": "CASE-E2E-001"
-    },
-    {
-      "pattern": "circular_transfer",
-      "accounts": [
-        "A1363",
-        "A26",
-        "A1905",
-        "A1493",
-        "A1823"
-      ],
-      "cycle_length": 5,
-      "total_amount": 2321.81,
-      "risk_score": 0.2232,
-      "source_layer": "graph_intelligence",
-      "case_id": "CASE-E2E-001"
-    },
-    {
-      "pattern": "circular_transfer",
-      "accounts": [
-        "A1076",
-        "A1593",
         "A681",
-        "A617",
-        "A24"
+        "A833",
+        "A900",
+        "A1924"
       ],
       "cycle_length": 5,
-      "total_amount": 2298.84,
-      "risk_score": 0.223,
+      "total_amount": 2421.55,
+      "risk_score": 0.2242,
+      "source_layer": "graph_intelligence",
+      "case_id": "CASE-E2E-001"
+    },
+    {
+      "pattern": "circular_transfer",
+      "accounts": [
+        "A24",
+        "A899",
+        "A657",
+        "A867",
+        "A511"
+      ],
+      "cycle_length": 5,
+      "total_amount": 2416.68,
+      "risk_score": 0.2242,
+      "source_layer": "graph_intelligence",
+      "case_id": "CASE-E2E-001"
+    },
+    {
+      "pattern": "circular_transfer",
+      "accounts": [
+        "A1835",
+        "A617",
+        "A900",
+        "A1924",
+        "A972"
+      ],
+      "cycle_length": 5,
+      "total_amount": 2368.2,
+      "risk_score": 0.2237,
       "source_layer": "graph_intelligence",
       "case_id": "CASE-E2E-001"
     },
@@ -6864,14 +6850,14 @@
     {
       "pattern": "circular_transfer",
       "accounts": [
-        "A1076",
-        "A512",
-        "A641",
-        "A475",
-        "A24"
+        "A1817",
+        "A87",
+        "A899",
+        "A1921",
+        "A972"
       ],
       "cycle_length": 5,
-      "total_amount": 2278.68,
+      "total_amount": 2277.47,
       "risk_score": 0.2228,
       "source_layer": "graph_intelligence",
       "case_id": "CASE-E2E-001"
@@ -6879,15 +6865,15 @@
     {
       "pattern": "circular_transfer",
       "accounts": [
-        "A1076",
-        "A475",
+        "A1823",
+        "A681",
+        "A617",
         "A24",
-        "A1881",
-        "A16"
+        "A1881"
       ],
       "cycle_length": 5,
-      "total_amount": 2256.08,
-      "risk_score": 0.2226,
+      "total_amount": 2274.55,
+      "risk_score": 0.2227,
       "source_layer": "graph_intelligence",
       "case_id": "CASE-E2E-001"
     },
@@ -6909,30 +6895,15 @@
     {
       "pattern": "circular_transfer",
       "accounts": [
-        "A1363",
-        "A324",
-        "A899",
-        "A1921",
-        "A1881"
+        "A1924",
+        "A711",
+        "A720",
+        "A833",
+        "A900"
       ],
       "cycle_length": 5,
-      "total_amount": 2233.58,
-      "risk_score": 0.2223,
-      "source_layer": "graph_intelligence",
-      "case_id": "CASE-E2E-001"
-    },
-    {
-      "pattern": "circular_transfer",
-      "accounts": [
-        "A1076",
-        "A1363",
-        "A536",
-        "A1565",
-        "A24"
-      ],
-      "cycle_length": 5,
-      "total_amount": 2230.77,
-      "risk_score": 0.2223,
+      "total_amount": 2243.96,
+      "risk_score": 0.2224,
       "source_layer": "graph_intelligence",
       "case_id": "CASE-E2E-001"
     },
@@ -6947,6 +6918,21 @@
       ],
       "cycle_length": 5,
       "total_amount": 2224.58,
+      "risk_score": 0.2222,
+      "source_layer": "graph_intelligence",
+      "case_id": "CASE-E2E-001"
+    },
+    {
+      "pattern": "circular_transfer",
+      "accounts": [
+        "A1817",
+        "A87",
+        "A277",
+        "A1881",
+        "A1823"
+      ],
+      "cycle_length": 5,
+      "total_amount": 2216.89,
       "risk_score": 0.2222,
       "source_layer": "graph_intelligence",
       "case_id": "CASE-E2E-001"
@@ -6969,30 +6955,45 @@
     {
       "pattern": "circular_transfer",
       "accounts": [
-        "A1076",
-        "A1593",
-        "A1881",
-        "A1363",
-        "A834"
+        "A1210",
+        "A386",
+        "A495",
+        "A341",
+        "A1234"
       ],
       "cycle_length": 5,
-      "total_amount": 2145.34,
-      "risk_score": 0.2215,
+      "total_amount": 2142.8,
+      "risk_score": 0.2214,
       "source_layer": "graph_intelligence",
       "case_id": "CASE-E2E-001"
     },
     {
       "pattern": "circular_transfer",
       "accounts": [
-        "A1363",
-        "A536",
+        "A1817",
+        "A87",
         "A1921",
         "A1881",
         "A1823"
       ],
       "cycle_length": 5,
-      "total_amount": 2091.13,
-      "risk_score": 0.2209,
+      "total_amount": 2129.65,
+      "risk_score": 0.2213,
+      "source_layer": "graph_intelligence",
+      "case_id": "CASE-E2E-001"
+    },
+    {
+      "pattern": "circular_transfer",
+      "accounts": [
+        "A1823",
+        "A681",
+        "A617",
+        "A900",
+        "A1924"
+      ],
+      "cycle_length": 5,
+      "total_amount": 2107.94,
+      "risk_score": 0.2211,
       "source_layer": "graph_intelligence",
       "case_id": "CASE-E2E-001"
     },
@@ -7014,15 +7015,15 @@
     {
       "pattern": "circular_transfer",
       "accounts": [
-        "A1363",
-        "A26",
-        "A1817",
-        "A1493",
-        "A1823"
+        "A1229",
+        "A641",
+        "A475",
+        "A24",
+        "A1565"
       ],
       "cycle_length": 5,
-      "total_amount": 2048.8,
-      "risk_score": 0.2205,
+      "total_amount": 2055.28,
+      "risk_score": 0.2206,
       "source_layer": "graph_intelligence",
       "case_id": "CASE-E2E-001"
     },
@@ -7044,15 +7045,45 @@
     {
       "pattern": "circular_transfer",
       "accounts": [
-        "A1363",
-        "A26",
-        "A9",
-        "A324",
-        "A834"
+        "A1924",
+        "A972",
+        "A828",
+        "A24",
+        "A989"
       ],
       "cycle_length": 5,
-      "total_amount": 2035.92,
+      "total_amount": 2035.33,
       "risk_score": 0.2204,
+      "source_layer": "graph_intelligence",
+      "case_id": "CASE-E2E-001"
+    },
+    {
+      "pattern": "circular_transfer",
+      "accounts": [
+        "A1817",
+        "A87",
+        "A277",
+        "A1951",
+        "A1823"
+      ],
+      "cycle_length": 5,
+      "total_amount": 2043.42,
+      "risk_score": 0.2204,
+      "source_layer": "graph_intelligence",
+      "case_id": "CASE-E2E-001"
+    },
+    {
+      "pattern": "circular_transfer",
+      "accounts": [
+        "A1823",
+        "A617",
+        "A899",
+        "A1921",
+        "A1924"
+      ],
+      "cycle_length": 5,
+      "total_amount": 2031.9,
+      "risk_score": 0.2203,
       "source_layer": "graph_intelligence",
       "case_id": "CASE-E2E-001"
     },
@@ -7074,6 +7105,36 @@
     {
       "pattern": "circular_transfer",
       "accounts": [
+        "A1823",
+        "A617",
+        "A1835",
+        "A24",
+        "A1881"
+      ],
+      "cycle_length": 5,
+      "total_amount": 2017.97,
+      "risk_score": 0.2202,
+      "source_layer": "graph_intelligence",
+      "case_id": "CASE-E2E-001"
+    },
+    {
+      "pattern": "circular_transfer",
+      "accounts": [
+        "A1835",
+        "A617",
+        "A899",
+        "A1921",
+        "A972"
+      ],
+      "cycle_length": 5,
+      "total_amount": 2020.2,
+      "risk_score": 0.2202,
+      "source_layer": "graph_intelligence",
+      "case_id": "CASE-E2E-001"
+    },
+    {
+      "pattern": "circular_transfer",
+      "accounts": [
         "A1565",
         "A41",
         "A867",
@@ -7089,45 +7150,30 @@
     {
       "pattern": "circular_transfer",
       "accounts": [
-        "A1363",
-        "A536",
+        "A1817",
+        "A87",
         "A1921",
-        "A1480",
-        "A1951"
+        "A635",
+        "A26"
       ],
       "cycle_length": 5,
-      "total_amount": 1971.67,
-      "risk_score": 0.2197,
-      "source_layer": "graph_intelligence",
-      "case_id": "CASE-E2E-001"
-    },
-    {
-      "pattern": "circular_transfer",
-      "accounts": [
-        "A1363",
-        "A536",
-        "A1921",
-        "A989",
-        "A711"
-      ],
-      "cycle_length": 5,
-      "total_amount": 1958.01,
-      "risk_score": 0.2196,
-      "source_layer": "graph_intelligence",
-      "case_id": "CASE-E2E-001"
-    },
-    {
-      "pattern": "circular_transfer",
-      "accounts": [
-        "A1363",
-        "A536",
-        "A1565",
-        "A24",
-        "A834"
-      ],
-      "cycle_length": 5,
-      "total_amount": 1934.95,
+      "total_amount": 1928.74,
       "risk_score": 0.2193,
+      "source_layer": "graph_intelligence",
+      "case_id": "CASE-E2E-001"
+    },
+    {
+      "pattern": "circular_transfer",
+      "accounts": [
+        "A1823",
+        "A681",
+        "A341",
+        "A277",
+        "A1881"
+      ],
+      "cycle_length": 5,
+      "total_amount": 1905.52,
+      "risk_score": 0.2191,
       "source_layer": "graph_intelligence",
       "case_id": "CASE-E2E-001"
     },
@@ -7143,21 +7189,6 @@
       "cycle_length": 5,
       "total_amount": 1912.46,
       "risk_score": 0.2191,
-      "source_layer": "graph_intelligence",
-      "case_id": "CASE-E2E-001"
-    },
-    {
-      "pattern": "circular_transfer",
-      "accounts": [
-        "A1076",
-        "A1363",
-        "A536",
-        "A324",
-        "A834"
-      ],
-      "cycle_length": 5,
-      "total_amount": 1894.37,
-      "risk_score": 0.2189,
       "source_layer": "graph_intelligence",
       "case_id": "CASE-E2E-001"
     },
@@ -7194,29 +7225,14 @@
     {
       "pattern": "circular_transfer",
       "accounts": [
-        "A1363",
-        "A536",
-        "A1817",
-        "A324",
-        "A834"
+        "A24",
+        "A899",
+        "A657",
+        "A867",
+        "A386"
       ],
       "cycle_length": 5,
-      "total_amount": 1825.83,
-      "risk_score": 0.2183,
-      "source_layer": "graph_intelligence",
-      "case_id": "CASE-E2E-001"
-    },
-    {
-      "pattern": "circular_transfer",
-      "accounts": [
-        "A1363",
-        "A536",
-        "A1905",
-        "A1493",
-        "A1823"
-      ],
-      "cycle_length": 5,
-      "total_amount": 1822.56,
+      "total_amount": 1821.96,
       "risk_score": 0.2182,
       "source_layer": "graph_intelligence",
       "case_id": "CASE-E2E-001"
@@ -7224,15 +7240,45 @@
     {
       "pattern": "circular_transfer",
       "accounts": [
-        "A1363",
-        "A536",
-        "A1921",
-        "A972",
-        "A834"
+        "A1823",
+        "A681",
+        "A341",
+        "A900",
+        "A1924"
       ],
       "cycle_length": 5,
-      "total_amount": 1753.94,
-      "risk_score": 0.2175,
+      "total_amount": 1807.15,
+      "risk_score": 0.2181,
+      "source_layer": "graph_intelligence",
+      "case_id": "CASE-E2E-001"
+    },
+    {
+      "pattern": "circular_transfer",
+      "accounts": [
+        "A1817",
+        "A324",
+        "A899",
+        "A1921",
+        "A972"
+      ],
+      "cycle_length": 5,
+      "total_amount": 1757.43,
+      "risk_score": 0.2176,
+      "source_layer": "graph_intelligence",
+      "case_id": "CASE-E2E-001"
+    },
+    {
+      "pattern": "circular_transfer",
+      "accounts": [
+        "A1823",
+        "A681",
+        "A341",
+        "A277",
+        "A1951"
+      ],
+      "cycle_length": 5,
+      "total_amount": 1732.05,
+      "risk_score": 0.2173,
       "source_layer": "graph_intelligence",
       "case_id": "CASE-E2E-001"
     },
@@ -7254,21 +7300,6 @@
     {
       "pattern": "circular_transfer",
       "accounts": [
-        "A1363",
-        "A536",
-        "A1565",
-        "A24",
-        "A1881"
-      ],
-      "cycle_length": 5,
-      "total_amount": 1696.04,
-      "risk_score": 0.217,
-      "source_layer": "graph_intelligence",
-      "case_id": "CASE-E2E-001"
-    },
-    {
-      "pattern": "circular_transfer",
-      "accounts": [
         "A1565",
         "A1724",
         "A972",
@@ -7284,29 +7315,59 @@
     {
       "pattern": "circular_transfer",
       "accounts": [
-        "A1363",
-        "A536",
+        "A1817",
+        "A87",
         "A1921",
         "A1924",
         "A1823"
       ],
       "cycle_length": 5,
-      "total_amount": 1662.82,
-      "risk_score": 0.2166,
+      "total_amount": 1701.34,
+      "risk_score": 0.217,
       "source_layer": "graph_intelligence",
       "case_id": "CASE-E2E-001"
     },
     {
       "pattern": "circular_transfer",
       "accounts": [
-        "A1363",
-        "A26",
-        "A588",
-        "A87",
-        "A711"
+        "A1835",
+        "A24",
+        "A899",
+        "A1921",
+        "A972"
       ],
       "cycle_length": 5,
-      "total_amount": 1631.09,
+      "total_amount": 1683.92,
+      "risk_score": 0.2168,
+      "source_layer": "graph_intelligence",
+      "case_id": "CASE-E2E-001"
+    },
+    {
+      "pattern": "circular_transfer",
+      "accounts": [
+        "A1817",
+        "A87",
+        "A1921",
+        "A1924",
+        "A972"
+      ],
+      "cycle_length": 5,
+      "total_amount": 1642.2,
+      "risk_score": 0.2164,
+      "source_layer": "graph_intelligence",
+      "case_id": "CASE-E2E-001"
+    },
+    {
+      "pattern": "circular_transfer",
+      "accounts": [
+        "A1835",
+        "A475",
+        "A1905",
+        "A877",
+        "A828"
+      ],
+      "cycle_length": 5,
+      "total_amount": 1634.91,
       "risk_score": 0.2163,
       "source_layer": "graph_intelligence",
       "case_id": "CASE-E2E-001"
@@ -7314,60 +7375,30 @@
     {
       "pattern": "circular_transfer",
       "accounts": [
-        "A1363",
-        "A536",
-        "A1817",
-        "A87",
-        "A711"
+        "A1835",
+        "A24",
+        "A989",
+        "A1924",
+        "A972"
       ],
       "cycle_length": 5,
-      "total_amount": 1484.2,
-      "risk_score": 0.2148,
+      "total_amount": 1556.59,
+      "risk_score": 0.2156,
       "source_layer": "graph_intelligence",
       "case_id": "CASE-E2E-001"
     },
     {
       "pattern": "circular_transfer",
       "accounts": [
-        "A1363",
-        "A536",
-        "A324",
-        "A1593",
-        "A1881"
+        "A1229",
+        "A641",
+        "A899",
+        "A1921",
+        "A972"
       ],
       "cycle_length": 5,
-      "total_amount": 1476.18,
-      "risk_score": 0.2148,
-      "source_layer": "graph_intelligence",
-      "case_id": "CASE-E2E-001"
-    },
-    {
-      "pattern": "circular_transfer",
-      "accounts": [
-        "A1363",
-        "A536",
-        "A1823",
-        "A277",
-        "A1881"
-      ],
-      "cycle_length": 5,
-      "total_amount": 1470.88,
+      "total_amount": 1468.18,
       "risk_score": 0.2147,
-      "source_layer": "graph_intelligence",
-      "case_id": "CASE-E2E-001"
-    },
-    {
-      "pattern": "circular_transfer",
-      "accounts": [
-        "A1363",
-        "A26",
-        "A1817",
-        "A324",
-        "A834"
-      ],
-      "cycle_length": 5,
-      "total_amount": 1462.45,
-      "risk_score": 0.2146,
       "source_layer": "graph_intelligence",
       "case_id": "CASE-E2E-001"
     },
@@ -7389,21 +7420,6 @@
     {
       "pattern": "circular_transfer",
       "accounts": [
-        "A1363",
-        "A536",
-        "A1823",
-        "A277",
-        "A1951"
-      ],
-      "cycle_length": 5,
-      "total_amount": 1443.8,
-      "risk_score": 0.2144,
-      "source_layer": "graph_intelligence",
-      "case_id": "CASE-E2E-001"
-    },
-    {
-      "pattern": "circular_transfer",
-      "accounts": [
         "A1565",
         "A1921",
         "A972",
@@ -7413,6 +7429,36 @@
       "cycle_length": 5,
       "total_amount": 1433.72,
       "risk_score": 0.2143,
+      "source_layer": "graph_intelligence",
+      "case_id": "CASE-E2E-001"
+    },
+    {
+      "pattern": "circular_transfer",
+      "accounts": [
+        "A1210",
+        "A1817",
+        "A87",
+        "A1275",
+        "A1234"
+      ],
+      "cycle_length": 5,
+      "total_amount": 1419.81,
+      "risk_score": 0.2142,
+      "source_layer": "graph_intelligence",
+      "case_id": "CASE-E2E-001"
+    },
+    {
+      "pattern": "circular_transfer",
+      "accounts": [
+        "A1229",
+        "A645",
+        "A1565",
+        "A1724",
+        "A972"
+      ],
+      "cycle_length": 5,
+      "total_amount": 1394.36,
+      "risk_score": 0.2139,
       "source_layer": "graph_intelligence",
       "case_id": "CASE-E2E-001"
     },
@@ -7464,6 +7510,36 @@
     {
       "pattern": "circular_transfer",
       "accounts": [
+        "A1823",
+        "A617",
+        "A24",
+        "A989",
+        "A1924"
+      ],
+      "cycle_length": 5,
+      "total_amount": 1338.93,
+      "risk_score": 0.2134,
+      "source_layer": "graph_intelligence",
+      "case_id": "CASE-E2E-001"
+    },
+    {
+      "pattern": "circular_transfer",
+      "accounts": [
+        "A1835",
+        "A475",
+        "A24",
+        "A983",
+        "A617"
+      ],
+      "cycle_length": 5,
+      "total_amount": 1233.82,
+      "risk_score": 0.2123,
+      "source_layer": "graph_intelligence",
+      "case_id": "CASE-E2E-001"
+    },
+    {
+      "pattern": "circular_transfer",
+      "accounts": [
         "A1565",
         "A1921",
         "A972",
@@ -7479,81 +7555,6 @@
     {
       "pattern": "circular_transfer",
       "accounts": [
-        "A1363",
-        "A536",
-        "A1921",
-        "A1924",
-        "A711"
-      ],
-      "cycle_length": 5,
-      "total_amount": 1122.67,
-      "risk_score": 0.2112,
-      "source_layer": "graph_intelligence",
-      "case_id": "CASE-E2E-001"
-    },
-    {
-      "pattern": "circular_transfer",
-      "accounts": [
-        "A1363",
-        "A26",
-        "A1817",
-        "A87",
-        "A711"
-      ],
-      "cycle_length": 5,
-      "total_amount": 1120.82,
-      "risk_score": 0.2112,
-      "source_layer": "graph_intelligence",
-      "case_id": "CASE-E2E-001"
-    },
-    {
-      "pattern": "circular_transfer",
-      "accounts": [
-        "A1363",
-        "A536",
-        "A87",
-        "A277",
-        "A1881"
-      ],
-      "cycle_length": 5,
-      "total_amount": 1098.55,
-      "risk_score": 0.211,
-      "source_layer": "graph_intelligence",
-      "case_id": "CASE-E2E-001"
-    },
-    {
-      "pattern": "circular_transfer",
-      "accounts": [
-        "A1363",
-        "A536",
-        "A87",
-        "A277",
-        "A1951"
-      ],
-      "cycle_length": 5,
-      "total_amount": 1071.47,
-      "risk_score": 0.2107,
-      "source_layer": "graph_intelligence",
-      "case_id": "CASE-E2E-001"
-    },
-    {
-      "pattern": "circular_transfer",
-      "accounts": [
-        "A1363",
-        "A536",
-        "A87",
-        "A1921",
-        "A1881"
-      ],
-      "cycle_length": 5,
-      "total_amount": 1011.31,
-      "risk_score": 0.2101,
-      "source_layer": "graph_intelligence",
-      "case_id": "CASE-E2E-001"
-    },
-    {
-      "pattern": "circular_transfer",
-      "accounts": [
         "A1565",
         "A711",
         "A720",
@@ -7563,21 +7564,6 @@
       "cycle_length": 5,
       "total_amount": 997.85,
       "risk_score": 0.21,
-      "source_layer": "graph_intelligence",
-      "case_id": "CASE-E2E-001"
-    },
-    {
-      "pattern": "circular_transfer",
-      "accounts": [
-        "A1363",
-        "A536",
-        "A1565",
-        "A1921",
-        "A1881"
-      ],
-      "cycle_length": 5,
-      "total_amount": 992.44,
-      "risk_score": 0.2099,
       "source_layer": "graph_intelligence",
       "case_id": "CASE-E2E-001"
     }
