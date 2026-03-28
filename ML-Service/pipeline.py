@@ -927,12 +927,30 @@ wired offshore to high-risk jurisdictions."""
     audit_path = audit.export_log(os.path.join(OUT_DIR, f"L7_audit_log_{case_id}.json"))
     ok(f"L7 Audit Trail explicitly locked and written to: {audit_path}")
 
-    # Return narrative for the interactive loop
+    # Return comprehensive output from all layers to the API
     return {
-        "narrative": narrative_text,
         "case_id": case_id,
+        "narrative": narrative_text,
         "audit": audit,
         "sar_report": sar_report,
+        # Extended comprehensive layer outputs
+        "context_prior_vector": pv_dict,
+        "ml_evaluation_metrics": {
+            "static": {
+                "recall_at_10": recall_a,
+                "precision_at_20": prec_a,
+            },
+            "context_aware": {
+                "recall_at_10": recall_b,
+                "precision_at_20": prec_b,
+                "lift": lift,
+            }
+        },
+        "graph_intelligence": {
+            "static_signals": result_static["signals"],
+            "context_aware_signals": result_biased["signals"],
+        },
+        "evidence_bundle": bundle_dict,
     }
 
 if __name__ == "__main__":

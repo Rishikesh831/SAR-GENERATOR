@@ -289,8 +289,13 @@ async def trigger_pipeline(
         "case_id":     case_id,
         "narrative":   result.get("narrative", ""),
         "audit_trail": audit_data,
-        "case_bundle": bundle_data,
+        "case_bundle": result.get("evidence_bundle", bundle_data),
         "sar_report":  sar_report,
+        
+        # Comprehensive layer outputs
+        "context_prior_vector":  result.get("context_prior_vector"),
+        "ml_evaluation_metrics": result.get("ml_evaluation_metrics"),
+        "graph_intelligence":    result.get("graph_intelligence"),
     })
 
 
