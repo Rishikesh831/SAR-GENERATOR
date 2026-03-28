@@ -168,6 +168,7 @@ def health_detailed():
         "L3_graph_features.csv",
         "L4_evidence_bundle.json",
         "L5_SAR_Narrative.txt",
+        "L5_SAR_Report.json",
     ]
     audit_candidates = glob.glob(os.path.join(OUT_DIR, "L7_audit_log_*.json"))
 
@@ -281,6 +282,7 @@ async def trigger_pipeline(
     case_id     = result.get("case_id", "CASE-E2E-001")
     audit_data  = _load_json(_latest_audit_path(),                              "Audit trail")
     bundle_data = _load_json(os.path.join(OUT_DIR, "L4_evidence_bundle.json"),  "Evidence bundle")
+    sar_report  = _load_json(os.path.join(OUT_DIR, "L5_SAR_Report.json"),       "SAR Report (L5)")
 
     logger.info("Returning SAR response for case_id=%s", case_id)
     return JSONResponse(content={
@@ -288,6 +290,7 @@ async def trigger_pipeline(
         "narrative":   result.get("narrative", ""),
         "audit_trail": audit_data,
         "case_bundle": bundle_data,
+        "sar_report":  sar_report,
     })
 
 
@@ -334,6 +337,10 @@ def get_sar_report() -> JSONResponse:
     Does **not** re-run the pipeline.
     """
     logger.info("GET /api/v1/sar_report")
+    report_path = os.path.join(OUT_DIR, "L5_SAR_Report.json")
+    if os.path.exists(report_path):
+        return JSONResponse(content=_load_json(report_path, "SAR Report (L5)"))
+
     narrative       = _load_text(os.path.join(OUT_DIR, "L5_SAR_Narrative.txt"),    "SAR Narrative (L5)")
     evidence_bundle = _load_json(os.path.join(OUT_DIR, "L4_evidence_bundle.json"), "Evidence bundle (L4)")
     prior_vector    = _load_json(os.path.join(OUT_DIR, "L0_prior_vector.json"),    "Prior Vector (L0)")

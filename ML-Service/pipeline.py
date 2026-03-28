@@ -20,7 +20,9 @@ import sys
 import os
 import io
 import json
+from datetime import datetime, timezone
 import numpy as np
+import pandas as pd
 from pathlib import Path
 
 # Ensure proper encoding on Windows only — on Linux/Render stdout is already UTF-8
@@ -75,6 +77,195 @@ def ok(msg):
 
 def warn(msg):
     print(f"  {RED}⚠{RESET}  {msg}")
+
+
+def _safe_country_list(df: pd.DataFrame) -> list[str]:
+    if df.empty or "country" not in df.columns:
+        return []
+    countries = df["country"].dropna().astype(str).str.upper().unique().tolist()
+    return sorted(countries)
+
+
+def _primary_country(df: pd.DataFrame) -> str:
+    if df.empty or "country" not in df.columns:
+        return "UNKNOWN"
+    vc = df["country"].dropna().astype(str).str.upper().value_counts()
+    return str(vc.index[0]) if not vc.empty else "UNKNOWN"
+
+
+def _review_period(df: pd.DataFrame) -> dict:
+    if df.empty or "timestamp" not in df.columns:
+        return {"start": "UNKNOWN", "end": "UNKNOWN"}
+    ts = pd.to_datetime(df["timestamp"], errors="coerce").dropna()
+    if ts.empty:
+        return {"start": "UNKNOWN", "end": "UNKNOWN"}
+    return {
+        "start": ts.min().date().isoformat(),
+        "end": ts.max().date().isoformat(),
+    }
+
+
+def _pattern_labels(signals: dict) -> list[str]:
+    mapping = {
+        "smurfing": "smurfing",
+        "funnel_accounts": "funnel_accounts",
+        "layering": "layering",
+        "circular_transfer": "circular_transfer",
+    }
+    labels = [mapping[k] for k, v in signals.items() if v]
+    return labels
+
+
+def _derive_risk_score(evidence_bundle: dict, fallback_score: float) -> int:
+    for evidence in evidence_bundle.get("evidence", []):
+        if evidence.get("source_layer") == "ML_L3":
+            facts = evidence.get("forensic_facts", {})
+            anomaly = facts.get("anomaly_score")
+            if isinstance(anomaly, (int, float)):
+                return int(round(float(anomaly) * 100))
+    return int(round(fallback_score * 100))
+
+
+def _risk_category(score: int) -> str:
+    if score >= 70:
+        return "HIGH"
+    if score >= 40:
+        return "MEDIUM"
+    return "LOW"
+
+
+def _build_sar_report(
+    case_id: str,
+    narrative: str,
+    evidence_bundle: dict,
+    prior_vector: dict,
+    tx_df: pd.DataFrame,
+    graph_signals: dict,
+    graph_flagged_nodes: set,
+    graph_flagged_tx: pd.DataFrame,
+    ai_confidence: float,
+    lift: float,
+) -> dict:
+    countries = _safe_country_list(tx_df)
+    primary_country = _primary_country(tx_df)
+    patterns_detected = _pattern_labels(graph_signals)
+
+    review_period = _review_period(tx_df)
+    total_amount = float(tx_df["amount"].sum()) if not tx_df.empty and "amount" in tx_df.columns else 0.0
+    avg_amount = float(tx_df["amount"].mean()) if not tx_df.empty and "amount" in tx_df.columns else 0.0
+    max_amount = float(tx_df["amount"].max()) if not tx_df.empty and "amount" in tx_df.columns else 0.0
+
+    suspicious_rows = graph_flagged_tx
+    if suspicious_rows is None or suspicious_rows.empty:
+        if "is_suspicious" in tx_df.columns:
+            suspicious_rows = tx_df[tx_df["is_suspicious"] == 1]
+        else:
+            suspicious_rows = tx_df.head(0)
+
+    suspicious_rows = suspicious_rows.head(25).copy()
+    suspicious_tx = []
+    for _, row in suspicious_rows.iterrows():
+        indicators = []
+        if row.get("pattern"):
+            indicators.append(str(row.get("pattern")))
+        if row.get("high_risk_country") == 1:
+            indicators.append("high_risk_country")
+        if row.get("country"):
+            indicators.append("cross_border")
+        if row.get("sender_account") in graph_flagged_nodes or row.get("receiver_account") in graph_flagged_nodes:
+            indicators.append("graph_topology")
+        suspicious_tx.append({
+            "date": str(row.get("timestamp", ""))[:10] if row.get("timestamp") else "UNKNOWN",
+            "amount": float(row.get("amount", 0.0)),
+            "type": str(row.get("type", "UNKNOWN")),
+            "from_account": str(row.get("sender_account", "")),
+            "to_account": str(row.get("receiver_account", "")),
+            "indicator": sorted(set(indicators))
+        })
+
+    risk_score = _derive_risk_score(evidence_bundle, ai_confidence)
+    risk_category = _risk_category(risk_score)
+
+    regulatory_impact = min(1.0, round(0.45 + (risk_score / 100) * 0.5 + (0.05 if patterns_detected else 0.0), 2))
+    ai_confidence = round(float(ai_confidence), 2)
+
+    relationship_types = []
+    if "layering" in patterns_detected:
+        relationship_types.append("layered_flow")
+    if "smurfing" in patterns_detected:
+        relationship_types.append("fan_in")
+    if "funnel_accounts" in patterns_detected:
+        relationship_types.append("pass_through")
+    if "circular_transfer" in patterns_detected:
+        relationship_types.append("round_trip")
+
+    risk_indicators = []
+    if countries:
+        risk_indicators.append(f"Cross-border countries involved: {', '.join(countries[:6])}")
+    if "velocity_spike" in tx_df.columns and (tx_df["velocity_spike"] == 1).any():
+        risk_indicators.append("Transaction velocity anomaly")
+    if patterns_detected:
+        risk_indicators.append(f"Patterns detected: {', '.join(patterns_detected)}")
+    if lift > 1.0:
+        risk_indicators.append(f"Contextual lift observed: {lift:.2f}x")
+
+    return {
+        "case_metadata": {
+            "case_id": case_id,
+            "date_generated": datetime.now(timezone.utc).date().isoformat(),
+            "reporting_unit": "AML Compliance / FIU",
+            "primary_country": primary_country,
+            "ai_confidence": ai_confidence,
+            "regulatory_impact": regulatory_impact,
+            "model_version": "SAR Guardian v2.1",
+        },
+        "subject_profile": {
+            "account_id": evidence_bundle.get("entity_id", "UNKNOWN"),
+            "risk_score": risk_score,
+            "risk_category": risk_category,
+            "kyc_status": "UNDER_REVIEW",
+            "risk_types": patterns_detected,
+            "connections_count": len(graph_flagged_nodes),
+            "relationship_types": relationship_types,
+            "institution": "UNKNOWN",
+            "countries_involved": countries,
+        },
+        "transaction_summary": {
+            "review_period": review_period,
+            "total_amount": round(total_amount, 2),
+            "transaction_count": int(len(tx_df)) if not tx_df.empty else 0,
+            "suspicious_transaction_count": len(suspicious_tx),
+            "average_amount": round(avg_amount, 2),
+            "max_transaction": round(max_amount, 2),
+            "countries": countries,
+            "patterns_detected": patterns_detected,
+        },
+        "suspicious_transactions": suspicious_tx,
+        "regulatory_mapping": [
+            {
+                "severity": "CRITICAL" if risk_category == "HIGH" else "MEDIUM",
+                "regulation": "BSA SAR Rule",
+                "reference": "31 USC §5318(g)",
+                "confidence": min(0.99, max(0.75, ai_confidence + 0.2)),
+                "trigger_reason": f"{len(suspicious_tx)} suspicious transactions totaling ${round(total_amount, 2)}",
+            }
+        ],
+        "risk_indicators": risk_indicators,
+        "evidence_summary": {
+            "transaction_records": int(len(tx_df)) if not tx_df.empty else 0,
+            "risk_score": risk_score,
+            "network_connections": len(graph_flagged_nodes),
+            "external_intelligence_hits": 0,
+            "detection_type": "pattern_based" if patterns_detected else "model_based",
+        },
+        "narrative_generation": {
+            "suspicious_activity_description": narrative,
+            "conclusion": f"Case {case_id} assessed as {risk_category} risk based on observed anomalies.",
+        },
+        "debug_context": {
+            "prior_vector": prior_vector,
+        },
+    }
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -144,10 +335,16 @@ wired offshore to high-risk jurisdictions."""
         if csv_path:
             warn(f"Supplied CSV not found at '{csv_path}'. Falling back to default dataset.")
 
+    tx_df = pd.DataFrame()
     if os.path.exists(dataset_path):
         file_size_mb = os.path.getsize(dataset_path) / (1024 * 1024)
         ok(f"Dataset found: {dataset_path} ({file_size_mb:.1f} MB)")
         audit.log_step("Ingest_L1", "Dataset Loaded", {"path": dataset_path, "size_mb": round(file_size_mb, 2)})
+        try:
+            tx_df = pd.read_csv(dataset_path)
+            ok(f"Loaded {len(tx_df)} transactions for reporting summary")
+        except Exception as e:
+            warn(f"Could not read dataset for summary: {e}")
     else:
         warn(f"Dataset NOT FOUND at {dataset_path}")
         audit.log_step("Ingest_L1", "Dataset Missing", {"path": dataset_path})
@@ -253,7 +450,6 @@ wired offshore to high-risk jurisdictions."""
                 
     # Loop over original dataset and find any transaction interacting closely with these severely flagged graph nodes
     # For performance on large sets, we limit to the worst offenders
-    import pandas as pd
     try:
         full_df = pd.read_csv(dataset_path)
         graph_flagged_tx = full_df[full_df["sender_account"].isin(graph_flagged_nodes) | full_df["receiver_account"].isin(graph_flagged_nodes)]
@@ -385,6 +581,25 @@ wired offshore to high-risk jurisdictions."""
         except Exception as e:
             warn(f"Ollama connection failed or generation error: {e}")
 
+    # ── L5: JSON SAR Report (structured output) ───────────────────────────
+    narrative_text = narrative if 'narrative' in locals() else "[SAR GENERATION FAILED]"
+    sar_report = _build_sar_report(
+        case_id=case_id,
+        narrative=narrative_text,
+        evidence_bundle=bundle_dict,
+        prior_vector=pv_dict,
+        tx_df=tx_df,
+        graph_signals=result_biased["signals"],
+        graph_flagged_nodes=graph_flagged_nodes,
+        graph_flagged_tx=graph_flagged_tx,
+        ai_confidence=float(max(scores_aware)) if len(scores_aware) else 0.0,
+        lift=lift,
+    )
+
+    with open(os.path.join(OUT_DIR, "L5_SAR_Report.json"), "w", encoding="utf-8") as f:
+        json.dump(sar_report, f, indent=2)
+    ok("Structured SAR Report saved to L5_SAR_Report.json")
+
     # ── Layer 6: Human Review ─────────────────────────────────────────────
     header("LAYER 6: HUMAN REVIEW & LAYER 7: AUDIT")
     ok("Review terminal triggered.")
@@ -415,9 +630,10 @@ wired offshore to high-risk jurisdictions."""
 
     # Return narrative for the interactive loop
     return {
-        "narrative": narrative if 'narrative' in locals() else "[SAR GENERATION FAILED]",
+        "narrative": narrative_text,
         "case_id": case_id,
-        "audit": audit
+        "audit": audit,
+        "sar_report": sar_report,
     }
 
 if __name__ == "__main__":
