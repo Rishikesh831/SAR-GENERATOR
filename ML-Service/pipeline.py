@@ -77,7 +77,7 @@ def warn(msg):
 #  PIPELINE
 # ═════════════════════════════════════════════════════════════════════════════
 
-def run_pipeline(human_feedback: str | None = None) -> dict:
+def run_pipeline(human_feedback: str | None = None, csv_path: str | None = None) -> dict:
     header("END-TO-END PIPELINE TEST")
     case_id = "CASE-E2E-001"
 
@@ -129,13 +129,24 @@ wired offshore to high-risk jurisdictions."""
 
     # ── Layer 1: Data Ingestion ───────────────────────────────────────────
     header("LAYER 1: DATA INGESTION")
-    dataset_path = os.path.join(THIS_DIR, "..", "Dataset", "synthetic_aml_transactions.csv")
-    dataset_path = os.path.abspath(dataset_path)
+    # Prefer caller-supplied CSV; fall back to the bundled synthetic dataset.
+    if csv_path and os.path.exists(csv_path):
+        dataset_path = os.path.abspath(csv_path)
+        ok(f"Using caller-supplied CSV: {dataset_path}")
+    else:
+        dataset_path = os.path.abspath(
+            os.path.join(THIS_DIR, "..", "Dataset", "synthetic_aml_transactions.csv")
+        )
+        if csv_path:
+            warn(f"Supplied CSV not found at '{csv_path}'. Falling back to default dataset.")
+
     if os.path.exists(dataset_path):
         file_size_mb = os.path.getsize(dataset_path) / (1024 * 1024)
         ok(f"Dataset found: {dataset_path} ({file_size_mb:.1f} MB)")
+        audit.log_step("Ingest_L1", "Dataset Loaded", {"path": dataset_path, "size_mb": round(file_size_mb, 2)})
     else:
         warn(f"Dataset NOT FOUND at {dataset_path}")
+        audit.log_step("Ingest_L1", "Dataset Missing", {"path": dataset_path})
 
     # Also generate synthetic ground-truth for ML validation
     df = generate_synthetic_dataset()
