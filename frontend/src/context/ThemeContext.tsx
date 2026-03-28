@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 
 // Theme Context for managing Light/Dark theme toggle
 export type Theme = "light" | "dark";
@@ -9,18 +9,27 @@ export interface ThemeContextType {
   toggleTheme: () => void;
 }
 
-export const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+// Default fallback so consumers never get undefined
+const defaultThemeContext: ThemeContextType = {
+  theme: "dark",
+  toggleTheme: () => {},
+};
+
+export const ThemeContext = createContext<ThemeContextType>(defaultThemeContext);
+
+// Co-locate the hook with the context to prevent HMR identity divergence
+export const useTheme = (): ThemeContextType => {
+  return useContext(ThemeContext);
+};
 
 export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
   const [theme, setTheme] = useState<Theme>("dark");
-  const [isHydrated, setIsHydrated] = useState(false);
 
   // Load theme from localStorage on mount
   useEffect(() => {
     const savedTheme = (localStorage.getItem("theme") as Theme) || "dark";
     setTheme(savedTheme);
     applyTheme(savedTheme);
-    setIsHydrated(true);
   }, []);
 
   // Apply theme to document root
@@ -46,7 +55,7 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>
-      {isHydrated ? children : null}
+      {children}
     </ThemeContext.Provider>
   );
 };

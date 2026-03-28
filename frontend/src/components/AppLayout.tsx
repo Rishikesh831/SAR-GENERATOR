@@ -4,7 +4,7 @@ import { Search, Bell, Menu, X, ShieldCheck, AlertTriangle, TrendingUp } from "l
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useState, useEffect, useRef, useMemo } from "react";
-import { useProfile } from "@/context/ProfileContext";
+import { useProfile } from "@/hooks/useProfile";
 import { useSARData } from "@/context/SARDataContext";
 import { useCSVData } from "@/hooks/useCSVData";
 import ThemeToggle from "@/components/ThemeToggle";

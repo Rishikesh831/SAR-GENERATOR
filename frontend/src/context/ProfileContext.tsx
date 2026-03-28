@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+/* eslint-disable react-refresh/only-export-components */
+import { createContext, useState, useEffect, ReactNode } from "react";
 
 export const STORAGE_KEY = "sar_guardian_profile";
 
@@ -22,17 +23,20 @@ export const DEFAULT_PROFILE: UserProfile = {
   department: "Financial Crimes Compliance",
 };
 
-interface ProfileContextValue {
+export interface ProfileContextValue {
   profile: UserProfile;
   setProfile: (profile: UserProfile) => void;
   saveProfile: (profile: UserProfile) => void;
 }
 
-const ProfileContext = createContext<ProfileContextValue>({
+export const ProfileContext = createContext<ProfileContextValue>({
   profile: DEFAULT_PROFILE,
   setProfile: () => {},
   saveProfile: () => {},
 });
+
+// Re-export useProfile hook for backward compatibility
+export { useProfile } from "@/hooks/useProfile";
 
 export function ProfileProvider({ children }: { children: ReactNode }) {
   const [profile, setProfileState] = useState<UserProfile>(() => {
@@ -50,7 +54,9 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       if (e.key === STORAGE_KEY && e.newValue) {
         try {
           setProfileState({ ...DEFAULT_PROFILE, ...JSON.parse(e.newValue) });
-        } catch {}
+        } catch (error) {
+          console.error("Failed to parse stored profile:", error);
+        }
       }
     };
     window.addEventListener("storage", handler);
@@ -69,8 +75,4 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       {children}
     </ProfileContext.Provider>
   );
-}
-
-export function useProfile() {
-  return useContext(ProfileContext);
 }

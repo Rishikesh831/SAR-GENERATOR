@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { useProfile } from "@/context/ProfileContext";
+import { useProfile } from "@/hooks/useProfile";
 
 function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/);

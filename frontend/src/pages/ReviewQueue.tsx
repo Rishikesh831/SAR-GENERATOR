@@ -13,7 +13,7 @@ import {
   ChevronRight, Gavel, Layers, Eye, Maximize2, Minimize2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useProfile } from "@/context/ProfileContext";
+import { useProfile } from "@/hooks/useProfile";
 import { createSarReportPdfBlob } from "@/lib/pdfExport";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────

@@ -38,12 +38,28 @@ import { cn } from "@/lib/utils";
 
 type GenerationEngine = "trained_model_api" | "rule_engine_fallback";
 
+// ─── ML Audit Trail Types (Compliance-Grade Explainability) ──────────────────
+
+type MLAuditEntry = {
+  timestamp: string;
+  layer: string;
+  stage: string;
+  model?: string;
+  action: string;
+  input_summary?: Record<string, string | number | boolean>;
+  output_summary?: Record<string, string | number | boolean>;
+  decision_factors?: string[];
+  impact?: string;
+  confidence?: number;
+};
+
 interface ModelReportResponse {
   report?: Partial<FullSARReport>;
   narrative?: string;
   conclusion?: string;
   modelVersion?: string;
   aiConfidence?: number;
+  auditTrail?: MLAuditEntry[];
 }
 
 const MODEL_ENDPOINT = ((import.meta as ImportMeta & { env: Record<string, string | undefined> }).env
@@ -174,7 +190,12 @@ async function generateReportWithEngine(
   entity: string,
   csvData: NonNullable<ReturnType<typeof useCSVData>["data"]>,
   liveTransactions: Transaction[]
-): Promise<{ report: FullSARReport; engine: GenerationEngine; engineNote: string }> {
+): Promise<{
+  report: FullSARReport;
+  engine: GenerationEngine;
+  engineNote: string;
+  auditTrail?: MLAuditEntry[];
+}> {
   const liveCsvTransactions = liveTransactions.map(toCsvTransaction);
   const mergedTransactions = dedupeCsvTransactions([
     ...liveCsvTransactions,
@@ -201,6 +222,7 @@ async function generateReportWithEngine(
       },
       engine: "rule_engine_fallback",
       engineNote: "No trained model endpoint configured. Set VITE_SAR_MODEL_ENDPOINT to enable model inference.",
+      auditTrail: undefined,
     };
   }
 
@@ -247,6 +269,7 @@ async function generateReportWithEngine(
       report: mergedReport,
       engine: "trained_model_api",
       engineNote: `Trained model response received from ${MODEL_ENDPOINT}`,
+      auditTrail: payload.auditTrail,
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : "unknown model endpoint error";
@@ -257,20 +280,51 @@ async function generateReportWithEngine(
       },
       engine: "rule_engine_fallback",
       engineNote: `Model endpoint unavailable (${message}). Fallback generator used.`,
+      auditTrail: undefined,
     };
   } finally {
     window.clearTimeout(timeout);
   }
 }
 
-// ─── Audit Messages ────────────────────────────────────────────────────────────
+// ─── ML Audit Trail Builder (Compliance-Grade Explainability) ────────────────
+
+function buildAuditFromML(
+  auditTrail: MLAuditEntry[]
+): Array<{ id: number; type: "ai_decision" | "transaction"; message: string }> {
+  return auditTrail.map((entry, idx) => {
+    const confidencePercent = ((entry.confidence ?? 0) * 100).toFixed(0);
+    const inputSummaryStr = entry.input_summary
+      ? Object.entries(entry.input_summary)
+          .slice(0, 2)
+          .map(([k, v]) => `${k}: ${v}`)
+          .join(", ")
+      : "N/A";
+    const outputSummaryStr = entry.output_summary
+      ? Object.entries(entry.output_summary)
+          .slice(0, 2)
+          .map(([k, v]) => `${k}: ${v}`)
+          .join(", ")
+      : "N/A";
+    const decisionFactorsStr =
+      entry.decision_factors && entry.decision_factors.length > 0
+        ? entry.decision_factors.slice(0, 2).join(", ")
+        : "rule-based";
+
+    return {
+      id: idx,
+      type: "ai_decision" as const,
+      message: `[${entry.stage}] ${entry.action}\nModel: ${entry.model || "N/A"} | Confidence: ${confidencePercent}%\nInput: ${inputSummaryStr}\nOutput: ${outputSummaryStr}\nFactors: ${decisionFactorsStr}\nImpact: ${entry.impact || "N/A"}`.trim(),
+    };
+  });
+}
 
 function buildAuditMessages(
   entity: string,
   report: FullSARReport,
   engine: GenerationEngine,
   engineNote: string
-) {
+): Array<{ type: "ai_decision" | "transaction"; message: string }> {
   const engineMessage =
     engine === "trained_model_api"
       ? `Trained model endpoint active: ${report.modelVersion}`
@@ -568,6 +622,7 @@ export default function SARGenerate() {
         report: generatedReport,
         engine,
         engineNote: nextEngineNote,
+        auditTrail,
       } = await generateReportWithEngine(entity, csvData, transactions);
       clearInterval(warmupInterval);
 
@@ -576,7 +631,10 @@ export default function SARGenerate() {
 
       const generatedPipeline = buildPipelineReport(entity, generatedReport);
 
-      const auditMessages = buildAuditMessages(entity, generatedReport, engine, nextEngineNote);
+      // Use ML audit trail if available from backend, otherwise fall back to rule-based messages
+      const auditMessages = auditTrail
+        ? buildAuditFromML(auditTrail)
+        : buildAuditMessages(entity, generatedReport, engine, nextEngineNote);
       let idx = 0;
 
       const auditInterval = setInterval(() => {
