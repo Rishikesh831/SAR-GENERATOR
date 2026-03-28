@@ -11,14 +11,17 @@ export default defineConfig(({ mode }) => ({
       overlay: false,
     },
     proxy: {
-      "/api": {
-        target: "http://localhost:5000",
+      "/deployed-api": {
+        target: "https://repo-zl06.onrender.com",
         changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/deployed-api/, "/api"),
+        secure: true,
       },
-      "/socket.io": {
-        target: "http://localhost:5000",
+      "/ml-api": {
+        target: "https://sar-generator.onrender.com",
         changeOrigin: true,
-        ws: true,
+        rewrite: (path) => path.replace(/^\/ml-api/, ""),
+        secure: true,
       },
     },
   },

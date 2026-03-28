@@ -2,7 +2,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, ArrowLeftRight, AlertTriangle, FileText,
   ClipboardList, FileCheck, Network, BarChart3, ScrollText,
-  Users, Settings, Shield, Lock, ChevronLeft, ChevronRight, X,
+  Users, Settings, Shield, Lock, ChevronLeft, ChevronRight, X, AlertCircle, Layers, Upload,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -23,14 +23,16 @@ const navSections = [
   {
     title: "Monitoring",
     items: [
-      { to: "/transactions", icon: ArrowLeftRight, label: "All Transactions" },
       { to: "/flagged", icon: AlertTriangle, label: "Flagged Clusters" },
+      { to: "/partially-flagged", icon: AlertCircle, label: "Partially Flagged" },
+      { to: "/customers", icon: Users, label: "Customer Database" },
     ],
   },
   {
     title: "SAR Management",
     items: [
       { to: "/sar/generate", icon: FileText, label: "Generate SAR" },
+      { to: "/sar/elements", icon: Layers, label: "SAR Elements" },
       { to: "/sar/queue", icon: ClipboardList, label: "Review Queue" },
       { to: "/sar/filed", icon: FileCheck, label: "Filed Reports" },
     ],
@@ -43,11 +45,15 @@ const navSections = [
     ],
   },
   {
+    title: "Integration",
+    items: [
+      { to: "/import-csv", icon: Upload, label: "Import CSV" },
+    ],
+  },
+  {
     title: "Compliance",
     items: [
       { to: "/audit", icon: ScrollText, label: "Audit Trail" },
-      { to: "/customers", icon: Users, label: "Customer Database" },
-      { to: "/settings", icon: Settings, label: "Settings" },
     ],
   },
 ];
@@ -90,13 +96,13 @@ export default function AppSidebar({
         "flex items-center border-b border-sidebar-border shrink-0",
         collapsed ? "justify-center px-3 py-4" : "gap-3 px-5 py-4"
       )}>
-       <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center bg-blue-500">
-  <img 
-    src="/barclays.png" 
-    alt="Logo" 
-    className="w-full h-full object-cover"
-  />
-</div>
+        <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center bg-blue-500">
+          <img
+            src="/barclays.png"
+            alt="Logo"
+            className="w-full h-full object-cover"
+          />
+        </div>
         {!collapsed && (
           <div className="min-w-0">
             <p className="text-sm font-bold text-sidebar-foreground truncate">Hack-It-Out</p>
@@ -211,11 +217,11 @@ export default function AppSidebar({
             <div className="flex items-center justify-between px-5 py-4 border-b border-sidebar-border">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-sidebar-primary flex items-center justify-center">
-                  <img 
-  src="/barclays.png" 
-  alt="Logo" 
-  className="w-6 h-6 object-contain"
-/>
+                  <img
+                    src="/barclays.png"
+                    alt="Logo"
+                    className="w-6 h-6 object-contain"
+                  />
                 </div>
                 <div>
                   <p className="text-sm font-bold text-sidebar-foreground">Barclays SAMRGS</p>

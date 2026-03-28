@@ -123,26 +123,6 @@ export default function Transactions() {
         </div>
       </div>
 
-      {/* New arrivals banner */}
-      {newCount > 0 && (
-        <button
-          className="w-full flex items-center justify-between px-4 py-2.5 rounded-lg bg-primary/10 border border-primary/20 hover:bg-primary/15 transition-colors text-left"
-          onClick={() => {
-            setNewCount(0);
-            setPage(0);
-            setSortField("date");
-            setSortDir("desc");
-          }}
-        >
-          <div className="flex items-center gap-2">
-            <ArrowDown className="w-4 h-4 text-primary animate-bounce shrink-0" />
-            <span className="text-sm font-medium text-primary">
-              {newCount} new transaction{newCount > 1 ? "s" : ""} received — click to view latest
-            </span>
-          </div>
-          <span className="text-xs text-primary/70">Sort by newest</span>
-        </button>
-      )}
 
       <Card className="shadow-card">
         <CardHeader className="pb-3">

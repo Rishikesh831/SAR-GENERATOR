@@ -73,7 +73,6 @@ export default function AuditTrail() {
                 <TableHead>User</TableHead>
                 <TableHead>Role</TableHead>
                 <TableHead>Action</TableHead>
-                <TableHead>Model / Prompt</TableHead>
                 <TableHead>Details</TableHead>
                 <TableHead className="text-center">Integrity</TableHead>
               </TableRow>
@@ -93,10 +92,6 @@ export default function AuditTrail() {
                     <Badge variant={(actionColors[entry.action] as any) || "default"} className="text-[10px]">
                       {entry.action}
                     </Badge>
-                  </TableCell>
-                  <TableCell className="text-[10px] text-muted-foreground">
-                    {entry.modelVersion && <span className="block">{entry.modelVersion}</span>}
-                    {entry.promptVersionId && <span className="block font-mono">{entry.promptVersionId}</span>}
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground max-w-[200px] truncate">{entry.details}</TableCell>
                   <TableCell className="text-center">

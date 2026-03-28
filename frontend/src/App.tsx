@@ -9,11 +9,11 @@ import { ProfileProvider } from "@/context/ProfileContext";
 import { SARDataProvider } from "@/context/SARDataContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import AppLayout from "@/components/AppLayout";
-import LiveTransactionBridge from "@/components/LiveTransactionBridge";
 import Dashboard from "@/pages/Dashboard";
-import Transactions from "@/pages/Transactions";
 import FlaggedClusters from "@/pages/FlaggedClusters";
+import PartiallyFlaggedAccounts from "@/pages/PartiallyFlaggedAccounts";
 import SARGenerate from "@/pages/SARGenerate";
+import SARElements from "@/pages/SARElements";
 import ReviewQueue from "@/pages/ReviewQueue";
 import FiledReports from "@/pages/FiledReports";
 import RiskGraph from "@/pages/RiskGraph";
@@ -25,6 +25,8 @@ import CaseDetail from "@/pages/CaseDetail";
 import AdminProfile from "@/pages/AdminProfile";
 import NotFound from "@/pages/NotFound";
 import LandingPage from "@/components/LandingPage";
+import ModelComparison from "@/pages/ModelComparison";
+import ImportCSV from "@/pages/ImportCSV";
 
 const queryClient = new QueryClient();
 const LANDING_STORAGE_KEY = "sarGuardian.hasEntered";
@@ -68,7 +70,6 @@ const App = () => {
           >
             <QueryClientProvider client={queryClient}>
               <SARDataProvider>
-                <LiveTransactionBridge />
                 <ProfileProvider>
                   <TooltipProvider>
                     <Toaster />
@@ -76,27 +77,30 @@ const App = () => {
                     <BrowserRouter>
                       <Routes>
                         <Route element={<AppLayout />}>
-                        <Route path="/" element={<Dashboard />} />
-                        <Route path="/transactions" element={<Transactions />} />
-                        <Route path="/flagged" element={<FlaggedClusters />} />
-                        <Route path="/sar/generate" element={<SARGenerate />} />
-                        <Route path="/sar/queue" element={<ReviewQueue />} />
-                        <Route path="/sar/filed" element={<FiledReports />} />
-                        <Route path="/risk-graph" element={<RiskGraph />} />
-                        <Route path="/analytics" element={<Analytics />} />
-                        <Route path="/case/:caseId" element={<CaseDetail />} />
-                        <Route path="/audit" element={<AuditTrail />} />
-                        <Route path="/customers" element={<Customers />} />
-                        <Route path="/settings" element={<SettingsPage />} />
-                        <Route path="/profile" element={<AdminProfile />} />
-                      </Route>
-                      <Route path="*" element={<NotFound />} />
-                    </Routes>
-                  </BrowserRouter>
-                </TooltipProvider>
-              </ProfileProvider>
-            </SARDataProvider>
-          </QueryClientProvider>
+                          <Route path="/" element={<Dashboard />} />
+                          <Route path="/flagged" element={<FlaggedClusters />} />
+                          <Route path="/partially-flagged" element={<PartiallyFlaggedAccounts />} />
+                          <Route path="/sar/generate" element={<SARGenerate />} />
+                          <Route path="/sar/elements" element={<SARElements />} />
+                          <Route path="/sar/queue" element={<ReviewQueue />} />
+                          <Route path="/sar/filed" element={<FiledReports />} />
+                          <Route path="/risk-graph" element={<RiskGraph />} />
+                          <Route path="/analytics" element={<Analytics />} />
+                          <Route path="/comparison" element={<ModelComparison />} />
+                          <Route path="/import-csv" element={<ImportCSV />} />
+                          <Route path="/case/:caseId" element={<CaseDetail />} />
+                          <Route path="/audit" element={<AuditTrail />} />
+                          <Route path="/customers" element={<Customers />} />
+                          <Route path="/settings" element={<SettingsPage />} />
+                          <Route path="/profile" element={<AdminProfile />} />
+                        </Route>
+                        <Route path="*" element={<NotFound />} />
+                      </Routes>
+                    </BrowserRouter>
+                  </TooltipProvider>
+                </ProfileProvider>
+              </SARDataProvider>
+            </QueryClientProvider>
           </motion.div>
         )}
       </AnimatePresence>

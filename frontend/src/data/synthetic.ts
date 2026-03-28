@@ -129,7 +129,7 @@ function generateDate(daysAgo: number): string {
 
 // Generate customers
 export const customers: Customer[] = Array.from({ length: 50 }, (_, i) => ({
-  id: `CUST-${String(i + 1).padStart(4, "0")}`,
+  id: `INP-${String(i + 1).padStart(4, "0")}`,
   name: `${randomFrom(firstNames)} ${randomFrom(lastNames)}`,
   accounts: Array.from({ length: randomBetween(2, 6) }, () => generateAccountNumber()),
   riskRating: randomFrom<RiskLevel>(["high", "medium", "low"]),

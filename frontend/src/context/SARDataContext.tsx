@@ -18,7 +18,7 @@ import {
   type DetectedThreat,
   type ThreatSummary,
 } from "@/lib/threatDetection";
-import { io, type Socket } from "socket.io-client";
+// import { io, type Socket } from "socket.io-client"; // DECOUPLED: WebSocket temporarily disabled
 import { fetchInitData, patchCase, updateChecklist, queueNarrative } from "@/lib/apiClient";
 
 // ─── Live Feed ─────────────────────────────────────────────────────────────────
@@ -441,25 +441,26 @@ export function SARDataProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // ─── Backend Integration: Socket.IO ────────────────────────────────────
-  useEffect(() => {
-    let socket: Socket | null = null;
-    try {
-      socket = io(window.location.origin, { transports: ["websocket", "polling"] });
-      socket.on("connect", () => console.log("🔌 Socket connected:", socket?.id));
-      socket.on("narrative_ready", (data: { caseId: string; narrative: string }) => {
-        console.log("📡 Narrative ready:", data.caseId);
-        setSARReports((prev) =>
-          prev.map((s) =>
-            s._dbId === data.caseId || s.caseId === data.caseId
-              ? { ...s, narrative: data.narrative, status: "review" as SARStatus, updatedAt: new Date().toISOString().split("T")[0] }
-              : s
-          )
-        );
-      });
-      socket.on("connect_error", () => { /* non-critical */ });
-    } catch { /* Socket.IO not available */ }
-    return () => { socket?.disconnect(); };
-  }, []);
+  // DECOUPLED FOR NOW: WebSocket functionality disabled
+  // useEffect(() => {
+  //   let socket: Socket | null = null;
+  //   try {
+  //     socket = io(window.location.origin, { transports: ["websocket", "polling"] });
+  //     socket.on("connect", () => console.log("🔌 Socket connected:", socket?.id));
+  //     socket.on("narrative_ready", (data: { caseId: string; narrative: string }) => {
+  //       console.log("📡 Narrative ready:", data.caseId);
+  //       setSARReports((prev) =>
+  //         prev.map((s) =>
+  //           s._dbId === data.caseId || s.caseId === data.caseId
+  //             ? { ...s, narrative: data.narrative, status: "review" as SARStatus, updatedAt: new Date().toISOString().split("T")[0] }
+  //             : s
+  //         )
+  //       );
+  //     });
+  //     socket.on("connect_error", () => { /* non-critical */ });
+  //   } catch { /* Socket.IO not available */ }
+  //   return () => { socket?.disconnect(); };
+  // }, []);
 
   // ─── Helper: Resolve real DB UUID from display ID ──────────────────────
   const getDbId = useCallback(

@@ -11,7 +11,7 @@ import { createSarReportPdfBlob } from "@/lib/pdfExport";
 import { cn } from "@/lib/utils";
 
 export default function FiledReports() {
-  const { sarReports, highlightedEntities, activeInvestigationEntity, pipelinesByEntity } = useSARData();
+  const { sarReports, highlightedEntities, activeInvestigationEntity } = useSARData();
   const [searchQ, setSearchQ] = useState("");
   const [pdfPreview, setPdfPreview] = useState<{ url: string; filename: string } | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
@@ -102,14 +102,13 @@ export default function FiledReports() {
                 <TableHead>Case ID</TableHead>
                 <TableHead>Transaction ID</TableHead>
                 <TableHead>Customer</TableHead>
-                <TableHead>Status</TableHead>
+
                 <TableHead>Assigned To</TableHead>
                 <TableHead>Model</TableHead>
                 <TableHead>Confidence</TableHead>
                 <TableHead>Filed Date</TableHead>
-                <TableHead>Filed Stamp</TableHead>
-                <TableHead>Lifecycle</TableHead>
-                <TableHead>Pipeline</TableHead>
+
+
                 <TableHead>Resolved Txns</TableHead>
                 <TableHead>Preview</TableHead>
                 <TableHead className="text-center">Verified</TableHead>
@@ -118,11 +117,7 @@ export default function FiledReports() {
             <TableBody>
               {filteredFiled.map((sar) => {
                 const highlighted = highlightedEntities.includes(sar.customerId);
-                const pipeline = pipelinesByEntity[sar.customerId];
-                const timelineText = (sar.timelineEvents || []).map((e) => e.event.toLowerCase()).join(" ");
-                const reviewReached = timelineText.includes("review") || ["review", "approved", "filed"].includes(sar.status);
-                const approvalReached = timelineText.includes("approved") || ["approved", "filed"].includes(sar.status);
-                const filedReached = sar.status === "filed";
+
 
                 return (
                   <TableRow key={sar.id} className={highlighted ? "bg-primary/5" : undefined}>
@@ -137,51 +132,15 @@ export default function FiledReports() {
                         )}
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <Badge variant={sar.status === "filed" ? "success" : "default"} className="text-[10px] capitalize gap-1">
-                        {sar.status === "filed" && <CheckCircle className="w-3 h-3" />}
-                        {sar.status}
-                      </Badge>
-                    </TableCell>
+
                     <TableCell className="text-sm text-muted-foreground">{sar.assignedTo}</TableCell>
                     <TableCell className="text-xs text-muted-foreground">{sar.modelUsed}</TableCell>
                     <TableCell>
                       <Badge variant="secondary" className="text-[10px]">{sar.confidenceScore}%</Badge>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">{sar.updatedAt}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground">
-                      {sar.filingStamp ? (
-                        <div className="space-y-0.5">
-                          <div className="font-mono">{sar.filingStamp.statusLabel}</div>
-                          <div>By {sar.filingStamp.filedBy}</div>
-                        </div>
-                      ) : (
-                        "-"
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <div className="space-y-1.5 min-w-[170px]">
-                        <div className="flex items-center gap-1.5 text-[10px]">
-                          <span className={cn("inline-block w-2 h-2 rounded-full", reviewReached ? "bg-amber-500" : "bg-muted")}></span>
-                          <span className={reviewReached ? "text-foreground" : "text-muted-foreground"}>Under Review</span>
-                        </div>
-                        <div className="flex items-center gap-1.5 text-[10px]">
-                          <span className={cn("inline-block w-2 h-2 rounded-full", approvalReached ? "bg-primary" : "bg-muted")}></span>
-                          <span className={approvalReached ? "text-foreground" : "text-muted-foreground"}>Under Approval</span>
-                        </div>
-                        <div className="flex items-center gap-1.5 text-[10px]">
-                          <span className={cn("inline-block w-2 h-2 rounded-full", filedReached ? "bg-green-500" : "bg-muted")}></span>
-                          <span className={filedReached ? "text-foreground" : "text-muted-foreground"}>Filed Report Successfully</span>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {pipeline ? (
-                        <Badge variant="outline" className="text-[9px]">{pipeline.modules.length} layers</Badge>
-                      ) : (
-                        <span className="text-[10px] text-muted-foreground">-</span>
-                      )}
-                    </TableCell>
+
+
                     <TableCell>
                       <div className="flex items-center gap-1.5">
                         <CheckCircle className="w-3.5 h-3.5 text-success" />
