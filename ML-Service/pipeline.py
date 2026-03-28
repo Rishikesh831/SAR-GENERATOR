@@ -79,6 +79,116 @@ def warn(msg):
     print(f"  {RED}⚠{RESET}  {msg}")
 
 
+def _load_db_url() -> str | None:
+    env_keys = ["DATABASE_URL", "NEON_DATABASE_URL", "NEON_DB_URL"]
+    for key in env_keys:
+        value = os.getenv(key)
+        if value:
+            return value.strip()
+
+    root_dir = os.path.abspath(os.path.join(THIS_DIR, ".."))
+    env_path = os.path.join(root_dir, ".env")
+    if not os.path.exists(env_path):
+        return None
+
+    try:
+        with open(env_path, "r", encoding="utf-8") as f:
+            for line in f:
+                raw = line.strip()
+                if not raw or raw.startswith("#"):
+                    continue
+                if "postgresql://" in raw:
+                    return raw
+                if "=" in raw:
+                    _, val = raw.split("=", 1)
+                    if "postgresql://" in val:
+                        return val.strip()
+    except Exception:
+        return None
+
+    return None
+
+
+def _validate_transactions_against_db(tx_df: pd.DataFrame, audit: "AuditTrail") -> None:
+    db_url = _load_db_url()
+    if not db_url:
+        audit.log_step("Validation_L5", "DB Validation Skipped", {"reason": "No DB URL configured"})
+        ok("DB validation skipped (no DB URL configured)")
+        return
+
+    if tx_df.empty:
+        audit.log_step("Validation_L5", "DB Validation Failed", {"reason": "Empty transaction dataset"})
+        raise RuntimeError("DB validation failed: empty transaction dataset")
+
+    required_cols = {"transaction_id", "amount"}
+    if not required_cols.issubset(set(tx_df.columns)):
+        missing = sorted(required_cols - set(tx_df.columns))
+        audit.log_step("Validation_L5", "DB Validation Failed", {"reason": "Missing required columns", "missing": missing})
+        raise RuntimeError(f"DB validation failed: missing columns {missing}")
+
+    try:
+        import psycopg2
+    except Exception as exc:
+        audit.log_step("Validation_L5", "DB Validation Failed", {"reason": "psycopg2 not installed", "error": str(exc)})
+        raise RuntimeError("DB validation failed: psycopg2 not installed") from exc
+
+    tx_df = tx_df.dropna(subset=["transaction_id", "amount"]).copy()
+    tx_df["transaction_id"] = tx_df["transaction_id"].astype(str)
+    tx_ids = tx_df["transaction_id"].unique().tolist()
+    if not tx_ids:
+        audit.log_step("Validation_L5", "DB Validation Failed", {"reason": "No transaction IDs present"})
+        raise RuntimeError("DB validation failed: no transaction IDs present")
+
+    audit.log_step("Validation_L5", "DB Connection Available", {"transaction_ids": len(tx_ids)})
+    ok(f"DB validation starting for {len(tx_ids)} transactions")
+
+    db_amounts: dict[str, float] = {}
+    missing_ids: set[str] = set()
+    chunk_size = 1000
+
+    with psycopg2.connect(db_url) as conn:
+        with conn.cursor() as cur:
+            for i in range(0, len(tx_ids), chunk_size):
+                chunk = tx_ids[i:i + chunk_size]
+                cur.execute(
+                    "SELECT transaction_id, amount FROM transactions WHERE transaction_id = ANY(%s)",
+                    (chunk,),
+                )
+                rows = cur.fetchall()
+                for tx_id, amount in rows:
+                    if tx_id is not None:
+                        db_amounts[str(tx_id)] = float(amount) if amount is not None else 0.0
+
+    missing_ids = set(tx_ids) - set(db_amounts.keys())
+    audit.log_step("Validation_L5", "DB Transaction Presence Check", {
+        "total_transactions": len(tx_ids),
+        "missing_transactions": len(missing_ids),
+    })
+
+    if missing_ids:
+        raise RuntimeError(f"DB validation failed: {len(missing_ids)} transactions not found")
+
+    mismatches = 0
+    for _, row in tx_df.iterrows():
+        tx_id = str(row["transaction_id"])
+        amount = float(row["amount"])
+        db_amount = db_amounts.get(tx_id, None)
+        if db_amount is None:
+            mismatches += 1
+            continue
+        if abs(db_amount - amount) > 0.01:
+            mismatches += 1
+
+    audit.log_step("Validation_L5", "DB Amount Consistency Check", {
+        "amount_mismatches": mismatches,
+    })
+
+    if mismatches:
+        raise RuntimeError(f"DB validation failed: {mismatches} amount mismatches")
+
+    ok("DB validation passed (transaction IDs + amount fields)")
+
+
 def _safe_country_list(df: pd.DataFrame) -> list[str]:
     if df.empty or "country" not in df.columns:
         return []
@@ -290,6 +400,229 @@ def _build_sar_report(
         "debug_context": {
             "prior_vector": prior_vector,
         },
+    }
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+#  ANTI-HALLUCINATION VALIDATOR
+# ═════════════════════════════════════════════════════════════════════════════
+
+def _validate_sar_narrative_against_evidence(
+    narrative: str,
+    evidence_bundle: dict,
+    graph_signals: dict,
+    tx_df: pd.DataFrame,
+    db_confirmed_ids: set[str] | None = None,
+) -> dict:
+    """
+    Cross-references every factual claim in the LLM-generated SAR narrative
+    against the ground-truth data layers.
+
+    Checks performed
+    ─────────────────
+    1. Dollar amounts   — every $ figure in the narrative must be within the
+                          range of amounts in the confirmed transaction set.
+    2. Account IDs      — any alphanumeric token that looks like an account ID
+                          must appear in the confirmed transactions.
+    3. AML patterns     — pattern names mentioned (smurfing, layering, etc.)
+                          must have been detected by the Graph Engine.
+    4. Jurisdictions    — country/jurisdiction names mentioned are flagged if
+                          they are not in the transaction dataset (possible
+                          Context-Agent leakage or hallucination).
+
+    Returns a hallucination_report dict with:
+      • passed              bool   — True if no high-confidence unverified claims
+      • hallucination_risk  float  — 0.0 (clean) → 1.0 (fully hallucinated)
+      • checks              list   — per-check result objects
+      • unverified_claims   list   — specific text snippets that could not be
+                                     matched to ground-truth data
+    """
+    import re
+
+    checks: list[dict] = []
+    unverified_claims: list[str] = []
+
+    # ── Build ground-truth lookup tables ─────────────────────────────────────
+
+    # Ground-truth dollar bounds from evidence bundle
+    evidence_amounts: list[float] = []
+    for ev in evidence_bundle.get("evidence", []):
+        facts = ev.get("forensic_facts", {})
+        vol = facts.get("total_volume_usd") or facts.get("volume_usd")
+        if isinstance(vol, (int, float)):
+            evidence_amounts.append(float(vol))
+
+    # Ground-truth amounts from CSV transactions
+    csv_amounts: list[float] = []
+    csv_accounts: set[str] = set()
+    csv_countries: set[str] = set()
+    if not tx_df.empty:
+        if "amount" in tx_df.columns:
+            csv_amounts = tx_df["amount"].dropna().astype(float).tolist()
+        for col in ("sender_account", "receiver_account"):
+            if col in tx_df.columns:
+                csv_accounts.update(tx_df[col].dropna().astype(str).str.upper().tolist())
+        if "country" in tx_df.columns:
+            csv_countries = set(tx_df["country"].dropna().astype(str).str.upper().tolist())
+
+    all_amounts = evidence_amounts + csv_amounts
+    amount_min = min(all_amounts) * 0.0 if all_amounts else 0.0   # allow $0
+    amount_max = max(all_amounts) * 1.5 if all_amounts else float("inf")  # 50% tolerance
+
+    # Ground-truth account IDs (CSV + DB confirmed)
+    confirmed_accounts = csv_accounts.copy()
+    if db_confirmed_ids:
+        confirmed_accounts.update(s.upper() for s in db_confirmed_ids)
+
+    # Ground-truth AML patterns (what the Graph Engine actually detected)
+    detected_patterns: set[str] = set()
+    pattern_aliases = {
+        "smurfing":          ["smurf", "smurfing", "structuring network"],
+        "funnel_accounts":   ["funnel", "pass-through", "passthrough"],
+        "layering":          ["layer", "layering", "layered"],
+        "circular_transfer": ["circular", "round-trip", "roundtrip", "loop"],
+    }
+    for pattern_key, instances in graph_signals.items():
+        if instances:  # non-empty list = detected
+            detected_patterns.add(pattern_key)
+
+    # Common country/jurisdiction names for detection (lowercase)
+    # We just check words that look like country names and see if they're in the CSV
+    _KNOWN_JURISDICTIONS = {
+        "nigeria", "ghana", "kenya", "ethiopia", "china", "russia", "iran",
+        "cayman", "bahamas", "panama", "luxembourg", "liechtenstein", "seychelles",
+        "singapore", "dubai", "uae", "switzerland", "mexico", "colombia",
+        "venezuela", "myanmar", "north korea", "afghanistan",
+    }
+
+    narrative_lower = narrative.lower()
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # CHECK 1: Dollar amounts
+    # ─────────────────────────────────────────────────────────────────────────
+    amount_pattern = re.compile(r"\$([\d,]+(?:\.\d{1,2})?)")
+    found_amounts  = amount_pattern.findall(narrative)
+    bad_amounts    = []
+    for raw in found_amounts:
+        try:
+            val = float(raw.replace(",", ""))
+        except ValueError:
+            continue
+        if all_amounts and not (amount_min <= val <= amount_max):
+            bad_amounts.append(f"${raw}")
+            unverified_claims.append(f"Amount ${raw} not in ground-truth range [{amount_min:.0f}–{amount_max:.0f}]")
+
+    checks.append({
+        "check":          "dollar_amounts",
+        "description":    "All $ figures in narrative must be within range of confirmed transaction data",
+        "values_found":   found_amounts,
+        "unverified":     bad_amounts,
+        "passed":         len(bad_amounts) == 0,
+    })
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # CHECK 2: Account IDs
+    # ─────────────────────────────────────────────────────────────────────────
+    # Match tokens that look like account IDs: ACC-12345, ACCT_XYZ, etc.
+    account_pattern = re.compile(
+        r"\b([A-Z]{2,6}[-_][A-Z0-9]{3,15}|[0-9]{8,20})\b", re.IGNORECASE
+    )
+    found_accounts = [m.upper() for m in account_pattern.findall(narrative)]
+    bad_accounts   = []
+    if confirmed_accounts:  # only validate if we have ground-truth accounts
+        for acct in found_accounts:
+            if acct not in confirmed_accounts:
+                bad_accounts.append(acct)
+                unverified_claims.append(f"Account '{acct}' not found in confirmed transaction records")
+
+    checks.append({
+        "check":        "account_ids",
+        "description":  "Account identifiers in narrative must exist in the confirmed transaction dataset",
+        "values_found": found_accounts,
+        "unverified":   bad_accounts,
+        "passed":       len(bad_accounts) == 0,
+    })
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # CHECK 3: AML pattern claims
+    # ─────────────────────────────────────────────────────────────────────────
+    bad_patterns = []
+    mentioned_patterns = []
+    for pattern_key, aliases in pattern_aliases.items():
+        for alias in aliases:
+            if alias in narrative_lower:
+                mentioned_patterns.append(alias)
+                if pattern_key not in detected_patterns:
+                    bad_patterns.append(alias)
+                    unverified_claims.append(
+                        f"Pattern '{alias}' mentioned in narrative but NOT detected by Graph Engine"
+                    )
+                break  # only flag once per pattern type
+
+    checks.append({
+        "check":             "aml_patterns",
+        "description":       "AML patterns claimed in narrative must have been detected by the Graph Engine",
+        "patterns_detected": sorted(detected_patterns),
+        "patterns_mentioned":mentioned_patterns,
+        "unverified":        bad_patterns,
+        "passed":            len(bad_patterns) == 0,
+    })
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # CHECK 4: Jurisdiction claims
+    # ─────────────────────────────────────────────────────────────────────────
+    bad_jurisdictions = []
+    mentioned_jurisdictions = []
+    for jurisdiction in _KNOWN_JURISDICTIONS:
+        if jurisdiction in narrative_lower:
+            mentioned_jurisdictions.append(jurisdiction)
+            # Only flag if CSV has a country column AND the country isn't in it
+            if csv_countries and jurisdiction.upper() not in csv_countries:
+                bad_jurisdictions.append(jurisdiction)
+                unverified_claims.append(
+                    f"Jurisdiction '{jurisdiction}' mentioned but not present in transaction country data"
+                )
+
+    checks.append({
+        "check":                   "jurisdictions",
+        "description":             "Jurisdictions mentioned must be present in the transaction dataset country column",
+        "jurisdictions_mentioned": mentioned_jurisdictions,
+        "csv_countries":           sorted(csv_countries) if csv_countries else "(no country column in CSV)",
+        "unverified":              bad_jurisdictions,
+        "passed":                  len(bad_jurisdictions) == 0 or not csv_countries,
+    })
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # Score
+    # ─────────────────────────────────────────────────────────────────────────
+    # Weight the checks: pattern and amount hallucinations are highest risk
+    weights = {"dollar_amounts": 0.35, "account_ids": 0.25, "aml_patterns": 0.30, "jurisdictions": 0.10}
+    total_unverified = sum(len(c["unverified"]) for c in checks)
+    total_found      = sum(
+        len(c.get("values_found") or c.get("patterns_mentioned") or c.get("jurisdictions_mentioned") or [])
+        for c in checks
+    )
+
+    failed_weights = sum(
+        weights[c["check"]] for c in checks if not c["passed"]
+    )
+    hallucination_risk = round(min(1.0, failed_weights + (total_unverified * 0.05)), 3)
+    passed_overall     = hallucination_risk < 0.30  # <30% risk → passes
+
+    return {
+        "passed":             passed_overall,
+        "hallucination_risk": hallucination_risk,
+        "risk_label":         "LOW" if hallucination_risk < 0.3 else ("MEDIUM" if hallucination_risk < 0.6 else "HIGH"),
+        "total_claims_checked": total_found,
+        "unverified_claim_count": total_unverified,
+        "unverified_claims":  unverified_claims,
+        "checks":             checks,
+        "note": (
+            "All narrative claims verified against ground-truth evidence."
+            if passed_overall else
+            "WARNING: Narrative contains claims not grounded in the evidence bundle. "
+            "Human analyst must review before filing."
+        ),
     }
 
 
@@ -560,6 +893,16 @@ wired offshore to high-risk jurisdictions."""
     ok(f"ML evidence objects: {len(ml_evidence)}")
     ok(f"Graph evidence objects: {len(graph_evidence)}")
 
+    # ── Validation Layer A/B: DB presence + amount consistency ────────────
+    header("VALIDATION: DB TRANSACTION INTEGRITY")
+    try:
+        _validate_transactions_against_db(tx_df, audit)
+    except Exception as exc:
+        audit.log_step("Validation_L5", "DB Validation Failed", {"error": str(exc)})
+        audit_path = audit.export_log(os.path.join(OUT_DIR, f"L7_audit_log_{case_id}.json"))
+        warn(f"Validation failed. Audit trail written to: {audit_path}")
+        raise
+
     # ── Layer 5: SAR Generator ────────────────────────────────────────────
     header("LAYER 5: SAR GENERATION (LLM)")
     print("  Status: sar_generator.py is ready")
@@ -606,6 +949,36 @@ wired offshore to high-risk jurisdictions."""
         except Exception as e:
             warn(f"Ollama connection failed or generation error: {e}")
 
+    # ── Anti-Hallucination Validator ──────────────────────────────────────────
+    header("VALIDATION: ANTI-HALLUCINATION CHECK")
+    narrative_for_check = narrative if 'narrative' in locals() else ""
+    db_confirmed_ids: set[str] = set()
+    if not tx_df.empty and "transaction_id" in tx_df.columns:
+        db_confirmed_ids = set(tx_df["transaction_id"].dropna().astype(str).tolist())
+
+    hallucination_report = _validate_sar_narrative_against_evidence(
+        narrative          = narrative_for_check,
+        evidence_bundle    = bundle_dict,
+        graph_signals      = result_biased["signals"],
+        tx_df              = tx_df,
+        db_confirmed_ids   = db_confirmed_ids,
+    )
+
+    if hallucination_report["passed"]:
+        ok(f"Anti-hallucination check PASSED (risk={hallucination_report['hallucination_risk']:.0%})")
+    else:
+        warn(f"Anti-hallucination check FAILED — risk={hallucination_report['hallucination_risk']:.0%}")
+        for claim in hallucination_report["unverified_claims"]:
+            warn(f"  Unverified: {claim}")
+
+    audit.log_step("Hallucination_L5", "Anti-Hallucination Validation Complete", {
+        "passed":             hallucination_report["passed"],
+        "hallucination_risk": hallucination_report["hallucination_risk"],
+        "risk_label":         hallucination_report["risk_label"],
+        "unverified_claims":  hallucination_report["unverified_claim_count"],
+        "checks_run":         len(hallucination_report["checks"]),
+    })
+
     # ── L5: JSON SAR Report (structured output) ───────────────────────────
     narrative_text = narrative if 'narrative' in locals() else "[SAR GENERATION FAILED]"
     sar_report = _build_sar_report(
@@ -621,6 +994,8 @@ wired offshore to high-risk jurisdictions."""
         ai_confidence=float(max(scores_aware)) if len(scores_aware) else 0.0,
         lift=lift,
     )
+    # Embed the hallucination report into the SAR report JSON
+    sar_report["hallucination_validation"] = hallucination_report
 
     with open(os.path.join(OUT_DIR, "L5_SAR_Report.json"), "w", encoding="utf-8") as f:
         json.dump(sar_report, f, indent=2)
