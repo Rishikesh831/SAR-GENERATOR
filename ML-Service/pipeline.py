@@ -23,8 +23,9 @@ import json
 import numpy as np
 from pathlib import Path
 
-# Ensure proper encoding on Windows
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+# Ensure proper encoding on Windows only — on Linux/Render stdout is already UTF-8
+if sys.platform == "win32":
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 
 # Ensure ML-Service is in path
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -53,8 +54,11 @@ from human_review import review_sar_interactive
 SEP   = "=" * 64
 DASH  = "-" * 64
 
-# Disable ANSI when piped or --no-color flag
-_NO_COLOR = not sys.stdout.isatty() or "--no-color" in sys.argv
+# Disable ANSI when piped, non-TTY, or --no-color flag (safe for Render/uvicorn)
+try:
+    _NO_COLOR = not sys.stdout.isatty() or "--no-color" in sys.argv
+except Exception:
+    _NO_COLOR = True
 GREEN = "" if _NO_COLOR else "\033[92m"
 RED   = "" if _NO_COLOR else "\033[91m"
 CYAN  = "" if _NO_COLOR else "\033[96m"
