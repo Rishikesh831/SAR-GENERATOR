@@ -80,13 +80,21 @@ def warn(msg):
 
 
 def _load_db_url() -> str | None:
+    sqlite_path = os.getenv("SQLITE_PATH")
+    if sqlite_path:
+        return f"sqlite:///{sqlite_path.strip()}"
+
+    root_dir = os.path.abspath(os.path.join(THIS_DIR, ".."))
+    default_sqlite = os.path.join(root_dir, "backend", "data", "sar.db")
+    if os.path.exists(default_sqlite):
+        return f"sqlite:///{default_sqlite}"
+
     env_keys = ["DATABASE_URL", "NEON_DATABASE_URL", "NEON_DB_URL"]
     for key in env_keys:
         value = os.getenv(key)
         if value:
             return value.strip()
 
-    root_dir = os.path.abspath(os.path.join(THIS_DIR, ".."))
     env_path = os.path.join(root_dir, ".env")
     if not os.path.exists(env_path):
         return None
@@ -99,10 +107,16 @@ def _load_db_url() -> str | None:
                     continue
                 if "postgresql://" in raw:
                     return raw
+                if "sqlite:///" in raw:
+                    return raw
                 if "=" in raw:
                     _, val = raw.split("=", 1)
                     if "postgresql://" in val:
                         return val.strip()
+                    if "sqlite:///" in val:
+                        return val.strip()
+                    if "SQLITE_PATH" in raw and val.strip():
+                        return f"sqlite:///{val.strip()}"
     except Exception:
         return None
 
@@ -126,11 +140,13 @@ def _validate_transactions_against_db(tx_df: pd.DataFrame, audit: "AuditTrail") 
         audit.log_step("Validation_L5", "DB Validation Failed", {"reason": "Missing required columns", "missing": missing})
         raise RuntimeError(f"DB validation failed: missing columns {missing}")
 
-    try:
-        import psycopg2
-    except Exception as exc:
-        audit.log_step("Validation_L5", "DB Validation Failed", {"reason": "psycopg2 not installed", "error": str(exc)})
-        raise RuntimeError("DB validation failed: psycopg2 not installed") from exc
+    is_sqlite = db_url.startswith("sqlite:///")
+    if not is_sqlite:
+        try:
+            import psycopg2
+        except Exception as exc:
+            audit.log_step("Validation_L5", "DB Validation Failed", {"reason": "psycopg2 not installed", "error": str(exc)})
+            raise RuntimeError("DB validation failed: psycopg2 not installed") from exc
 
     tx_df = tx_df.dropna(subset=["transaction_id", "amount"]).copy()
     tx_df["transaction_id"] = tx_df["transaction_id"].astype(str)
@@ -146,18 +162,36 @@ def _validate_transactions_against_db(tx_df: pd.DataFrame, audit: "AuditTrail") 
     missing_ids: set[str] = set()
     chunk_size = 1000
 
-    with psycopg2.connect(db_url) as conn:
-        with conn.cursor() as cur:
+    if is_sqlite:
+        import sqlite3
+        sqlite_path = db_url.replace("sqlite:///", "")
+        conn = sqlite3.connect(sqlite_path)
+        try:
+            cur = conn.cursor()
             for i in range(0, len(tx_ids), chunk_size):
                 chunk = tx_ids[i:i + chunk_size]
-                cur.execute(
-                    "SELECT transaction_id, amount FROM transactions WHERE transaction_id = ANY(%s)",
-                    (chunk,),
-                )
+                placeholders = ",".join(["?"] * len(chunk))
+                query = f"SELECT transaction_id, amount FROM transactions WHERE transaction_id IN ({placeholders})"
+                cur.execute(query, chunk)
                 rows = cur.fetchall()
                 for tx_id, amount in rows:
                     if tx_id is not None:
                         db_amounts[str(tx_id)] = float(amount) if amount is not None else 0.0
+        finally:
+            conn.close()
+    else:
+        with psycopg2.connect(db_url) as conn:
+            with conn.cursor() as cur:
+                for i in range(0, len(tx_ids), chunk_size):
+                    chunk = tx_ids[i:i + chunk_size]
+                    cur.execute(
+                        "SELECT transaction_id, amount FROM transactions WHERE transaction_id = ANY(%s)",
+                        (chunk,),
+                    )
+                    rows = cur.fetchall()
+                    for tx_id, amount in rows:
+                        if tx_id is not None:
+                            db_amounts[str(tx_id)] = float(amount) if amount is not None else 0.0
 
     missing_ids = set(tx_ids) - set(db_amounts.keys())
     audit.log_step("Validation_L5", "DB Transaction Presence Check", {

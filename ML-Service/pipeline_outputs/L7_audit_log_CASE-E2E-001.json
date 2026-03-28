@@ -2,7 +2,7 @@
     "case_id": "CASE-E2E-001",
     "audit_trail": [
         {
-            "timestamp": "2026-03-27T12:22:43.335776+00:00",
+            "timestamp": "2026-03-28T13:29:08.290132+00:00",
             "layer": "SYSTEM",
             "action": "AuditTrail Initialized",
             "details": {
@@ -10,7 +10,7 @@
             }
         },
         {
-            "timestamp": "2026-03-27T12:22:43.335776+00:00",
+            "timestamp": "2026-03-28T13:29:08.290132+00:00",
             "layer": "Context_L2",
             "action": "Generated Prior Vector",
             "details": {
@@ -29,7 +29,16 @@
             }
         },
         {
-            "timestamp": "2026-03-27T12:22:43.522221+00:00",
+            "timestamp": "2026-03-28T13:29:08.303477+00:00",
+            "layer": "Ingest_L1",
+            "action": "Dataset Loaded",
+            "details": {
+                "path": "C:\\Users\\user\\AppData\\Local\\Temp\\tmp0i6_ptka.csv",
+                "size_mb": 0.1
+            }
+        },
+        {
+            "timestamp": "2026-03-28T13:29:08.615386+00:00",
             "layer": "ML_L3",
             "action": "Executed XGBoost Context Bias",
             "details": {
@@ -40,28 +49,53 @@
             }
         },
         {
-            "timestamp": "2026-03-27T12:24:10.789094+00:00",
+            "timestamp": "2026-03-28T13:29:10.323817+00:00",
             "layer": "Graph_L4",
             "action": "Generated Subgraph Topologies",
             "details": {
-                "smurfing_signals": 100,
-                "funnel_signals": 50,
-                "layering_signals": 200,
-                "circular_signals": 100,
+                "smurfing_signals": 0,
+                "funnel_signals": 0,
+                "layering_signals": 36,
+                "circular_signals": 0,
                 "flagged_graph_nodes": 0
             }
         },
         {
-            "timestamp": "2026-03-27T12:24:10.789094+00:00",
+            "timestamp": "2026-03-28T13:29:10.327160+00:00",
             "layer": "Evidence_L5",
             "action": "Built Fact-based CaseBundle",
             "details": {
                 "entity_id": "ACC-88392",
-                "evidence_objects_count": 2
+                "evidence_objects_count": 1
             }
         },
         {
-            "timestamp": "2026-03-27T12:24:21.608953+00:00",
+            "timestamp": "2026-03-28T13:29:10.333627+00:00",
+            "layer": "Validation_L5",
+            "action": "DB Connection Available",
+            "details": {
+                "transaction_ids": 1000
+            }
+        },
+        {
+            "timestamp": "2026-03-28T13:29:10.353915+00:00",
+            "layer": "Validation_L5",
+            "action": "DB Transaction Presence Check",
+            "details": {
+                "total_transactions": 1000,
+                "missing_transactions": 0
+            }
+        },
+        {
+            "timestamp": "2026-03-28T13:29:10.572647+00:00",
+            "layer": "Validation_L5",
+            "action": "DB Amount Consistency Check",
+            "details": {
+                "amount_mismatches": 0
+            }
+        },
+        {
+            "timestamp": "2026-03-28T13:29:23.702602+00:00",
             "layer": "SAR_L6",
             "action": "Generated Language Model Narrative",
             "details": {
@@ -69,36 +103,31 @@
             }
         },
         {
-            "timestamp": "2026-03-27T12:24:21.608953+00:00",
-            "layer": "SYSTEM",
-            "action": "Audit Complete",
+            "timestamp": "2026-03-28T13:29:23.750187+00:00",
+            "layer": "Hallucination_L5",
+            "action": "Anti-Hallucination Validation Complete",
             "details": {
-                "duration_seconds": 98.27,
-                "total_events": 6
+                "passed": false,
+                "hallucination_risk": 0.6,
+                "risk_label": "HIGH",
+                "unverified_claims": 1,
+                "checks_run": 2
             }
         },
         {
-            "timestamp": "2026-03-27T12:27:39.411230+00:00",
-            "layer": "Review_L7",
-            "action": "Analyst Review: approved",
-            "details": {
-                "feedback": ""
-            }
-        },
-        {
-            "timestamp": "2026-03-27T12:27:39.411230+00:00",
+            "timestamp": "2026-03-28T13:29:23.792756+00:00",
             "layer": "SYSTEM",
             "action": "Audit Complete",
             "details": {
-                "duration_seconds": 296.08,
-                "total_events": 8
+                "duration_seconds": 15.5,
+                "total_events": 11
             }
         }
     ],
     "flagged_transactions_count": 92,
     "flagged_transactions": [
         {
-            "timestamp": "2026-03-27T12:22:43.517216+00:00",
+            "timestamp": "2026-03-28T13:29:08.593166+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -107,7 +136,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.517216+00:00",
+            "timestamp": "2026-03-28T13:29:08.593166+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -116,7 +145,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.517216+00:00",
+            "timestamp": "2026-03-28T13:29:08.593166+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -125,7 +154,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.517216+00:00",
+            "timestamp": "2026-03-28T13:29:08.593166+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -134,7 +163,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.517216+00:00",
+            "timestamp": "2026-03-28T13:29:08.593166+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -143,7 +172,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.517216+00:00",
+            "timestamp": "2026-03-28T13:29:08.593166+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -152,7 +181,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.518221+00:00",
+            "timestamp": "2026-03-28T13:29:08.593166+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -161,7 +190,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.518221+00:00",
+            "timestamp": "2026-03-28T13:29:08.593166+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -170,7 +199,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.518221+00:00",
+            "timestamp": "2026-03-28T13:29:08.593166+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -179,7 +208,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.518221+00:00",
+            "timestamp": "2026-03-28T13:29:08.593166+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -188,7 +217,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.518221+00:00",
+            "timestamp": "2026-03-28T13:29:08.593166+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -197,7 +226,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.518221+00:00",
+            "timestamp": "2026-03-28T13:29:08.593166+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -206,7 +235,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.518221+00:00",
+            "timestamp": "2026-03-28T13:29:08.593166+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -215,7 +244,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.518221+00:00",
+            "timestamp": "2026-03-28T13:29:08.593166+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -224,7 +253,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.518221+00:00",
+            "timestamp": "2026-03-28T13:29:08.593166+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -233,7 +262,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.518221+00:00",
+            "timestamp": "2026-03-28T13:29:08.593166+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -242,7 +271,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.518221+00:00",
+            "timestamp": "2026-03-28T13:29:08.593166+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -251,7 +280,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.518221+00:00",
+            "timestamp": "2026-03-28T13:29:08.593166+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -260,7 +289,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.518221+00:00",
+            "timestamp": "2026-03-28T13:29:08.593166+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -269,7 +298,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.518221+00:00",
+            "timestamp": "2026-03-28T13:29:08.593166+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -278,7 +307,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.518221+00:00",
+            "timestamp": "2026-03-28T13:29:08.593166+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -287,7 +316,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.518221+00:00",
+            "timestamp": "2026-03-28T13:29:08.598593+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -296,7 +325,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.518221+00:00",
+            "timestamp": "2026-03-28T13:29:08.598593+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -305,7 +334,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.518221+00:00",
+            "timestamp": "2026-03-28T13:29:08.598593+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -314,7 +343,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.518221+00:00",
+            "timestamp": "2026-03-28T13:29:08.599590+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -323,7 +352,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.518221+00:00",
+            "timestamp": "2026-03-28T13:29:08.599590+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -332,7 +361,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.519221+00:00",
+            "timestamp": "2026-03-28T13:29:08.599590+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -341,7 +370,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.519221+00:00",
+            "timestamp": "2026-03-28T13:29:08.599590+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -350,7 +379,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.519221+00:00",
+            "timestamp": "2026-03-28T13:29:08.600827+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -359,7 +388,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.519221+00:00",
+            "timestamp": "2026-03-28T13:29:08.600827+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -368,7 +397,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.519221+00:00",
+            "timestamp": "2026-03-28T13:29:08.600827+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -377,7 +406,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.519221+00:00",
+            "timestamp": "2026-03-28T13:29:08.600827+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -386,7 +415,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.519221+00:00",
+            "timestamp": "2026-03-28T13:29:08.600827+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -395,7 +424,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.519221+00:00",
+            "timestamp": "2026-03-28T13:29:08.600827+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -404,7 +433,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.519221+00:00",
+            "timestamp": "2026-03-28T13:29:08.600827+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -413,7 +442,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.519221+00:00",
+            "timestamp": "2026-03-28T13:29:08.600827+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -422,7 +451,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.519221+00:00",
+            "timestamp": "2026-03-28T13:29:08.600827+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -431,7 +460,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.519221+00:00",
+            "timestamp": "2026-03-28T13:29:08.600827+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -440,7 +469,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.519221+00:00",
+            "timestamp": "2026-03-28T13:29:08.600827+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -449,7 +478,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.519221+00:00",
+            "timestamp": "2026-03-28T13:29:08.600827+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -458,7 +487,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.519221+00:00",
+            "timestamp": "2026-03-28T13:29:08.600827+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -467,7 +496,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.519221+00:00",
+            "timestamp": "2026-03-28T13:29:08.600827+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -476,7 +505,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.519221+00:00",
+            "timestamp": "2026-03-28T13:29:08.600827+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -485,7 +514,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.519221+00:00",
+            "timestamp": "2026-03-28T13:29:08.600827+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -494,7 +523,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.519221+00:00",
+            "timestamp": "2026-03-28T13:29:08.600827+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -503,7 +532,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.519221+00:00",
+            "timestamp": "2026-03-28T13:29:08.600827+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -512,7 +541,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.519221+00:00",
+            "timestamp": "2026-03-28T13:29:08.600827+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -521,7 +550,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.519221+00:00",
+            "timestamp": "2026-03-28T13:29:08.600827+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -530,7 +559,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.520221+00:00",
+            "timestamp": "2026-03-28T13:29:08.600827+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -539,7 +568,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.520221+00:00",
+            "timestamp": "2026-03-28T13:29:08.600827+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -548,7 +577,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.520221+00:00",
+            "timestamp": "2026-03-28T13:29:08.600827+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -557,7 +586,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.520221+00:00",
+            "timestamp": "2026-03-28T13:29:08.605562+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -566,7 +595,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.520221+00:00",
+            "timestamp": "2026-03-28T13:29:08.605562+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -575,7 +604,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.520221+00:00",
+            "timestamp": "2026-03-28T13:29:08.606381+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -584,7 +613,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.520221+00:00",
+            "timestamp": "2026-03-28T13:29:08.606984+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -593,7 +622,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.520221+00:00",
+            "timestamp": "2026-03-28T13:29:08.606984+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -602,7 +631,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.520221+00:00",
+            "timestamp": "2026-03-28T13:29:08.606984+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -611,7 +640,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.520221+00:00",
+            "timestamp": "2026-03-28T13:29:08.607666+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -620,7 +649,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.520221+00:00",
+            "timestamp": "2026-03-28T13:29:08.607666+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -629,7 +658,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.520221+00:00",
+            "timestamp": "2026-03-28T13:29:08.607666+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -638,7 +667,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.520221+00:00",
+            "timestamp": "2026-03-28T13:29:08.607666+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -647,7 +676,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.520221+00:00",
+            "timestamp": "2026-03-28T13:29:08.607666+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -656,7 +685,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.520221+00:00",
+            "timestamp": "2026-03-28T13:29:08.607666+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -665,7 +694,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.520221+00:00",
+            "timestamp": "2026-03-28T13:29:08.608887+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -674,7 +703,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.520221+00:00",
+            "timestamp": "2026-03-28T13:29:08.608887+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -683,7 +712,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.520221+00:00",
+            "timestamp": "2026-03-28T13:29:08.608887+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -692,7 +721,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.520221+00:00",
+            "timestamp": "2026-03-28T13:29:08.608887+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -701,7 +730,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.520221+00:00",
+            "timestamp": "2026-03-28T13:29:08.608887+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -710,7 +739,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.520221+00:00",
+            "timestamp": "2026-03-28T13:29:08.608887+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -719,7 +748,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.521221+00:00",
+            "timestamp": "2026-03-28T13:29:08.608887+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -728,7 +757,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.521221+00:00",
+            "timestamp": "2026-03-28T13:29:08.608887+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -737,7 +766,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.521221+00:00",
+            "timestamp": "2026-03-28T13:29:08.608887+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -746,7 +775,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.521221+00:00",
+            "timestamp": "2026-03-28T13:29:08.608887+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -755,7 +784,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.521221+00:00",
+            "timestamp": "2026-03-28T13:29:08.608887+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -764,7 +793,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.521221+00:00",
+            "timestamp": "2026-03-28T13:29:08.608887+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -773,7 +802,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.521221+00:00",
+            "timestamp": "2026-03-28T13:29:08.608887+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -782,7 +811,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.521221+00:00",
+            "timestamp": "2026-03-28T13:29:08.608887+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -791,7 +820,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.521221+00:00",
+            "timestamp": "2026-03-28T13:29:08.608887+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -800,7 +829,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.521221+00:00",
+            "timestamp": "2026-03-28T13:29:08.608887+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -809,7 +838,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.521221+00:00",
+            "timestamp": "2026-03-28T13:29:08.612751+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -818,7 +847,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.521221+00:00",
+            "timestamp": "2026-03-28T13:29:08.612751+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -827,7 +856,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.521221+00:00",
+            "timestamp": "2026-03-28T13:29:08.613342+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -836,7 +865,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.521221+00:00",
+            "timestamp": "2026-03-28T13:29:08.613342+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -845,7 +874,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.521221+00:00",
+            "timestamp": "2026-03-28T13:29:08.613342+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -854,7 +883,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.521221+00:00",
+            "timestamp": "2026-03-28T13:29:08.613342+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -863,7 +892,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.521221+00:00",
+            "timestamp": "2026-03-28T13:29:08.613342+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -872,7 +901,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.521221+00:00",
+            "timestamp": "2026-03-28T13:29:08.613342+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -881,7 +910,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.521221+00:00",
+            "timestamp": "2026-03-28T13:29:08.614456+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -890,7 +919,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.521221+00:00",
+            "timestamp": "2026-03-28T13:29:08.615045+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -899,7 +928,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.521221+00:00",
+            "timestamp": "2026-03-28T13:29:08.615386+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -908,7 +937,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.521221+00:00",
+            "timestamp": "2026-03-28T13:29:08.615386+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",
@@ -917,7 +946,7 @@
             "flagged_by_layer": "ML_L3"
         },
         {
-            "timestamp": "2026-03-27T12:22:43.522221+00:00",
+            "timestamp": "2026-03-28T13:29:08.615386+00:00",
             "transaction_id": "Unknown",
             "sender": "",
             "receiver": "",

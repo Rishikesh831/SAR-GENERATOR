@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SAR Generator Console</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <main class="app">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">AML Intelligence Console</p>
+          <h1>SAR Generator</h1>
+          <p class="subtitle">
+            Upload transactions, validate integrity, and generate compliant SARs
+            with a full audit trail.
+          </p>
+          <div class="status-pills">
+            <span>Layered ML + Graph</span>
+            <span>DB Integrity Gates</span>
+            <span>Audit-First</span>
+          </div>
+        </div>
+        <div class="hero-card">
+          <p>Primary Pipeline</p>
+          <ul>
+            <li>Context → ML → Graph</li>
+            <li>Evidence → SAR</li>
+            <li>Audit Logging</li>
+          </ul>
+          <div class="pulse"></div>
+        </div>
+      </header>
+
+      <section class="panel">
+        <h2>Generate SAR</h2>
+        <form id="upload-form">
+          <label class="file-drop">
+            <input type="file" name="transactions" accept=".csv" required />
+            <span>Drop CSV or click to select</span>
+          </label>
+          <textarea
+            name="human_feedback"
+            placeholder="Optional analyst feedback to bias the context layer"
+            rows="3"
+          ></textarea>
+          <button type="submit">Run Pipeline</button>
+        </form>
+      </section>
+
+      <section class="grid">
+        <div class="panel">
+          <h3>Case Summary</h3>
+          <div id="case-summary" class="stat-list">
+            <p class="muted">Awaiting run...</p>
+          </div>
+        </div>
+        <div class="panel">
+          <h3>Risk Indicators</h3>
+          <ul id="risk-indicators" class="chip-list"></ul>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h3>Pipeline Status</h3>
+          <span id="pipeline-status" class="status-tag">Idle</span>
+        </div>
+        <div class="timeline" id="pipeline-timeline">
+          <div class="timeline-step active">
+            <span>1</span>
+            <p>Upload CSV</p>
+          </div>
+          <div class="timeline-step">
+            <span>2</span>
+            <p>ML + Graph</p>
+          </div>
+          <div class="timeline-step">
+            <span>3</span>
+            <p>DB Validation</p>
+          </div>
+          <div class="timeline-step">
+            <span>4</span>
+            <p>SAR Draft</p>
+          </div>
+          <div class="timeline-step">
+            <span>5</span>
+            <p>Audit Trail</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="grid">
+        <div class="panel">
+          <h3>Risk Score & Contribution</h3>
+          <div class="stat-list" id="risk-score"></div>
+          <div id="contribution-bars" class="bar-list"></div>
+        </div>
+        <div class="panel">
+          <h3>Historical Signals</h3>
+          <div id="history-graph" class="mini-chart"></div>
+          <p class="muted">Recent anomaly activity based on audit trail events.</p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h3>Audit Trail</h3>
+        <div id="audit-trail" class="audit-list"></div>
+      </section>
+
+      <section class="panel">
+        <h3>Structured SAR JSON</h3>
+        <pre id="sar-output">No SAR generated yet.</pre>
+      </section>
+
+      <section class="panel">
+        <h3>Formatted SAR Report</h3>
+        <pre id="sar-text">No SAR generated yet.</pre>
+      </section>
+
+      <section class="grid">
+        <div class="panel">
+          <h3>Review Queues</h3>
+          <div id="review-queues" class="queue-board"></div>
+        </div>
+        <div class="panel">
+          <h3>Filing Status</h3>
+          <div id="filing-status" class="filing-status">
+            <p class="muted">Awaiting senior approval.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="/src/main.js"></script>
+    <link rel="stylesheet" href="/src/styles.css" />
+  </body>
+</html>

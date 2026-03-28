@@ -15,16 +15,6 @@
         }
       },
       "rationale": "Anomaly score of 1.00 exceeds threshold with Z-score 3.8."
-    },
-    {
-      "source_layer": "Graph_L4",
-      "finding_type": "Smurfing_Topology_Detected",
-      "forensic_facts": {
-        "nodes": 108,
-        "centrality_score": 0.978,
-        "total_volume_usd": 33830.45
-      },
-      "rationale": "Subgraph forms a smurfing structure with 108 nodes passing $33,830.45."
     }
   ]
 }

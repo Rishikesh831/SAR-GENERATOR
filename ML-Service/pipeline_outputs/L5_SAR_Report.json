@@ -1,0 +1,130 @@
+{
+  "case_metadata": {
+    "case_id": "CASE-E2E-001",
+    "date_generated": "2026-03-28",
+    "reporting_unit": "AML Compliance / FIU",
+    "primary_country": "IN",
+    "ai_confidence": 1.0,
+    "regulatory_impact": 1.0,
+    "model_version": "SAR Guardian v2.1"
+  },
+  "subject_profile": {
+    "account_id": "ACC-88392",
+    "risk_score": 100,
+    "risk_category": "HIGH",
+    "kyc_status": "UNDER_REVIEW",
+    "risk_types": [
+      "layering"
+    ],
+    "connections_count": 93,
+    "relationship_types": [
+      "layered_flow"
+    ],
+    "institution": "UNKNOWN",
+    "countries_involved": [
+      "CH",
+      "CY",
+      "IN",
+      "KY",
+      "PA",
+      "SG",
+      "UAE",
+      "UK",
+      "US"
+    ]
+  },
+  "transaction_summary": {
+    "review_period": {
+      "start": "2023-01-01",
+      "end": "2024-02-21"
+    },
+    "total_amount": 388492.63,
+    "transaction_count": 1000,
+    "suspicious_transaction_count": 92,
+    "average_amount": 388.49,
+    "max_transaction": 1803.59,
+    "countries": [
+      "CH",
+      "CY",
+      "IN",
+      "KY",
+      "PA",
+      "SG",
+      "UAE",
+      "UK",
+      "US"
+    ],
+    "patterns_detected": [
+      "layering"
+    ]
+  },
+  "suspicious_transactions": [],
+  "regulatory_mapping": [
+    {
+      "severity": "CRITICAL",
+      "regulation": "BSA SAR Rule",
+      "reference": "31 USC \u00a75318(g)",
+      "confidence": 0.99,
+      "trigger_reason": "92 suspicious transactions totaling $388492.63"
+    }
+  ],
+  "risk_indicators": [
+    "Patterns detected: layering",
+    "Contextual lift observed: 2.50x"
+  ],
+  "evidence_summary": {
+    "transaction_records": 1000,
+    "risk_score": 100,
+    "network_connections": 93,
+    "external_intelligence_hits": 0,
+    "detection_type": "layering"
+  },
+  "narrative_generation": {
+    "suspicious_activity_description": "Here is the official narrative based on the provided Evidence Bundle:\n\n[Reporting Institution]\n\nFiling Institution:\nName: [Bank Name]\nAddress: [Bank Address]\nCity: [City]\nState: [State]\nZIP: [ZIP]\n\nSuspicious Activity Information:\nDateRange: Calculated from Evidence Bundle\nCumulativeAmount: Calculated from Evidence Bundle\nCharacterization: Structuring / Money Laundering (Smurfing)\n\nNarrative:\n\nThe subject(s) of this report are related to the transaction with entity ID ACC-88392, which is identified as [NOT PROVIDED]. On [NOT PROVIDED], the graph intelligence detected a transaction flow that was flagged by the Model_Anomaly_Threshold_Exceeded finding type. This finding resulted in an anomaly score of 1.00, which exceeded the threshold indicated by the Z-score of 3.8.\n\nThe top features identified for this transaction are: amount = 0.4, n_daily_txns = 0.35, and velocity_spike = 0.25. These anomalies were detected in the ML Suspicion Detection process.\n\nIt is not possible to determine speculative motives for this activity without additional information beyond what is provided in the Evidence Bundle. However, it can be summarized that the suspicious activity reported is due to the structuring/smurfing characterization of the transaction flow detected by the graph intelligence.\n\n[NOT PROVIDED]\n\n[NOT PROVIDED]",
+    "conclusion": "Case CASE-E2E-001 assessed as HIGH risk based on observed anomalies."
+  },
+  "debug_context": {
+    "prior_vector": {
+      "context_timestamp": "2026-03-26T12:00:00Z",
+      "world_state": {
+        "region_risk": "West Africa ^",
+        "typology_focus": "structuring",
+        "commodity_flag": "narcotics",
+        "enforcement_rec": "FinCEN_Files_pattern",
+        "risk_multiplier": 1.0
+      },
+      "justification": "Financial crime indicators detected \u2014 3 high-risk regions; typology:structuring; commodity:narcotics; (severe commodity bonus); enforcement:FinCEN_Files_pattern; (corroboration \u00d71.10); risk_multiplier set to 1.0."
+    }
+  },
+  "hallucination_validation": {
+    "passed": false,
+    "hallucination_risk": 0.6,
+    "risk_label": "HIGH",
+    "total_claims_checked": 1,
+    "unverified_claim_count": 1,
+    "unverified_claims": [
+      "Account 'ACC-88392' not found in DB-confirmed transaction records"
+    ],
+    "checks": [
+      {
+        "check": "dollar_amounts",
+        "description": "All $ figures in narrative must be within range of DB-confirmed transaction data",
+        "values_found": [],
+        "unverified": [],
+        "passed": true
+      },
+      {
+        "check": "account_ids",
+        "description": "Account identifiers in narrative must exist in the DB-confirmed transaction dataset",
+        "values_found": [
+          "ACC-88392"
+        ],
+        "unverified": [
+          "ACC-88392"
+        ],
+        "passed": false
+      }
+    ],
+    "note": "WARNING: Narrative contains specific figures/IDs not grounded in the DB transactions."
+  }
+}

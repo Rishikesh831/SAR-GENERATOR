@@ -1,6 +1,7 @@
-[FINCEN Report Number] - Suspicious Activity Report
+Here is the official narrative based on the provided Evidence Bundle:
 
-Institution Name: [Reporting Institution]
+[Reporting Institution]
+
 Filing Institution:
 Name: [Bank Name]
 Address: [Bank Address]
@@ -13,25 +14,14 @@ DateRange: Calculated from Evidence Bundle
 CumulativeAmount: Calculated from Evidence Bundle
 Characterization: Structuring / Money Laundering (Smurfing)
 
-Narrative Instructions:
+Narrative:
 
-1. Write a formal FINCEN Suspicious Activity Report narrative.
-2. Introduce the subject(s) clearly.
+The subject(s) of this report are related to the transaction with entity ID ACC-88392, which is identified as [NOT PROVIDED]. On [NOT PROVIDED], the graph intelligence detected a transaction flow that was flagged by the Model_Anomaly_Threshold_Exceeded finding type. This finding resulted in an anomaly score of 1.00, which exceeded the threshold indicated by the Z-score of 3.8.
 
-Subject: The entity identified as ACC-88392 and the transactions associated with it are under examination.
+The top features identified for this transaction are: amount = 0.4, n_daily_txns = 0.35, and velocity_spike = 0.25. These anomalies were detected in the ML Suspicion Detection process.
 
-3. Explain the transaction flow detected by the graph intelligence.
+It is not possible to determine speculative motives for this activity without additional information beyond what is provided in the Evidence Bundle. However, it can be summarized that the suspicious activity reported is due to the structuring/smurfing characterization of the transaction flow detected by the graph intelligence.
 
-The evidence reveals a subgraph structure with 108 nodes, passing a total volume of $33,830.45 USD. This structure is indicative of smurfing activity, where multiple entities are used to facilitate large cash transactions.
+[NOT PROVIDED]
 
-4. Detail the anomalies found by the ML Suspicion Detection.
-
-Anomaly scores exceeding the threshold were detected for this entity, with a Z-score of 3.8 and an anomaly score of 1.00. Furthermore, the top features of the transaction flow reveal spikes in velocity and amounts, suggesting manipulation of the financial system.
-
-5. Do NOT add speculative motives; restrict the narrative to the objective facts in the Evidence Bundle.
-
-6. Mention West African networks or narcotics ONLY if explicitly listed in the Evidence Bundle.
-
-7. Summarize why the activity is suspicious.
-
-The entity ACC-88392 and its associated transactions are suspicious due to the presence of a smurfing structure, which indicates an attempt to circumvent reporting requirements. Additionally, the anomaly scores exceeding the threshold suggest manipulation of the financial system, further indicating potential structuring or money laundering activities.
+[NOT PROVIDED]
