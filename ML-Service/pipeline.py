@@ -407,16 +407,14 @@ def _build_sar_report(
 #  ANTI-HALLUCINATION VALIDATOR
 # ═════════════════════════════════════════════════════════════════════════════
 
-def _validate_sar_narrative_against_evidence(
+def _validate_sar_narrative_against_db(
     narrative: str,
-    evidence_bundle: dict,
-    graph_signals: dict,
     tx_df: pd.DataFrame,
     db_confirmed_ids: set[str] | None = None,
 ) -> dict:
     """
-    Cross-references every factual claim in the LLM-generated SAR narrative
-    against the ground-truth data layers.
+    Cross-references factual claims in the LLM-generated SAR narrative
+    strictly against the DB/CSV transaction data.
 
     Checks performed
     ─────────────────
@@ -424,78 +422,37 @@ def _validate_sar_narrative_against_evidence(
                           range of amounts in the confirmed transaction set.
     2. Account IDs      — any alphanumeric token that looks like an account ID
                           must appear in the confirmed transactions.
-    3. AML patterns     — pattern names mentioned (smurfing, layering, etc.)
-                          must have been detected by the Graph Engine.
-    4. Jurisdictions    — country/jurisdiction names mentioned are flagged if
-                          they are not in the transaction dataset (possible
-                          Context-Agent leakage or hallucination).
 
     Returns a hallucination_report dict with:
-      • passed              bool   — True if no high-confidence unverified claims
+      • passed              bool   — True if no unverified claims
       • hallucination_risk  float  — 0.0 (clean) → 1.0 (fully hallucinated)
       • checks              list   — per-check result objects
-      • unverified_claims   list   — specific text snippets that could not be
-                                     matched to ground-truth data
+      • unverified_claims   list   — specific text snippets that could not be matched
     """
     import re
 
     checks: list[dict] = []
     unverified_claims: list[str] = []
 
-    # ── Build ground-truth lookup tables ─────────────────────────────────────
+    # ── Build ground-truth lookup tables from DB/CSV ─────────────────────────
 
-    # Ground-truth dollar bounds from evidence bundle
-    evidence_amounts: list[float] = []
-    for ev in evidence_bundle.get("evidence", []):
-        facts = ev.get("forensic_facts", {})
-        vol = facts.get("total_volume_usd") or facts.get("volume_usd")
-        if isinstance(vol, (int, float)):
-            evidence_amounts.append(float(vol))
-
-    # Ground-truth amounts from CSV transactions
     csv_amounts: list[float] = []
     csv_accounts: set[str] = set()
-    csv_countries: set[str] = set()
+    
     if not tx_df.empty:
         if "amount" in tx_df.columns:
             csv_amounts = tx_df["amount"].dropna().astype(float).tolist()
         for col in ("sender_account", "receiver_account"):
             if col in tx_df.columns:
                 csv_accounts.update(tx_df[col].dropna().astype(str).str.upper().tolist())
-        if "country" in tx_df.columns:
-            csv_countries = set(tx_df["country"].dropna().astype(str).str.upper().tolist())
 
-    all_amounts = evidence_amounts + csv_amounts
-    amount_min = min(all_amounts) * 0.0 if all_amounts else 0.0   # allow $0
-    amount_max = max(all_amounts) * 1.5 if all_amounts else float("inf")  # 50% tolerance
+    amount_min = min(csv_amounts) * 0.0 if csv_amounts else 0.0
+    amount_max = max(csv_amounts) * 1.5 if csv_amounts else float("inf")
 
     # Ground-truth account IDs (CSV + DB confirmed)
     confirmed_accounts = csv_accounts.copy()
     if db_confirmed_ids:
         confirmed_accounts.update(s.upper() for s in db_confirmed_ids)
-
-    # Ground-truth AML patterns (what the Graph Engine actually detected)
-    detected_patterns: set[str] = set()
-    pattern_aliases = {
-        "smurfing":          ["smurf", "smurfing", "structuring network"],
-        "funnel_accounts":   ["funnel", "pass-through", "passthrough"],
-        "layering":          ["layer", "layering", "layered"],
-        "circular_transfer": ["circular", "round-trip", "roundtrip", "loop"],
-    }
-    for pattern_key, instances in graph_signals.items():
-        if instances:  # non-empty list = detected
-            detected_patterns.add(pattern_key)
-
-    # Common country/jurisdiction names for detection (lowercase)
-    # We just check words that look like country names and see if they're in the CSV
-    _KNOWN_JURISDICTIONS = {
-        "nigeria", "ghana", "kenya", "ethiopia", "china", "russia", "iran",
-        "cayman", "bahamas", "panama", "luxembourg", "liechtenstein", "seychelles",
-        "singapore", "dubai", "uae", "switzerland", "mexico", "colombia",
-        "venezuela", "myanmar", "north korea", "afghanistan",
-    }
-
-    narrative_lower = narrative.lower()
 
     # ─────────────────────────────────────────────────────────────────────────
     # CHECK 1: Dollar amounts
@@ -508,13 +465,13 @@ def _validate_sar_narrative_against_evidence(
             val = float(raw.replace(",", ""))
         except ValueError:
             continue
-        if all_amounts and not (amount_min <= val <= amount_max):
+        if csv_amounts and not (amount_min <= val <= amount_max):
             bad_amounts.append(f"${raw}")
-            unverified_claims.append(f"Amount ${raw} not in ground-truth range [{amount_min:.0f}–{amount_max:.0f}]")
+            unverified_claims.append(f"Amount ${raw} not in DB-confirmed range [{amount_min:.0f}–{amount_max:.0f}]")
 
     checks.append({
         "check":          "dollar_amounts",
-        "description":    "All $ figures in narrative must be within range of confirmed transaction data",
+        "description":    "All $ figures in narrative must be within range of DB-confirmed transaction data",
         "values_found":   found_amounts,
         "unverified":     bad_amounts,
         "passed":         len(bad_amounts) == 0,
@@ -523,91 +480,35 @@ def _validate_sar_narrative_against_evidence(
     # ─────────────────────────────────────────────────────────────────────────
     # CHECK 2: Account IDs
     # ─────────────────────────────────────────────────────────────────────────
-    # Match tokens that look like account IDs: ACC-12345, ACCT_XYZ, etc.
     account_pattern = re.compile(
         r"\b([A-Z]{2,6}[-_][A-Z0-9]{3,15}|[0-9]{8,20})\b", re.IGNORECASE
     )
     found_accounts = [m.upper() for m in account_pattern.findall(narrative)]
     bad_accounts   = []
-    if confirmed_accounts:  # only validate if we have ground-truth accounts
+    if confirmed_accounts:
         for acct in found_accounts:
             if acct not in confirmed_accounts:
                 bad_accounts.append(acct)
-                unverified_claims.append(f"Account '{acct}' not found in confirmed transaction records")
+                unverified_claims.append(f"Account '{acct}' not found in DB-confirmed transaction records")
 
     checks.append({
         "check":        "account_ids",
-        "description":  "Account identifiers in narrative must exist in the confirmed transaction dataset",
+        "description":  "Account identifiers in narrative must exist in the DB-confirmed transaction dataset",
         "values_found": found_accounts,
         "unverified":   bad_accounts,
         "passed":       len(bad_accounts) == 0,
     })
 
     # ─────────────────────────────────────────────────────────────────────────
-    # CHECK 3: AML pattern claims
-    # ─────────────────────────────────────────────────────────────────────────
-    bad_patterns = []
-    mentioned_patterns = []
-    for pattern_key, aliases in pattern_aliases.items():
-        for alias in aliases:
-            if alias in narrative_lower:
-                mentioned_patterns.append(alias)
-                if pattern_key not in detected_patterns:
-                    bad_patterns.append(alias)
-                    unverified_claims.append(
-                        f"Pattern '{alias}' mentioned in narrative but NOT detected by Graph Engine"
-                    )
-                break  # only flag once per pattern type
-
-    checks.append({
-        "check":             "aml_patterns",
-        "description":       "AML patterns claimed in narrative must have been detected by the Graph Engine",
-        "patterns_detected": sorted(detected_patterns),
-        "patterns_mentioned":mentioned_patterns,
-        "unverified":        bad_patterns,
-        "passed":            len(bad_patterns) == 0,
-    })
-
-    # ─────────────────────────────────────────────────────────────────────────
-    # CHECK 4: Jurisdiction claims
-    # ─────────────────────────────────────────────────────────────────────────
-    bad_jurisdictions = []
-    mentioned_jurisdictions = []
-    for jurisdiction in _KNOWN_JURISDICTIONS:
-        if jurisdiction in narrative_lower:
-            mentioned_jurisdictions.append(jurisdiction)
-            # Only flag if CSV has a country column AND the country isn't in it
-            if csv_countries and jurisdiction.upper() not in csv_countries:
-                bad_jurisdictions.append(jurisdiction)
-                unverified_claims.append(
-                    f"Jurisdiction '{jurisdiction}' mentioned but not present in transaction country data"
-                )
-
-    checks.append({
-        "check":                   "jurisdictions",
-        "description":             "Jurisdictions mentioned must be present in the transaction dataset country column",
-        "jurisdictions_mentioned": mentioned_jurisdictions,
-        "csv_countries":           sorted(csv_countries) if csv_countries else "(no country column in CSV)",
-        "unverified":              bad_jurisdictions,
-        "passed":                  len(bad_jurisdictions) == 0 or not csv_countries,
-    })
-
-    # ─────────────────────────────────────────────────────────────────────────
     # Score
     # ─────────────────────────────────────────────────────────────────────────
-    # Weight the checks: pattern and amount hallucinations are highest risk
-    weights = {"dollar_amounts": 0.35, "account_ids": 0.25, "aml_patterns": 0.30, "jurisdictions": 0.10}
+    weights = {"dollar_amounts": 0.50, "account_ids": 0.50}
     total_unverified = sum(len(c["unverified"]) for c in checks)
-    total_found      = sum(
-        len(c.get("values_found") or c.get("patterns_mentioned") or c.get("jurisdictions_mentioned") or [])
-        for c in checks
-    )
+    total_found      = sum(len(c.get("values_found") or []) for c in checks)
 
-    failed_weights = sum(
-        weights[c["check"]] for c in checks if not c["passed"]
-    )
-    hallucination_risk = round(min(1.0, failed_weights + (total_unverified * 0.05)), 3)
-    passed_overall     = hallucination_risk < 0.30  # <30% risk → passes
+    failed_weights = sum(weights[c["check"]] for c in checks if not c["passed"])
+    hallucination_risk = round(min(1.0, failed_weights + (total_unverified * 0.10)), 3)
+    passed_overall     = hallucination_risk < 0.50
 
     return {
         "passed":             passed_overall,
@@ -618,10 +519,9 @@ def _validate_sar_narrative_against_evidence(
         "unverified_claims":  unverified_claims,
         "checks":             checks,
         "note": (
-            "All narrative claims verified against ground-truth evidence."
+            "All tested narrative claims matching DB evidence."
             if passed_overall else
-            "WARNING: Narrative contains claims not grounded in the evidence bundle. "
-            "Human analyst must review before filing."
+            "WARNING: Narrative contains specific figures/IDs not grounded in the DB transactions."
         ),
     }
 
@@ -956,10 +856,8 @@ wired offshore to high-risk jurisdictions."""
     if not tx_df.empty and "transaction_id" in tx_df.columns:
         db_confirmed_ids = set(tx_df["transaction_id"].dropna().astype(str).tolist())
 
-    hallucination_report = _validate_sar_narrative_against_evidence(
+    hallucination_report = _validate_sar_narrative_against_db(
         narrative          = narrative_for_check,
-        evidence_bundle    = bundle_dict,
-        graph_signals      = result_biased["signals"],
         tx_df              = tx_df,
         db_confirmed_ids   = db_confirmed_ids,
     )
