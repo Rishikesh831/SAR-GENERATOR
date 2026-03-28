@@ -9,6 +9,8 @@ dotenv.config();
 // Route imports
 import caseRoutes from "./routes/caseRoutes.js";
 import ingestionRoutes from "./routes/ingestionRoutes.js";
+import sarRoutes from "./routes/sarRoutes.js";
+import referenceRoutes from "./routes/referenceRoutes.js";
 import { getInitialData } from "./controllers/InitController.js";
 
 // Socket.IO
@@ -43,9 +45,11 @@ app.get("/health", (req, res) =>
 );
 
 // ─── API Routes ─────────────────────────────────────
-app.get("/api/init", getInitialData);            // NEW: Single startup call
+app.get("/api/init", getInitialData);            // Single startup call
 app.use("/api/ingest", ingestionRoutes);
 app.use("/api/cases", caseRoutes);
+app.use("/api/sar", sarRoutes);                  // SAR generation engine
+app.use("/api/reference", referenceRoutes);      // Regulatory rules & typologies
 
 // ─── Socket.IO ─────────────────────────────────────
 io.on("connection", (socket) => {
@@ -59,9 +63,11 @@ io.on("connection", (socket) => {
 // ─── Start ─────────────────────────────────────────
 httpServer.listen(PORT, () => {
     console.log(`🚀 Server & Sockets on http://localhost:${PORT}`);
-    console.log(`   GET  /api/init    — Frontend startup data`);
-    console.log(`   POST /api/ingest  — Transaction ingestion`);
-    console.log(`   GET  /api/cases   — All cases`);
+    console.log(`   GET  /api/init       — Frontend startup data`);
+    console.log(`   POST /api/ingest     — Transaction ingestion`);
+    console.log(`   GET  /api/cases      — All cases`);
+    console.log(`   POST /api/sar        — SAR generation engine`);
+    console.log(`   GET  /api/reference  — Regulatory rules & typologies`);
 });
 
 // Start background worker
