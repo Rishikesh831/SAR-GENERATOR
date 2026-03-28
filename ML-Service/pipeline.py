@@ -143,6 +143,7 @@ def _build_sar_report(
     graph_signals: dict,
     graph_flagged_nodes: set,
     graph_flagged_tx: pd.DataFrame,
+    audit_flagged_tx: list[dict],
     ai_confidence: float,
     lift: float,
 ) -> dict:
@@ -163,6 +164,7 @@ def _build_sar_report(
             suspicious_rows = tx_df.head(0)
 
     suspicious_rows = suspicious_rows.head(25).copy()
+    flagged_countries = set()
     suspicious_tx = []
     for _, row in suspicious_rows.iterrows():
         indicators = []
@@ -170,6 +172,8 @@ def _build_sar_report(
             indicators.append(str(row.get("pattern")))
         if row.get("high_risk_country") == 1:
             indicators.append("high_risk_country")
+            if row.get("country"):
+                flagged_countries.add(str(row.get("country")).upper())
         if row.get("country"):
             indicators.append("cross_border")
         if row.get("sender_account") in graph_flagged_nodes or row.get("receiver_account") in graph_flagged_nodes:
@@ -182,6 +186,12 @@ def _build_sar_report(
             "to_account": str(row.get("receiver_account", "")),
             "indicator": sorted(set(indicators))
         })
+
+    if not flagged_countries and audit_flagged_tx:
+        for tx in audit_flagged_tx:
+            country = tx.get("country")
+            if country:
+                flagged_countries.add(str(country).upper())
 
     risk_score = _derive_risk_score(evidence_bundle, ai_confidence)
     risk_category = _risk_category(risk_score)
@@ -200,14 +210,29 @@ def _build_sar_report(
         relationship_types.append("round_trip")
 
     risk_indicators = []
-    if countries:
-        risk_indicators.append(f"Cross-border countries involved: {', '.join(countries[:6])}")
+    if flagged_countries:
+        risk_indicators.append(f"High-risk jurisdiction involvement: {', '.join(sorted(flagged_countries))}")
     if "velocity_spike" in tx_df.columns and (tx_df["velocity_spike"] == 1).any():
         risk_indicators.append("Transaction velocity anomaly")
     if patterns_detected:
         risk_indicators.append(f"Patterns detected: {', '.join(patterns_detected)}")
     if lift > 1.0:
         risk_indicators.append(f"Contextual lift observed: {lift:.2f}x")
+
+    network_connections = len(graph_flagged_nodes)
+    if network_connections == 0:
+        for pattern_list in graph_signals.values():
+            for sig in pattern_list:
+                if isinstance(sig, dict):
+                    if "account" in sig:
+                        graph_flagged_nodes.add(sig["account"])
+                    if "nodes" in sig:
+                        graph_flagged_nodes.update(sig["nodes"])
+                    if "accounts" in sig:
+                        graph_flagged_nodes.update(sig["accounts"])
+        network_connections = len(graph_flagged_nodes)
+
+    detection_type = ", ".join(patterns_detected) if patterns_detected else "model_based"
 
     return {
         "case_metadata": {
@@ -228,16 +253,16 @@ def _build_sar_report(
             "connections_count": len(graph_flagged_nodes),
             "relationship_types": relationship_types,
             "institution": "UNKNOWN",
-            "countries_involved": countries,
+            "countries_involved": sorted(flagged_countries) if flagged_countries else countries,
         },
         "transaction_summary": {
             "review_period": review_period,
             "total_amount": round(total_amount, 2),
             "transaction_count": int(len(tx_df)) if not tx_df.empty else 0,
-            "suspicious_transaction_count": len(suspicious_tx),
+            "suspicious_transaction_count": max(len(suspicious_tx), len(audit_flagged_tx)),
             "average_amount": round(avg_amount, 2),
             "max_transaction": round(max_amount, 2),
-            "countries": countries,
+            "countries": sorted(flagged_countries) if flagged_countries else countries,
             "patterns_detected": patterns_detected,
         },
         "suspicious_transactions": suspicious_tx,
@@ -247,16 +272,16 @@ def _build_sar_report(
                 "regulation": "BSA SAR Rule",
                 "reference": "31 USC §5318(g)",
                 "confidence": min(0.99, max(0.75, ai_confidence + 0.2)),
-                "trigger_reason": f"{len(suspicious_tx)} suspicious transactions totaling ${round(total_amount, 2)}",
+                "trigger_reason": f"{max(len(suspicious_tx), len(audit_flagged_tx))} suspicious transactions totaling ${round(total_amount, 2)}",
             }
         ],
         "risk_indicators": risk_indicators,
         "evidence_summary": {
             "transaction_records": int(len(tx_df)) if not tx_df.empty else 0,
             "risk_score": risk_score,
-            "network_connections": len(graph_flagged_nodes),
+            "network_connections": network_connections,
             "external_intelligence_hits": 0,
-            "detection_type": "pattern_based" if patterns_detected else "model_based",
+            "detection_type": detection_type,
         },
         "narrative_generation": {
             "suspicious_activity_description": narrative,
@@ -592,6 +617,7 @@ wired offshore to high-risk jurisdictions."""
         graph_signals=result_biased["signals"],
         graph_flagged_nodes=graph_flagged_nodes,
         graph_flagged_tx=graph_flagged_tx,
+        audit_flagged_tx=audit.flagged_transactions,
         ai_confidence=float(max(scores_aware)) if len(scores_aware) else 0.0,
         lift=lift,
     )
