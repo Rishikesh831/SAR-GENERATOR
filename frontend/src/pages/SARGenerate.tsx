@@ -510,7 +510,7 @@ export default function SARGenerate() {
 
     void (async () => {
       const preferredLogo = await loadSarPdfLogoDataUrl("/barclays.png");
-      const fallbackLogo = preferredLogo ?? await loadSarPdfLogoDataUrl("/barclays-logo.png");
+      const fallbackLogo = preferredLogo ?? await loadSarPdfLogoDataUrl("/barclays.png");
 
       if (!cancelled) {
         setPdfLogoDataUrl(fallbackLogo);

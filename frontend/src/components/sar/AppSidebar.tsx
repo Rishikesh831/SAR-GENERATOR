@@ -90,9 +90,13 @@ export default function AppSidebar({
         "flex items-center border-b border-sidebar-border shrink-0",
         collapsed ? "justify-center px-3 py-4" : "gap-3 px-5 py-4"
       )}>
-        <div className="w-8 h-8 rounded-lg bg-sidebar-primary flex items-center justify-center shrink-0">
-          <Shield className="w-4 h-4 text-sidebar-primary-foreground" />
-        </div>
+       <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center bg-blue-500">
+  <img 
+    src="/barclays.png" 
+    alt="Logo" 
+    className="w-full h-full object-cover"
+  />
+</div>
         {!collapsed && (
           <div className="min-w-0">
             <p className="text-sm font-bold text-sidebar-foreground truncate">Hack-It-Out</p>
@@ -207,7 +211,11 @@ export default function AppSidebar({
             <div className="flex items-center justify-between px-5 py-4 border-b border-sidebar-border">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-sidebar-primary flex items-center justify-center">
-                  <Shield className="w-4 h-4 text-sidebar-primary-foreground" />
+                  <img 
+  src="/barclays.png" 
+  alt="Logo" 
+  className="w-6 h-6 object-contain"
+/>
                 </div>
                 <div>
                   <p className="text-sm font-bold text-sidebar-foreground">Barclays SAMRGS</p>
