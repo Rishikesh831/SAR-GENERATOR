@@ -7,6 +7,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ProfileProvider } from "@/context/ProfileContext";
 import { SARDataProvider } from "@/context/SARDataContext";
+import { ThemeProvider } from "@/context/ThemeContext";
 import AppLayout from "@/components/AppLayout";
 import LiveTransactionBridge from "@/components/LiveTransactionBridge";
 import Dashboard from "@/pages/Dashboard";
@@ -47,33 +48,34 @@ const App = () => {
   }
 
   return (
-    <AnimatePresence mode="wait" initial={false}>
-      {!hasEntered ? (
-        <motion.div
-          key="landing"
-          initial={{ opacity: 1 }}
-          exit={{ opacity: 0, scale: 0.985, filter: "blur(8px)" }}
-          transition={{ duration: 0.55, ease: transitionEase }}
-        >
-          <LandingPage onGetStarted={handleGetStarted} />
-        </motion.div>
-      ) : (
-        <motion.div
-          key="dashboard"
-          initial={{ opacity: 0, y: 14, filter: "blur(10px)" }}
-          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-          transition={{ duration: 0.65, ease: transitionEase }}
-        >
-          <QueryClientProvider client={queryClient}>
-            <SARDataProvider>
-              <LiveTransactionBridge />
-              <ProfileProvider>
-                <TooltipProvider>
-                  <Toaster />
-                  <Sonner />
-                  <BrowserRouter>
-                    <Routes>
-                      <Route element={<AppLayout />}>
+    <ThemeProvider>
+      <AnimatePresence mode="wait" initial={false}>
+        {!hasEntered ? (
+          <motion.div
+            key="landing"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0, scale: 0.985, filter: "blur(8px)" }}
+            transition={{ duration: 0.55, ease: transitionEase }}
+          >
+            <LandingPage onGetStarted={handleGetStarted} />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="dashboard"
+            initial={{ opacity: 0, y: 14, filter: "blur(10px)" }}
+            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+            transition={{ duration: 0.65, ease: transitionEase }}
+          >
+            <QueryClientProvider client={queryClient}>
+              <SARDataProvider>
+                <LiveTransactionBridge />
+                <ProfileProvider>
+                  <TooltipProvider>
+                    <Toaster />
+                    <Sonner />
+                    <BrowserRouter>
+                      <Routes>
+                        <Route element={<AppLayout />}>
                         <Route path="/" element={<Dashboard />} />
                         <Route path="/transactions" element={<Transactions />} />
                         <Route path="/flagged" element={<FlaggedClusters />} />
@@ -95,9 +97,10 @@ const App = () => {
               </ProfileProvider>
             </SARDataProvider>
           </QueryClientProvider>
-        </motion.div>
-      )}
-    </AnimatePresence>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </ThemeProvider>
   );
 };
 

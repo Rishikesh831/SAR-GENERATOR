@@ -7,6 +7,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { useProfile } from "@/context/ProfileContext";
 import { useSARData } from "@/context/SARDataContext";
 import { useCSVData } from "@/hooks/useCSVData";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const severityBorderColor: Record<string, string> = {
   critical: "border-l-red-500",
@@ -348,6 +349,9 @@ export default function AppLayout() {
             <Badge variant="success" className="hidden lg:inline-flex text-[10px] gap-1">
               <ShieldCheck className="w-3 h-3" /> Regulatory Compliant
             </Badge>
+
+            {/* Theme Toggle — Light/Dark Mode */}
+            <ThemeToggle />
 
             {/* User Profile — reads from ProfileContext */}
             <button

@@ -95,7 +95,7 @@ export default function AppSidebar({
         </div>
         {!collapsed && (
           <div className="min-w-0">
-            <p className="text-sm font-bold text-sidebar-foreground truncate">Barclays SAMRGS</p>
+            <p className="text-sm font-bold text-sidebar-foreground truncate">Hack-It-Out</p>
             <p className="text-[10px] text-sidebar-muted truncate">SAR Gen AI Platform</p>
           </div>
         )}

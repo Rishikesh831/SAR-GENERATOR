@@ -184,11 +184,11 @@ export default function Dashboard() {
       {/* Intelligence Dashboard Tab Navigation */}
       <div className="flex gap-2 overflow-x-auto pb-2 border-b border-border">
         {[
-          { id: "overview", label: "📊 Overview" },
-          { id: "threats", label: "🌍 Threat Map" },
-          { id: "timeline", label: "📅 Timeline" },
-          { id: "alerts", label: "🚨 Alerts" },
-          { id: "health", label: "💚 Health" },
+          { id: "overview", label: "Overview" },
+          { id: "threats", label: "Threat Map" },
+          { id: "timeline", label: "Timeline" },
+          { id: "alerts", label: "Alerts" },
+          { id: "health", label: "Health" },
         ].map((tab) => (
           <button
             key={tab.id}
