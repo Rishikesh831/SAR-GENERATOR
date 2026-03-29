@@ -125,23 +125,17 @@ function SARDetail({
   const allChecked = checklist.every(Boolean);
 
   return (
-    <div
-      className={cn(
-        "fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm",
-        isFullscreen ? "p-0" : "p-4"
-      )}
-    >
-      <div
+    <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent
         className={cn(
-          "bg-card border border-border shadow-2xl flex flex-col overflow-hidden",
+          "p-0 overflow-hidden flex flex-col min-h-0",
           isFullscreen
             ? "w-screen h-screen max-w-none max-h-none rounded-none border-0"
-            : "w-full max-w-4xl max-h-[92vh] rounded-xl"
+            : "w-full max-w-4xl h-[90vh] max-h-[90vh] rounded-xl"
         )}
-        onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-start justify-between p-4 border-b border-border shrink-0">
+        <div className="flex items-center justify-between gap-3 p-4 pr-12 border-b border-border shrink-0">
           <div className="flex items-center gap-3">
             <div className={cn(
               "p-2 rounded-lg",
@@ -172,9 +166,6 @@ function SARDetail({
             >
               {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
             </button>
-            <button onClick={onClose} className="text-muted-foreground hover:text-foreground mt-0.5">
-              <X className="w-5 h-5" />
-            </button>
           </div>
         </div>
 
@@ -204,8 +195,9 @@ function SARDetail({
         </div>
 
         {/* Content */}
-        <ScrollArea className="flex-1 min-h-0">
-          <div className="p-4 space-y-3">
+        <div className="flex-1 overflow-y-auto min-h-0">
+          <ScrollArea className="h-full min-h-0">
+            <div className="p-4 space-y-3">
 
             {/* ── Narrative ──────────────────────────────────────────────── */}
             {activeTab === "narrative" && (
@@ -443,6 +435,7 @@ function SARDetail({
             )}
           </div>
         </ScrollArea>
+        </div>
 
         {/* Footer actions */}
         {(sar.status === "review" || sar.status === "approved") && (
@@ -589,8 +582,8 @@ function SARDetail({
             )}
           </div>
         )}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 

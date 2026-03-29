@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useEffect, useRef } from "react";
+import { useRef, useState } from "react";
 
 interface Node {
   id: string;
@@ -50,6 +50,14 @@ const typeIcons: Record<string, string> = {
 };
 
 export function NetworkGraph() {
+  const [selectedNode, setSelectedNode] = useState<string | null>(null);
+  const selectedEntity = selectedNode ? nodes.find((node) => node.id === selectedNode) : null;
+  const connectedEntities = selectedNode
+    ? edges
+        .filter((edge) => edge.from === selectedNode || edge.to === selectedNode)
+        .map((edge) => (edge.from === selectedNode ? edge.to : edge.from))
+    : [];
+
   return (
     <div className="panel h-full flex flex-col">
       <div className="panel-header">
@@ -82,30 +90,41 @@ export function NetworkGraph() {
             );
           })}
         </svg>
-        <div className="absolute inset-0 p-4">
-          {nodes.map((node, i) => (
-            <motion.div
-              key={node.id}
-              className="absolute"
-              style={{ left: `${node.x}%`, top: `${node.y}%`, transform: "translate(-50%, -50%)" }}
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.3 + i * 0.08, duration: 0.3, type: "spring", stiffness: 300 }}
-            >
-              <div
-                className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] border cursor-pointer hover:scale-110 transition-transform"
-                style={{
-                  backgroundColor: `${riskColors[node.risk]}20`,
-                  borderColor: `${riskColors[node.risk]}80`,
+        <div className="absolute inset-0 p-4" onClick={() => setSelectedNode(null)}>
+          {nodes.map((node, i) => {
+            const isSelected = selectedNode === node.id;
+            const isDimmed = selectedNode && !isSelected;
+            return (
+              <motion.div
+                key={node.id}
+                className="absolute"
+                style={{ left: `${node.x}%`, top: `${node.y}%`, transform: "translate(-50%, -50%)" }}
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.3 + i * 0.08, duration: 0.3, type: "spring", stiffness: 300 }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  console.log("clicked node:", node);
+                  setSelectedNode(node.id === selectedNode ? null : node.id);
                 }}
               >
-                <span>{typeIcons[node.type]}</span>
-              </div>
-              <span className="absolute top-full mt-1 left-1/2 -translate-x-1/2 whitespace-nowrap text-[9px] font-mono text-muted-foreground">
-                {node.label}
-              </span>
-            </motion.div>
-          ))}
+                <div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] border cursor-pointer transition-transform ${
+                    isSelected ? "ring-2 ring-primary bg-primary/20 scale-110" : "hover:scale-110"
+                  } ${isDimmed ? "opacity-40" : ""}`}
+                  style={{
+                    backgroundColor: `${riskColors[node.risk]}20`,
+                    borderColor: `${riskColors[node.risk]}80`,
+                  }}
+                >
+                  <span>{typeIcons[node.type]}</span>
+                </div>
+                <span className="absolute top-full mt-1 left-1/2 -translate-x-1/2 whitespace-nowrap text-[9px] font-mono text-muted-foreground">
+                  {node.label}
+                </span>
+              </motion.div>
+            );
+          })}
         </div>
 
         <div className="absolute bottom-3 left-4 flex gap-3">
@@ -121,6 +140,34 @@ export function NetworkGraph() {
           ))}
         </div>
       </div>
+      {selectedEntity && (
+        <div className="mt-3 rounded-lg border border-border bg-muted/50 p-3 text-xs text-foreground">
+          <div className="flex items-center justify-between gap-3 mb-2">
+            <div>
+              <div className="text-[11px] font-semibold">Selected Entity</div>
+              <div className="text-[10px] text-muted-foreground">{selectedEntity.label}</div>
+            </div>
+            <div className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground">
+              {selectedEntity.type}
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <div className="text-[9px] text-muted-foreground">Risk Level</div>
+              <div className="mt-1 text-[10px] font-semibold">{selectedEntity.risk.toUpperCase()}</div>
+            </div>
+            <div>
+              <div className="text-[9px] text-muted-foreground">Connections</div>
+              <div className="mt-1 text-[10px] font-semibold">{connectedEntities.length}</div>
+            </div>
+          </div>
+          {connectedEntities.length > 0 && (
+            <div className="mt-3 text-[9px] text-muted-foreground">
+              Connected to: {connectedEntities.join(", ")}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
