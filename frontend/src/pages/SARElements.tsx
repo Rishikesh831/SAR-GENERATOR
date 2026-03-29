@@ -2,8 +2,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { ChevronDown, ChevronUp, AlertTriangle, CheckCircle2, Code, Lock, Users, TrendingUp } from "lucide-react";
+import { ChevronDown, ChevronUp, AlertTriangle, CheckCircle2, Code, Lock, Users, TrendingUp, Scale, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
+import LawComparisonDisplay from "@/components/sar/LawComparisonDisplay";
+import LawAdaptationDisplay from "@/components/sar/LawAdaptationDisplay";
 
 // Case Metadata (Header Section)
 interface CaseMetadata {
@@ -178,7 +180,7 @@ const getConfidenceColor = (confidence: number) => {
 
 export default function SARElements() {
   const [expandedEntity, setExpandedEntity] = useState<string | null>(null);
-  const [activeSection, setActiveSection] = useState<"entities" | "changed">("entities");
+  const [activeSection, setActiveSection] = useState<"entities" | "changed" | "law_comparison" | "law_adaptation">("entities");
 
   return (
     <div className="space-y-6 animate-slide-in">
@@ -215,11 +217,11 @@ export default function SARElements() {
       </div>
 
       {/* Section Navigation */}
-      <div className="flex gap-2 border-b">
+      <div className="flex gap-2 border-b overflow-x-auto pb-0">
         <button
           onClick={() => setActiveSection("entities")}
           className={cn(
-            "px-4 py-3 text-sm font-medium transition-colors border-b-2 -mb-[2px]",
+            "px-4 py-3 text-sm font-medium transition-colors border-b-2 -mb-[2px] whitespace-nowrap",
             activeSection === "entities"
               ? "border-primary text-primary"
               : "border-transparent text-muted-foreground hover:text-foreground"
@@ -230,13 +232,37 @@ export default function SARElements() {
         <button
           onClick={() => setActiveSection("changed")}
           className={cn(
-            "px-4 py-3 text-sm font-medium transition-colors border-b-2 -mb-[2px]",
+            "px-4 py-3 text-sm font-medium transition-colors border-b-2 -mb-[2px] whitespace-nowrap",
             activeSection === "changed"
               ? "border-primary text-primary"
               : "border-transparent text-muted-foreground hover:text-foreground"
           )}
         >
           Newly Changed Entities
+        </button>
+        <button
+          onClick={() => setActiveSection("law_comparison")}
+          className={cn(
+            "px-4 py-3 text-sm font-medium transition-colors border-b-2 -mb-[2px] whitespace-nowrap",
+            activeSection === "law_comparison"
+              ? "border-primary text-primary"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          )}
+        >
+          <Scale className="w-4 h-4 inline mr-1.5" />
+          Law Comparison
+        </button>
+        <button
+          onClick={() => setActiveSection("law_adaptation")}
+          className={cn(
+            "px-4 py-3 text-sm font-medium transition-colors border-b-2 -mb-[2px] whitespace-nowrap",
+            activeSection === "law_adaptation"
+              ? "border-primary text-primary"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          )}
+        >
+          <BookOpen className="w-4 h-4 inline mr-1.5" />
+          Narrative Adaptation
         </button>
       </div>
 
@@ -779,7 +805,7 @@ export default function SARElements() {
                   <div className="flex-1 min-w-0">
                     <CardTitle className="text-base">Narrative Generation</CardTitle>
                     <CardDescription className="text-xs">
-                      LLM-generated suspicious activity analysis
+                      LLM-generated suspicious activity analysis (2025 Enhanced Law)
                     </CardDescription>
                   </div>
                 </div>
@@ -794,6 +820,15 @@ export default function SARElements() {
             {expandedEntity === "narrative" && (
               <CardContent className="pt-0 border-t">
                 <div className="space-y-3 mt-3">
+                  {/* Current Law Context */}
+                  <div className="bg-green-500/5 border border-green-500/30 rounded-lg p-3">
+                    <p className="text-xs font-semibold text-green-700 dark:text-green-400 mb-2">CURRENT LAW CONTEXT (2025 Enhanced)</p>
+                    <p className="text-xs text-foreground leading-relaxed">
+                      Account ACCT100192 represents a CRITICAL SAR case under the 2025 Enhanced Framework. The account triggers multiple enhanced detection criteria including dynamic threshold violations, AI-driven risk scoring, and enhanced beneficial ownership concerns. Expedited filing within 5 business days is required with enhanced beneficial ownership documentation.
+                    </p>
+                  </div>
+
+                  {/* Original Narrative */}
                   <div className="bg-muted/30 rounded-lg p-3">
                     <p className="text-[10px] text-muted-foreground font-medium mb-2">SUSPICIOUS ACTIVITY DESCRIPTION</p>
                     <p className="text-sm text-foreground leading-relaxed">
@@ -806,6 +841,14 @@ export default function SARElements() {
                       {sarCaseData.narrative_generation.conclusion}
                     </p>
                   </div>
+
+                  {/* Law Adaptation Notice */}
+                  <div className="bg-blue-500/5 border border-blue-500/30 rounded-lg p-3">
+                    <p className="text-xs font-semibold text-blue-700 dark:text-blue-400 mb-2">ℹ️ Law Adaptation Notice</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      This narrative is generated for the current 2025 Enhanced Law framework. The system automatically regenerates narratives based on applicable laws. Under the legacy 2024 framework, this case would be classified as "low" severity instead of "critical". Under the incoming 2026 Global framework, this case would require multi-jurisdiction cross-border reporting. Use the "Narrative Adaptation" tab to view law-specific narratives.
+                    </p>
+                  </div>
                 </div>
                 <div className="bg-muted/30 rounded-lg p-3 mt-3 font-mono text-xs overflow-auto">
                   <pre className="text-foreground">
@@ -816,6 +859,16 @@ export default function SARElements() {
             )}
           </Card>
         </div>
+      )}
+
+      {/* Law Comparison Section */}
+      {activeSection === "law_comparison" && (
+        <LawComparisonDisplay />
+      )}
+
+      {/* Law Adaptation Section */}
+      {activeSection === "law_adaptation" && (
+        <LawAdaptationDisplay />
       )}
 
       {/* Footer */}

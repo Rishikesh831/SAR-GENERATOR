@@ -14,6 +14,65 @@ function getInitials(name: string): string {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
+// Define role-based access control
+const ROLE_PERMISSIONS: Record<string, string[]> = {
+  "Senior Analyst": [
+    "/",
+    "/flagged",
+    "/partially-flagged",
+    "/customers",
+    "/sar/generate",
+    "/sar/elements",
+    "/sar/queue",
+    "/sar/filed",
+    "/risk-graph",
+    "/analytics",
+    "/model-comparison",
+    "/import-csv",
+    "/audit",
+    "/profile",
+  ],
+  "Compliance Officer": [
+    "/",
+    "/flagged",
+    "/sar/queue",
+    "/sar/filed",
+    "/sar/elements",
+    "/model-comparison",
+    "/audit",
+    "/profile",
+  ],
+  "AML Officer": [
+    "/",
+    "/flagged",
+    "/partially-flagged",
+    "/customers",
+    "/sar/generate",
+    "/sar/elements",
+    "/sar/queue",
+    "/risk-graph",
+    "/analytics",
+    "/import-csv",
+    "/profile",
+  ],
+  "Analyst": [
+    "/",
+    "/flagged",
+    "/customers",
+    "/sar/generate",
+    "/sar/elements",
+    "/profile",
+  ],
+  "Approver": [
+    "/",
+    "/sar/queue",
+    "/sar/filed",
+    "/sar/elements",
+    "/model-comparison",
+    "/profile",
+  ],
+};
+
 const navSections = [
   {
     items: [
@@ -42,6 +101,7 @@ const navSections = [
     items: [
       { to: "/risk-graph", icon: Network, label: "Risk Attribution" },
       { to: "/analytics", icon: BarChart3, label: "Analytics" },
+      { to: "/model-comparison", icon: ArrowLeftRight, label: "Model Comparison" },
     ],
   },
   {

@@ -126,6 +126,8 @@ function toCsvTransaction(txn: Transaction): CsvTransaction {
     day: parsed.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" }),
     is_high_risk_country: HIGH_RISK_COUNTRIES.has(txn.country),
     log_amount: Math.log10(Math.max(txn.amount, 1)),
+    risk_score: txn.riskScore,
+    customer_id: txn.customerId,
   };
 }
 

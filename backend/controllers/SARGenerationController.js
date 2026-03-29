@@ -14,6 +14,10 @@ import {
   sendValidationError,
   sendNotFound,
 } from "../middlewares/apiResponse.js";
+import { callMLGenerateSAR, callMLGetSARReport } from "../services/mlService.js";
+import { buildFraudGraph } from "../services/fraudGraphService.js";
+import { generateRiskAttribution } from "../services/riskAttributionService.js";
+import { buildEvidence } from "../services/evidenceBuilderService.js";
 
 // ─── Regulatory Rules Engine ───────────────────────────────────────────
 
@@ -241,36 +245,101 @@ export const generateSARReport = async (req, res) => {
     const externalRisk = context.externalRisk || [];
     const historicalSARs = context.historicalSARs || [];
 
-    // Analyze patterns
+    console.log(`[SAR] Generating SAR report for entity ${entityId} (${transactions.length} transactions)`);
+
+    // ─── Step 1: Analyze patterns (existing rule engine) ─────────────────
     const patterns = analyzeTransactionPatterns(transactions);
     const suspiciousCount = transactions.filter((t) => t.is_suspicious).length;
     const totalAmount = transactions.reduce((sum, t) => sum + (t.is_suspicious ? t.amount : 0), 0);
 
-    // Generate regulatory breaches
+    // ─── Step 2: Attempt ML API integration ──────────────────────────────
+    let mlData = null;
+    let mlSuccess = false;
+
+    try {
+      // Build pseudo-transaction objects for ML
+      const mlTransactions = transactions.map(t => ({
+        displayId: t.id,
+        amount: t.amount,
+        currency: t.currency || "USD",
+        timestamp: t.date || new Date().toISOString(),
+        senderDetails: { acc_id: t.sender_account || "", country: t.sender_country || "" },
+        receiverDetails: { acc_id: t.receiver_account || "", country: t.receiver_country || "" },
+        category: t.type || t.category || "",
+        isFlagged: t.is_suspicious || false,
+        externalTxId: t.id,
+      }));
+
+      const mlResult = await callMLGenerateSAR(mlTransactions, entityId);
+      if (mlResult.success) {
+        mlData = mlResult.data;
+        mlSuccess = true;
+        console.log(`[ML] Response received (risk_score=${mlData.risk_score})`);
+      }
+    } catch (mlErr) {
+      console.warn(`[ML] ML API unavailable, using rule engine only: ${mlErr.message}`);
+    }
+
+    // ─── Step 3: Build fraud graph ───────────────────────────────────────
+    const graphTransactions = transactions.map(t => ({
+      ...t,
+      senderDetails: { acc_id: t.sender_account, country: t.sender_country },
+      receiverDetails: { acc_id: t.receiver_account, country: t.receiver_country },
+    }));
+
+    const graphData = buildFraudGraph(graphTransactions, { id: entityId }, mlData || {});
+
+    // ─── Step 4: Risk attribution ────────────────────────────────────────
+    const caseProxy = {
+      transactions: graphTransactions,
+      displayId: entityId,
+    };
+    const riskAttribution = generateRiskAttribution(caseProxy, mlData || {}, graphData);
+
+    // ─── Step 5: Generate regulatory breaches (existing engine) ──────────
     const regulatoryBreaches = generateRegulatoryBreaches(patterns, totalAmount, suspiciousCount);
     const regulatoryImpactScore = computeImpactScore(regulatoryBreaches);
 
-    // Build enhanced report
+    // ─── Step 6: Build enhanced report ───────────────────────────────────
     const enhancedReport = {
       ...baselineReport,
       regulatoryBreaches,
       regulatoryImpactScore,
-      modelVersion: `${baselineReport.modelVersion} (Backend Rule Engine)`,
-      aiConfidence: Math.min(99, baselineReport.aiConfidence || 85),
+      modelVersion: mlSuccess
+        ? `${baselineReport.modelVersion} (ML + Backend Rule Engine)`
+        : `${baselineReport.modelVersion} (Backend Rule Engine)`,
+      aiConfidence: mlSuccess
+        ? Math.min(99, Math.round(riskAttribution.risk_score * 100))
+        : Math.min(99, baselineReport.aiConfidence || 85),
+      // ML-enhanced fields
+      mlRiskScore: riskAttribution.risk_score,
+      mlRiskLevel: riskAttribution.risk_level,
+      typologies: riskAttribution.typologies,
+      graphStats: graphData.stats,
     };
 
-    // Enrich activity description with backend analysis
+    // Enrich activity description with ML + graph analysis
     if (!enhancedReport.activityDescription || enhancedReport.activityDescription.includes("Local Rules") || enhancedReport.activityDescription.includes("rule engine")) {
-      enhancedReport.activityDescription = `
-        Backend analysis identified ${suspiciousCount} suspicious transaction(s) totalling $${totalAmount.toLocaleString("en-US", { maximumFractionDigits: 0 })} across ${enhancedReport.countriesInvolved?.length || 0} jurisdiction(s).
-        
-        Primary patterns detected: ${patterns.join(", ")}.
-        
-        Network analysis reveals ${networkEdges.length} connections between entities, suggesting systematic financial flows potentially designed to obscure beneficial ownership or source of funds.
-        
-        Risk indicators have been cross-referenced against ${historicalSARs.length} historical precedents, confirming alignment with known AML typologies.
-      `.trim();
+      const mlNarrative = mlData?.sar_narrative;
+      if (mlNarrative && mlSuccess) {
+        enhancedReport.activityDescription = mlNarrative;
+      } else {
+        enhancedReport.activityDescription = `
+          Backend analysis identified ${suspiciousCount} suspicious transaction(s) totalling $${totalAmount.toLocaleString("en-US", { maximumFractionDigits: 0 })} across ${enhancedReport.countriesInvolved?.length || 0} jurisdiction(s).
+          
+          Primary patterns detected: ${patterns.join(", ")}.
+          ${riskAttribution.typologies.length > 0 ? `Typologies identified: ${riskAttribution.typologies.join(", ")}.` : ""}
+          
+          Network analysis reveals ${networkEdges.length} connections between entities, with ${graphData.flagged_paths.length} suspicious fund flow path(s) detected. ${graphData.clusters.length} entity cluster(s) identified.
+          
+          Risk indicators have been cross-referenced against ${historicalSARs.length} historical precedents, confirming alignment with known AML typologies.
+          
+          Composite risk score: ${Math.round(riskAttribution.risk_score * 100)}% (ML: ${Math.round((riskAttribution.ml_contribution?.risk_score || 0) * 100)}%, Rules: ${Math.round((riskAttribution.rule_contribution?.risk_score || 0) * 100)}%, Graph: ${Math.round((riskAttribution.graph_contribution?.risk_score || 0) * 100)}%)
+        `.trim();
+      }
     }
+
+    console.log(`[SAR] Narrative generated successfully for ${entityId}`);
 
     return sendSuccess(
       res,
@@ -280,6 +349,15 @@ export const generateSARReport = async (req, res) => {
         conclusion: enhancedReport.conclusion,
         modelVersion: enhancedReport.modelVersion,
         aiConfidence: enhancedReport.aiConfidence,
+        // New ML-enriched fields (additive, won't break frontend)
+        mlIntegrated: mlSuccess,
+        riskAttribution: {
+          risk_score: riskAttribution.risk_score,
+          risk_level: riskAttribution.risk_level,
+          typologies: riskAttribution.typologies,
+          explainability: riskAttribution.explainability,
+        },
+        graphSummary: graphData.stats,
       },
       "SAR report generated successfully",
       200
@@ -427,7 +505,7 @@ export const saveSARReport = async (req, res) => {
           riskScore: report.riskScore ? String(report.riskScore > 1 ? report.riskScore / 100 : report.riskScore) : null,
           riskLevel: report.riskCategory === "critical" ? "CRITICAL"
             : report.riskCategory === "high" ? "HIGH"
-            : report.riskCategory === "medium" ? "MEDIUM" : "LOW",
+              : report.riskCategory === "medium" ? "MEDIUM" : "LOW",
           updatedAt: new Date(),
         })
         .where(eq(cases.id, caseId))
@@ -472,7 +550,7 @@ export const saveSARReport = async (req, res) => {
       riskScore: report.riskScore ? String(report.riskScore > 1 ? report.riskScore / 100 : report.riskScore) : null,
       riskLevel: report.riskCategory === "critical" ? "CRITICAL"
         : report.riskCategory === "high" ? "HIGH"
-        : report.riskCategory === "medium" ? "MEDIUM" : "LOW",
+          : report.riskCategory === "medium" ? "MEDIUM" : "LOW",
     }).returning();
 
     const newCase = inserted[0];

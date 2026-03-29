@@ -2,9 +2,15 @@ import React, { useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Upload, FileText, CheckCircle, AlertTriangle, Loader2, Database, X, Shield, Zap, ChevronRight, Layers, ScrollText, TrendingUp, Building2 } from "lucide-react";
+import { Upload, FileText, CheckCircle, AlertTriangle, Loader2, Database, X, Shield, Zap, ChevronRight, Layers, ScrollText, TrendingUp, Building2, Eye, Maximize2, Minimize2, Clock, CheckSquare, FileCheck } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { createSarReportPdfBlob } from "@/lib/pdfExport";
+import type { FullSARReport } from "@/lib/csvLoader";
+import { cn } from "@/lib/utils";
+import { useRBAC } from "@/hooks/useRBAC";
+import { ProtectedElement } from "@/components/sar/ProtectedElement";
 
 // Types
 type Status = "idle" | "generating" | "saving" | "success" | "error";
@@ -12,6 +18,84 @@ type Status = "idle" | "generating" | "saving" | "success" | "error";
 interface SARResponse {
   [key: string]: any; // Flexible JSON structure returned by the API
 }
+
+// Review Queue Interface
+interface ReviewQueueItem {
+  id: string;
+  caseId: string;
+  accountId: string;
+  riskScore: number;
+  status: "pending" | "under_review" | "approved" | "rejected";
+  submittedBy: string;
+  submittedDate: string;
+  assignedTo?: string;
+  assignedDate?: string;
+  reviewedDate?: string;
+  riskCategory: "CRITICAL" | "HIGH" | "MEDIUM" | "LOW";
+  institutionName: string;
+  suspiciousTxnCount: number;
+  totalAmount: number;
+  countries: string[];
+  lawVersion: string;
+  narrative: string;
+}
+
+// Sample Review Queue Data
+const SAMPLE_REVIEW_QUEUE: ReviewQueueItem[] = [
+  {
+    id: "queue-1",
+    caseId: "SAR-2026-63084",
+    accountId: "ACCT100192",
+    riskScore: 70,
+    status: "pending",
+    submittedBy: "analyst-001",
+    submittedDate: "2026-03-29T10:30:00Z",
+    riskCategory: "HIGH",
+    institutionName: "Barclays Bank PLC",
+    suspiciousTxnCount: 4,
+    totalAmount: 476000,
+    countries: ["KY", "UK", "RU", "US", "AE", "CN", "IN"],
+    lawVersion: "2025.1 Enhanced",
+    narrative: "Account shows high-risk transaction patterns with involvement in high-risk jurisdictions.",
+  },
+  {
+    id: "queue-2",
+    caseId: "SAR-2026-63085",
+    accountId: "ACCT100193",
+    riskScore: 85,
+    status: "under_review",
+    submittedBy: "analyst-002",
+    submittedDate: "2026-03-28T14:45:00Z",
+    assignedTo: "reviewer-001",
+    assignedDate: "2026-03-29T09:00:00Z",
+    riskCategory: "CRITICAL",
+    institutionName: "HSBC Holdings",
+    suspiciousTxnCount: 12,
+    totalAmount: 2500000,
+    countries: ["CH", "SG", "HK", "AE"],
+    lawVersion: "2025.1 Enhanced",
+    narrative: "Multiple layered transactions detected across multiple high-risk jurisdictions with rapid velocity patterns.",
+  },
+  {
+    id: "queue-3",
+    caseId: "SAR-2026-63086",
+    accountId: "ACCT100194",
+    riskScore: 45,
+    status: "approved",
+    submittedBy: "analyst-001",
+    submittedDate: "2026-03-27T11:20:00Z",
+    assignedTo: "reviewer-002",
+    assignedDate: "2026-03-28T08:00:00Z",
+    reviewedDate: "2026-03-29T12:00:00Z",
+    riskCategory: "MEDIUM",
+    institutionName: "Standard Chartered Bank",
+    suspiciousTxnCount: 2,
+    totalAmount: 250000,
+    countries: ["US", "UK"],
+    lawVersion: "2025.1 Enhanced",
+    narrative: "Standard transaction pattern with minor regulatory concerns.",
+  },
+];
 
 function ReportSection({ num, title, children }: { num: number; title: string; children: React.ReactNode }) {
   return (
@@ -42,8 +126,138 @@ export default function ImportCSV() {
   const [status, setStatus] = useState<Status>("idle");
   const [errorMsg, setErrorMsg] = useState<string>("");
   const [sarData, setSarData] = useState<SARResponse | null>(null);
+  const [showReviewQueue, setShowReviewQueue] = useState(false);
+  const [reviewQueueItems, setReviewQueueItems] = useState<ReviewQueueItem[]>(SAMPLE_REVIEW_QUEUE);
+  const [selectedQueueItem, setSelectedQueueItem] = useState<ReviewQueueItem | null>(null);
+
+  // RBAC
+  const { currentUser, hasPermission, switchRole } = useRBAC();
+
+  // PDF Preview State
+  const [pdfPreview, setPdfPreview] = useState<{ url: string; filename: string } | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [pdfFullscreen, setPdfFullscreen] = useState(false);
+  const previewFrameRef = useRef<HTMLIFrameElement>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Map backend JSON to standard FullSARReport for PDF export
+  const buildPdfReport = (data: SARResponse): FullSARReport => {
+    return {
+      caseId: data.case_metadata?.case_id || "SAR-UNKNOWN",
+      dateGenerated: data.case_metadata?.date_generated || new Date().toISOString().split("T")[0],
+      reportingInstitution: data.subject_profile?.institution || "Barclays Bank PLC",
+      reportingUnit: data.case_metadata?.reporting_unit || "AML Compliance / FIU",
+      entityId: data.subject_profile?.account_id || "UNKNOWN",
+      riskCategory: "High",
+      riskScore: data.subject_profile?.risk_score || 0,
+      kycStatus: data.subject_profile?.kyc_status || "UNKNOWN",
+      primaryCountry: data.case_metadata?.primary_country || "XX",
+      riskTypes: data.subject_profile?.risk_types || [],
+      txnCount: data.transaction_summary?.transaction_count || 0,
+      suspiciousTxnCount: data.transaction_summary?.suspicious_transaction_count || 0,
+      totalAmount: data.transaction_summary?.total_amount || 0,
+      maxSingleAmount: data.transaction_summary?.max_transaction || 0,
+      avgAmount: data.transaction_summary?.average_amount || 0,
+      periodStart: data.transaction_summary?.review_period?.start || "",
+      periodEnd: data.transaction_summary?.review_period?.end || "",
+      countriesInvolved: data.transaction_summary?.countries || [],
+      patternsObserved: data.transaction_summary?.patterns_detected || [],
+      networkConnections: data.subject_profile?.connections_count || 0,
+      connectedEntities: [],
+      relationshipTypes: data.subject_profile?.relationship_types || [],
+      regulatoryBreaches: (data.regulatory_mapping || []).map((b: any) => ({
+        rule: b.regulation || "",
+        ref: b.reference || "",
+        description: b.trigger_reason || "",
+        severity: (b.severity || "medium").toLowerCase(),
+        confidence: b.confidence ? Math.round(b.confidence * 100) : 80,
+        trigger: b.trigger_reason || "",
+      })),
+      regulatoryImpactScore: data.case_metadata?.regulatory_impact ? Math.round(data.case_metadata.regulatory_impact * 100) : 0,
+      riskIndicators: data.risk_indicators || [],
+      evidenceItems: data.evidence_summary ? Object.entries(data.evidence_summary).map(([k,v]) => `${k}: ${v}`) : [],
+      activityDescription: data.narrative_generation?.suspicious_activity_description || "",
+      conclusion: data.narrative_generation?.conclusion || "",
+      aiConfidence: data.case_metadata?.ai_confidence ? Math.round(data.case_metadata.ai_confidence * 100) : 0,
+      modelVersion: data.case_metadata?.model_version || "SAR Guardian",
+      transactionRows: [],
+    };
+  };
+
+  function handleOpenPdfPreview() {
+    if (!sarData) return;
+    const report = buildPdfReport(sarData);
+    const { blob, filename } = createSarReportPdfBlob(report, {
+      engine: "trained_model_api",
+      engineNote: "Generated dynamically from CSV import.",
+    });
+    setPreviewLoading(true);
+    setPdfPreview({
+      url: URL.createObjectURL(blob),
+      filename,
+    });
+  }
+
+  function handleOpenQueueItemPdfPreview(item: ReviewQueueItem) {
+    // Create a PDF report from the queue item
+    const mockSarData: SARResponse = {
+      case_metadata: {
+        case_id: item.caseId,
+        date_generated: item.submittedDate.split('T')[0],
+        reporting_unit: "AML Compliance / FIU",
+        primary_country: item.countries[0] || "XX",
+        ai_confidence: item.riskScore / 100,
+        regulatory_impact: item.riskScore / 100,
+        model_version: "SAR Guardian v2.1 - " + item.lawVersion,
+      },
+      subject_profile: {
+        account_id: item.accountId,
+        risk_score: item.riskScore,
+        risk_category: item.riskCategory,
+        kyc_status: "UNDER_REVIEW",
+        risk_types: [],
+        connections_count: 0,
+        relationship_types: [],
+        institution: item.institutionName,
+        countries_involved: item.countries,
+      },
+      transaction_summary: {
+        review_period: { start: "2026-01-01", end: "2026-03-29" },
+        total_amount: item.totalAmount,
+        transaction_count: item.suspiciousTxnCount * 3,
+        suspicious_transaction_count: item.suspiciousTxnCount,
+        average_amount: item.totalAmount / (item.suspiciousTxnCount * 3),
+        max_transaction: item.totalAmount / 2,
+        countries: item.countries,
+        patterns_detected: ["layering"],
+      },
+      narrative_generation: {
+        suspicious_activity_description: item.narrative,
+        conclusion: `Case ${item.caseId} assessed as ${item.riskCategory} risk.`,
+      },
+    };
+
+    const report = buildPdfReport(mockSarData);
+    const { blob, filename } = createSarReportPdfBlob(report, {
+      engine: "review_queue",
+      engineNote: `Queue Review - ${item.lawVersion}`,
+    });
+    setPreviewLoading(true);
+    setPdfPreview({
+      url: URL.createObjectURL(blob),
+      filename,
+    });
+  }
+
+  function handleClosePdfPreview() {
+    setPdfPreview((prev) => {
+      if (prev?.url) URL.revokeObjectURL(prev.url);
+      return null;
+    });
+    setPreviewLoading(false);
+    setPdfFullscreen(false);
+  }
 
   // Force bypassing CORS using local Vite proxies
   const API_2_URL = "/ml-api/api/v1/sar_report";
@@ -250,6 +464,137 @@ export default function ImportCSV() {
         </p>
       </div>
 
+      {/* Role Selector & Review Queue Access */}
+      <Card className="shadow-card border-blue-500/40 bg-blue-500/5">
+        <CardContent className="p-4">
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div className="flex-1 text-sm">
+              <p className="font-semibold text-foreground flex items-center gap-2">
+                <Shield className="w-4 h-4" />
+                Current Role: <span className="text-primary capitalize">{currentUser.role.replace(/_/g, " ")}</span>
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Access Level: {currentUser.role === "admin" ? "Full Administrative Access" : 
+                               currentUser.role === "compliance_officer" ? "Compliance & Approval Permissions" :
+                               currentUser.role === "reviewer" ? "Review Queue Access" :
+                               currentUser.role === "analyst" ? "Analysis & Viewing Permissions" :
+                               "Viewing Permissions Only"}
+              </p>
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              {hasPermission("canViewReviewQueue") && (
+                <Button 
+                  variant={showReviewQueue ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setShowReviewQueue(!showReviewQueue)}
+                  className="gap-2"
+                >
+                  <Clock className="w-4 h-4" />
+                  Review Queue ({reviewQueueItems.length})
+                </Button>
+              )}
+              <Button variant="outline" size="sm" onClick={() => {
+                const roles: typeof currentUser.role[] = ["admin", "compliance_officer", "reviewer", "analyst", "viewer"];
+                const currentIdx = roles.indexOf(currentUser.role);
+                const nextRole = roles[(currentIdx + 1) % roles.length];
+                switchRole(nextRole);
+              }}className="text-xs">
+                Switch Role
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Review Queue Section - Role Protected */}
+      {showReviewQueue && (
+        <ProtectedElement requiredPermissions={["canViewReviewQueue"]}>
+          <Card className="shadow-card border-amber-500/40 bg-amber-500/5">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                  <div>
+                    <CardTitle>Review Queue</CardTitle>
+                    <CardDescription>Role-based SAR review and approval</CardDescription>
+                  </div>
+                </div>
+                <Badge variant="outline">{reviewQueueItems.length} Items</Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {reviewQueueItems.map((item) => (
+                <div 
+                  key={item.id}
+                  className={cn(
+                    "border rounded-lg p-3 cursor-pointer transition-colors hover:bg-muted/50",
+                    item.status === "pending" && "border-orange-500/40 bg-orange-500/5",
+                    item.status === "under_review" && "border-blue-500/40 bg-blue-500/5",
+                    item.status === "approved" && "border-green-500/40 bg-green-500/5",
+                    item.status === "rejected" && "border-red-500/40 bg-red-500/5"
+                  )}
+                  onClick={() => setSelectedQueueItem(item)}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="font-mono text-sm font-semibold text-foreground">{item.caseId}</p>
+                        <Badge className={cn(
+                          "text-xs",
+                          item.riskCategory === "CRITICAL" && "bg-red-500/15 text-red-700 dark:text-red-400",
+                          item.riskCategory === "HIGH" && "bg-orange-500/15 text-orange-700 dark:text-orange-400",
+                          item.riskCategory === "MEDIUM" && "bg-amber-500/15 text-amber-700 dark:text-amber-400",
+                          item.riskCategory === "LOW" && "bg-green-500/15 text-green-700 dark:text-green-400"
+                        )}>
+                          {item.riskCategory}
+                        </Badge>
+                        <Badge variant="secondary" className="text-xs capitalize">
+                          {item.status.replace(/_/g, " ")}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+                        <span>{item.institutionName}</span>
+                        <span>•</span>
+                        <span>Risk: {item.riskScore}/100</span>
+                        <span>•</span>
+                        <span>{item.suspiciousTxnCount} TXN</span>
+                      </div>
+                      <p className="text-xs text-foreground line-clamp-2">{item.narrative}</p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenQueueItemPdfPreview(item);
+                        }}
+                        className="text-xs gap-1"
+                      >
+                        <Eye className="w-4 h-4" />
+                        Preview
+                      </Button>
+                      {hasPermission("canApproveReports") && item.status === "pending" && (
+                        <>
+                          <Button variant="outline" size="sm" className="text-xs gap-1 text-green-600 border-green-500/40">
+                            <CheckSquare className="w-4 h-4" />
+                            Approve
+                          </Button>
+                          <Button variant="outline" size="sm" className="text-xs gap-1 text-red-600 border-red-500/40">
+                            <X className="w-4 h-4" />
+                            Reject
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </ProtectedElement>
+      )}
+
       {/* File Upload Section */}
       <Card className="shadow-card border-primary/20">
         <CardContent className="p-6">
@@ -358,9 +703,14 @@ export default function ImportCSV() {
                     </div>
                   </div>
                 </div>
-                <Button variant="outline" size="sm" onClick={handleClearFile} className="shrink-0">
-                  Process New File
-                </Button>
+                <div className="flex gap-2 shrink-0">
+                  <Button variant="outline" size="sm" onClick={handleOpenPdfPreview} className="shrink-0 text-xs gap-1">
+                    <Eye className="w-4 h-4" /> Preview PDF
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={handleClearFile} className="shrink-0">
+                    Process New File
+                  </Button>
+                </div>
               </div>
 
               {/* Case info bar */}
@@ -686,6 +1036,185 @@ export default function ImportCSV() {
           </CardContent>
         </Card>
       )}
+
+      {/* PDF Preview Dialog */}
+      <Dialog open={!!pdfPreview} onOpenChange={(open) => { if (!open) handleClosePdfPreview(); }}>
+        <DialogContent
+          className={cn(
+            "p-0 overflow-hidden flex flex-col",
+            pdfFullscreen
+              ? "w-screen h-screen max-w-none max-h-none rounded-none border-0"
+              : "w-[min(96vw,1200px)] max-w-none h-[90vh] max-h-[90vh]"
+          )}
+        >
+          <DialogHeader className="px-4 py-3 border-b border-border">
+            <div className="flex items-center justify-between gap-2 pr-8">
+              <DialogTitle className="text-sm font-semibold">SAR Report PDF Preview</DialogTitle>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 text-[11px]"
+                onClick={() => setPdfFullscreen((v) => !v)}
+              >
+                {pdfFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+                {pdfFullscreen ? "Exit Full Screen" : "Full Screen"}
+              </Button>
+            </div>
+          </DialogHeader>
+          <div className="relative flex-1 min-h-0 bg-muted/20">
+            {previewLoading && (
+              <div className="absolute inset-0 z-10 flex items-center justify-center text-sm text-muted-foreground bg-background/70">
+                Rendering preview...
+              </div>
+            )}
+            {pdfPreview && (
+              <iframe
+                ref={previewFrameRef}
+                src={`${pdfPreview.url}#view=FitH`}
+                className={cn("w-full h-full border-0", previewLoading ? "opacity-0" : "opacity-100")}
+                title={pdfPreview.filename}
+                onLoad={() => setPreviewLoading(false)}
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Review Queue Item Details Dialog */}
+      <Dialog open={!!selectedQueueItem} onOpenChange={(open) => { if (!open) setSelectedQueueItem(null); }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <div className="flex items-start justify-between gap-3 pr-8">
+              <div className="space-y-1">
+                <DialogTitle className="text-lg">{selectedQueueItem?.caseId}</DialogTitle>
+                <p className="text-xs text-muted-foreground">{selectedQueueItem?.accountId}</p>
+              </div>
+              <Badge className={cn(
+                "text-xs",
+                selectedQueueItem?.riskCategory === "CRITICAL" && "bg-red-500/15 text-red-700 dark:text-red-400",
+                selectedQueueItem?.riskCategory === "HIGH" && "bg-orange-500/15 text-orange-700 dark:text-orange-400",
+                selectedQueueItem?.riskCategory === "MEDIUM" && "bg-amber-500/15 text-amber-700 dark:text-amber-400",
+                selectedQueueItem?.riskCategory === "LOW" && "bg-green-500/15 text-green-700 dark:text-green-400"
+              )}>
+                {selectedQueueItem?.riskCategory}
+              </Badge>
+            </div>
+          </DialogHeader>
+          
+          {selectedQueueItem && (
+            <div className="space-y-4">
+              {/* Status */}
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground mb-2">STATUS</p>
+                <Badge variant="secondary" className="text-xs capitalize">
+                  {selectedQueueItem.status.replace(/_/g, " ")}
+                </Badge>
+              </div>
+
+              {/* Risk & Metrics */}
+              <div className="grid grid-cols-2 gaps-3">
+                <div className="bg-muted/30 p-3 rounded-lg">
+                  <p className="text-[10px] text-muted-foreground font-medium mb-1">Risk Score</p>
+                  <p className="text-lg font-bold text-foreground">{selectedQueueItem.riskScore}/100</p>
+                </div>
+                <div className="bg-muted/30 p-3 rounded-lg">
+                  <p className="text-[10px] text-muted-foreground font-medium mb-1">Suspicious Transactions</p>
+                  <p className="text-lg font-bold text-foreground">{selectedQueueItem.suspiciousTxnCount}</p>
+                </div>
+                <div className="bg-muted/30 p-3 rounded-lg col-span-2">
+                  <p className="text-[10px] text-muted-foreground font-medium mb-1">Total Amount</p>
+                  <p className="text-lg font-bold text-foreground">${selectedQueueItem.totalAmount.toLocaleString()}</p>
+                </div>
+              </div>
+
+              {/* Institution & Law */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground mb-1">Institution</p>
+                  <p className="text-sm text-foreground">{selectedQueueItem.institutionName}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground mb-1">Law Version</p>
+                  <p className="text-sm text-foreground">{selectedQueueItem.lawVersion}</p>
+                </div>
+              </div>
+
+              {/* Countries */}
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground mb-2">Countries Involved</p>
+                <div className="flex flex-wrap gap-2">
+                  {selectedQueueItem.countries.map((country) => (
+                    <Badge key={country} variant="outline" className="text-xs">
+                      {country}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              {/* Narrative */}
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground mb-2">Narrative</p>
+                <div className="bg-muted/30 rounded-lg p-3 text-sm text-foreground leading-relaxed">
+                  {selectedQueueItem.narrative}
+                </div>
+              </div>
+
+              {/* Timeline */}
+              <div className="space-y-2 text-xs">
+                <p className="font-semibold text-muted-foreground">Timeline</p>
+                <div className="flex items-start gap-2">
+                  <Clock className="w-4 h-4 mt-0.5 text-muted-foreground shrink-0" />
+                  <div>
+                    <p className="text-muted-foreground">Submitted by {selectedQueueItem.submittedBy}</p>
+                    <p className="text-xs text-muted-foreground">{new Date(selectedQueueItem.submittedDate).toLocaleString()}</p>
+                  </div>
+                </div>
+                {selectedQueueItem.assignedTo && (
+                  <div className="flex items-start gap-2">
+                    <CheckSquare className="w-4 h-4 mt-0.5 text-blue-600 dark:text-blue-400 shrink-0" />
+                    <div>
+                      <p className="text-muted-foreground">Assigned to {selectedQueueItem.assignedTo}</p>
+                      <p className="text-xs text-muted-foreground">{selectedQueueItem.assignedDate ? new Date(selectedQueueItem.assignedDate).toLocaleString() : "N/A"}</p>
+                    </div>
+                  </div>
+                )}
+                {selectedQueueItem.reviewedDate && (
+                  <div className="flex items-start gap-2">
+                    <FileCheck className="w-4 h-4 mt-0.5 text-green-600 dark:text-green-400 shrink-0" />
+                    <div>
+                      <p className="text-muted-foreground">Reviewed</p>
+                      <p className="text-xs text-muted-foreground">{new Date(selectedQueueItem.reviewedDate).toLocaleString()}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-2 pt-4 border-t">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handleOpenQueueItemPdfPreview(selectedQueueItem)}
+                  className="gap-2"
+                >
+                  <Eye className="w-4 h-4" />
+                  Preview PDF
+                </Button>
+                {hasPermission("canApproveReports") && selectedQueueItem.status === "pending" && (
+                  <>
+                    <Button variant="destructive" size="sm" className="ml-auto">
+                      Reject
+                    </Button>
+                    <Button size="sm" className="bg-green-600 hover:bg-green-700">
+                      Approve
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
     </div>
   );

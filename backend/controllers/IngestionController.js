@@ -1,6 +1,9 @@
 import { db } from "../middlewares/dbconfig.js";
 import { cases, transactions as transactionsTable, auditLogs } from "../src/db/schemas.ts";
-import { sql } from "drizzle-orm";
+import { sql, eq } from "drizzle-orm";
+import { callMLGenerateSAR } from "../services/mlService.js";
+import { buildFraudGraph } from "../services/fraudGraphService.js";
+import { generateRiskAttribution } from "../services/riskAttributionService.js";
 
 export const ingestData = async (req, res) => {
     try {
@@ -24,7 +27,6 @@ export const ingestData = async (req, res) => {
         deadline.setDate(deadline.getDate() + 30);
 
         // 3. Auto-generate displayIds
-        // Get current max case displayId number
         const maxCaseResult = await db.execute(
             sql`SELECT display_id FROM cases WHERE display_id LIKE 'SAR-%' ORDER BY display_id DESC LIMIT 1`
         );
@@ -34,7 +36,6 @@ export const ingestData = async (req, res) => {
             : 0;
         const newCaseDisplayId = `SAR-${String(lastCaseNum + 1).padStart(4, "0")}`;
 
-        // Get current max transaction displayId number
         const maxTxnResult = await db.execute(
             sql`SELECT display_id FROM transactions WHERE display_id LIKE 'TXN-%' ORDER BY display_id DESC LIMIT 1`
         );
@@ -87,7 +88,15 @@ export const ingestData = async (req, res) => {
                 details: `Case ${newCaseDisplayId} ingested with ${transactions.length} transactions from ${jurisdictionMap[primaryCurrency] || "Global"} region.`
             });
 
-            return newCase;
+            return { ...newCase, normalizedData };
+        });
+
+        console.log(`[INGEST] Case ${newCaseDisplayId} created with ${transactions.length} transactions`);
+
+        // 5. ASYNC ML ENRICHMENT (non-blocking)
+        // Runs in background — doesn't hold up the response
+        enrichWithML(result.id, result.normalizedData, newCaseDisplayId).catch(err => {
+            console.warn(`[INGEST] Background ML enrichment failed for ${newCaseDisplayId}: ${err.message}`);
         });
 
         return res.status(201).json({
@@ -101,4 +110,68 @@ export const ingestData = async (req, res) => {
         console.error("Ingestion Error:", error.message);
         return res.status(500).json({ error: "Failed to ingest data" });
     }
-};
+};
+
+/**
+ * Async ML enrichment — runs after ingestion response is sent
+ * Updates the case with ML risk score if successful
+ */
+async function enrichWithML(caseId, normalizedTransactions, displayId) {
+    console.log(`[ML] Starting background enrichment for ${displayId}`);
+
+    try {
+        const mlResult = await callMLGenerateSAR(normalizedTransactions, displayId);
+
+        if (mlResult.success && mlResult.data) {
+            console.log(`[ML] Response received (risk_score=${mlResult.data.risk_score})`);
+
+            // Build graph for initial enrichment
+            const graphData = buildFraudGraph(normalizedTransactions, {}, mlResult.data);
+            const riskAttribution = generateRiskAttribution(
+                { transactions: normalizedTransactions, displayId },
+                mlResult.data,
+                graphData
+            );
+
+            // Update case with ML results
+            await db.update(cases)
+                .set({
+                    pipelineStatus: {
+                        ingestion: "completed",
+                        enrichment: "completed",
+                        ml_analysis: "enriched",
+                        narrative_gen: "pending",
+                    },
+                    mlInsights: {
+                        ...mlResult.data,
+                        risk_attribution: riskAttribution,
+                        graph_patterns: graphData.flagged_paths || [],
+                        clusters: graphData.clusters || [],
+                        _enriched_at: new Date().toISOString(),
+                    },
+                    riskScore: String(riskAttribution.risk_score),
+                    riskLevel: riskAttribution.risk_level,
+                    updatedAt: new Date(),
+                })
+                .where(eq(cases.id, caseId));
+
+            await db.insert(auditLogs).values({
+                caseId,
+                action: "ML_ENRICHMENT_COMPLETED",
+                actor: "SYSTEM",
+                details: `Background ML enrichment completed: risk=${riskAttribution.risk_score} (${riskAttribution.risk_level})`,
+                payload: {
+                    layer: "ML",
+                    risk_score: riskAttribution.risk_score,
+                    typologies: riskAttribution.typologies,
+                },
+            });
+
+            console.log(`[ML] Background enrichment completed for ${displayId}: score=${riskAttribution.risk_score}`);
+        }
+    } catch (err) {
+        console.warn(`[ML] Background enrichment failed for ${displayId}: ${err.message}`);
+        // Non-critical — ingestion data is already saved
+    }
+}
+

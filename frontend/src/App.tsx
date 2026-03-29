@@ -86,7 +86,7 @@ const App = () => {
                           <Route path="/sar/filed" element={<FiledReports />} />
                           <Route path="/risk-graph" element={<RiskGraph />} />
                           <Route path="/analytics" element={<Analytics />} />
-                          <Route path="/comparison" element={<ModelComparison />} />
+                          <Route path="/model-comparison" element={<ModelComparison />} />
                           <Route path="/import-csv" element={<ImportCSV />} />
                           <Route path="/case/:caseId" element={<CaseDetail />} />
                           <Route path="/audit" element={<AuditTrail />} />
